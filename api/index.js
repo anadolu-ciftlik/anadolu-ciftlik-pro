@@ -14,9 +14,13 @@ const BASE_PRICES = { yumurta:2, bal:10, sut:8, peynir:25 };
 module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { cors(res); return res.status(200).end(); }
 
-  // URL'den endpoint adını çıkar (örn: /api/login -> /login)
-  const url = req.url.replace(/^\/api/, "").split("?")[0];
-  const path = url === "/" ? "/index" : url;
+// Vercel üzerinden gelen API adresini belirle
+const requestedPath = req.query?.path ||
+  req.url.replace(/^\/api/, "").split("?")[0];
+
+const path = requestedPath === "/" || requestedPath === ""
+  ? "/index"
+  : requestedPath;
 
   try {
     // ================= AUTH =================
