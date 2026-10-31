@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anadolu Çiftlik Yatırım — Hayvan Pazarı</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0f1a; --panel:#111a2c; --panel2:#16223a; --line:#1f2c47;
+  --green:#22c55e; --green2:#16a34a; --gold:#f59e0b; --red:#ef4444;
+  --blue:#3b82f6; --purple:#a855f7; --text:#e9eef8; --muted:#8ca0c4;
+  --papara:#7c3aed; --sky1:#1e3a5f; --sky2:#0a0f1a;
+  --grass:#0d2818; --grass2:#0a1d10;
+  --card-shadow:0 16px 36px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f0f4fa; --panel:#ffffff; --panel2:#f8fafc; --line:#e2e8f0;
+  --text:#0f172a; --muted:#64748b;
+  --sky1:#87ceeb; --sky2:#e0f2fe;
+  --grass:#86efac; --grass2:#4ade80;
+  --card-shadow:0 16px 36px rgba(0,0,0,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+button{font-family:inherit;cursor:pointer}
+::-webkit-scrollbar{width:9px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
+.auth-screen{position:fixed;inset:0;background:radial-gradient(1200px 600px at 20% 0%,var(--sky1),transparent),linear-gradient(180deg,var(--sky2),var(--bg));display:grid;place-items:center;z-index:9999;padding:20px;overflow-y:auto}
+.auth-box{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:36px;max-width:480px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.auth-brand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px}
+.auth-brand .logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#22c55e,#059669);display:grid;place-items:center;font-size:1.8rem;box-shadow:0 8px 24px rgba(34,197,94,.4)}
+.auth-brand h1{font-size:1.4rem;letter-spacing:.5px}
+.auth-sub{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:26px}
+.auth-tabs{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:22px}
+.auth-tab{flex:1;padding:11px;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:.9rem;border-radius:9px;transition:.2s}
+.auth-tab.active{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
+.auth-form{display:none}
+.auth-form.active{display:block}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:7px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:13px 15px;border-radius:11px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:.95rem;font-family:inherit;transition:.15s;resize:vertical}
+.form-group textarea{min-height:120px;line-height:1.5}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+.form-group small{display:block;font-size:.74rem;color:var(--muted);margin-top:5px}
+.btn{width:100%;padding:14px;border:none;border-radius:11px;font-weight:800;font-size:.95rem;background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a;transition:.18s;letter-spacing:.3px}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;transform:none;filter:none}
+.btn.gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#1a1200}
+.btn.blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#04121f}
+.btn.papara{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.link{color:var(--green);font-size:.85rem;text-align:center;display:block;margin-top:16px;cursor:pointer;font-weight:600}
+.link:hover{text-decoration:underline}
+.auth-msg{padding:12px 14px;border-radius:10px;font-size:.85rem;margin-bottom:14px;display:none}
+.auth-msg.show{display:block}
+.auth-msg.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80}
+.auth-msg.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#7ceb9e}
+.welcome-bonus{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px;font-size:.83rem;color:#f8d78a;line-height:1.6;margin-bottom:18px;text-align:center}
+.welcome-bonus b{color:var(--gold);font-size:1rem}
+.avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+.avatar-opt{aspect-ratio:1;border-radius:12px;background:var(--panel2);border:2px solid var(--line);display:grid;place-items:center;font-size:1.6rem;cursor:pointer;transition:.15s}
+.avatar-opt:hover{border-color:rgba(34,197,94,.5);transform:scale(1.05)}
+.avatar-opt.sel{border-color:var(--green);background:rgba(34,197,94,.15);box-shadow:0 0 12px rgba(34,197,94,.4)}
+.app{display:none;grid-template-columns:260px 1fr;min-height:100vh}
+.app.show{display:grid}
+.sidebar{background:linear-gradient(180deg,var(--panel),var(--bg));border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#22c55e,#059669);display:grid;place-items:center;font-size:1.4rem;box-shadow:0 6px 18px rgba(34,197,94,.35)}
+.brand h1{font-size:1rem;letter-spacing:.3px;font-weight:800}
+.brand small{color:var(--muted);font-size:.66rem;letter-spacing:1.5px;font-weight:600}
+.nav-sec{font-size:.66rem;color:var(--muted);font-weight:800;letter-spacing:1.5px;padding:14px 12px 6px;text-transform:uppercase;opacity:.6}
+.nav-btn{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;background:transparent;border:1px solid transparent;color:var(--muted);font-size:.9rem;font-weight:600;transition:.18s;text-align:left;width:100%}
+.nav-btn:hover{background:var(--panel2);color:var(--text)}
+.nav-btn.active{background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(5,150,105,.06));border-color:rgba(34,197,94,.4);color:var(--green)}
+.nav-btn .ico{font-size:1.1rem;width:22px;text-align:center}
+.sidebar .spacer{flex:1}
+.trust-box{margin-top:16px;padding:12px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px;font-size:.72rem;color:var(--muted);line-height:1.5}
+.trust-box b{color:var(--green);display:block;margin-bottom:4px;font-size:.8rem}
+.main{padding:24px 28px 60px;max-width:1500px;width:100%}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.page-title{font-size:1.5rem;font-weight:800}
+.page-title small{display:block;font-size:.8rem;color:var(--muted);font-weight:500;margin-top:4px}
+.wallet-pill{display:flex;gap:12px;align-items:center;flex-wrap:wrap;position:relative}
+.pill{background:linear-gradient(135deg,#f59e0b,#d97706);color:#1a1200;padding:12px 22px;border-radius:40px;font-weight:800;font-size:1.05rem;box-shadow:0 8px 24px rgba(245,158,11,.25);white-space:nowrap}
+.pill small{display:block;font-size:.68rem;font-weight:700;opacity:.75;margin-bottom:1px}
+.theme-btn{width:44px;height:44px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:1.2rem;display:grid;place-items:center;transition:.18s}
+.theme-btn:hover{background:var(--panel);transform:rotate(20deg)}
+.user-chip{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:40px;padding:6px 14px 6px 6px;cursor:pointer;transition:.18s;position:relative}
+.user-chip:hover{border-color:rgba(34,197,94,.4)}
+.user-avatar{width:38px;height:38px;border-radius:50%;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:grid;place-items:center;font-size:1.2rem}
+.user-name{font-weight:700;font-size:.9rem;line-height:1.2;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-name small{display:block;font-size:.7rem;color:var(--muted);font-weight:500}
+.dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--panel2);border:1px solid var(--line);border-radius:14px;min-width:200px;padding:8px;box-shadow:0 15px 40px rgba(0,0,0,.3);display:none;z-index:100}
+.dropdown.show{display:block}
+.dropdown button{width:100%;text-align:left;padding:11px 14px;border:none;background:transparent;color:var(--text);font-size:.9rem;font-weight:600;border-radius:9px;transition:.15s;display:flex;align-items:center;gap:10px;position:relative}
+.dropdown button:hover{background:var(--panel)}
+.dropdown hr{border:none;border-top:1px solid var(--line);margin:6px 0}
+.dropdown button.danger{color:#ff8a80}
+.dropdown button.danger:hover{background:rgba(239,68,68,.1)}
+.dropdown .notif-dot{width:8px;height:8px;border-radius:50%;background:var(--red);position:absolute;right:14px;top:50%;transform:translateY(-50%);animation:pulseDot 1.5s infinite}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.4}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:26px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;inset:0;background:radial-gradient(300px 120px at 100% 0%,rgba(34,197,94,.08),transparent)}
+.stat .lbl{color:var(--muted);font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px}
+.stat .val{font-size:1.6rem;font-weight:800;margin-top:8px}
+.stat .sub{font-size:.74rem;color:var(--muted);margin-top:4px}
+.stat .val.live{color:var(--green);font-variant-numeric:tabular-nums}
+.stat .val.goldlive{color:var(--gold);font-variant-numeric:tabular-nums}
+.green{color:var(--green)} .gold{color:var(--gold)} .red{color:#ff7b72} .blue{color:#6cb8ff} .purple{color:#c08bff}
+.section{display:none}
+.section.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.section-head h2{font-size:1.2rem}
+.section-head p{color:var(--muted);font-size:.85rem;margin-top:3px}
+.farm-scene{position:relative;height:280px;border-radius:20px;overflow:hidden;background:linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 65%, var(--grass) 65%, var(--grass2) 100%);border:1px solid var(--line);margin-bottom:22px;box-shadow:inset 0 0 60px rgba(0,0,0,.15)}
+[data-theme="light"] .farm-scene{background:linear-gradient(180deg, #87ceeb 0%, #e0f2fe 60%, #86efac 60%, #4ade80 100%)}
+.farm-scene .sun{position:absolute;top:20px;right:40px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,#fef08a 0%,#facc15 60%,#f59e0b 100%);box-shadow:0 0 60px rgba(250,204,21,.6),0 0 100px rgba(250,204,21,.3);animation:sunPulse 4s ease-in-out infinite}
+@keyframes sunPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.farm-scene .cloud{position:absolute;background:rgba(255,255,255,.85);border-radius:50px;filter:blur(1px)}
+.farm-scene .cloud::before,.farm-scene .cloud::after{content:"";position:absolute;background:inherit;border-radius:50%}
+.cloud.c1{top:30px;left:8%;width:80px;height:26px;animation:cloudMove 40s linear infinite}
+.cloud.c1::before{width:40px;height:40px;top:-18px;left:10px}
+.cloud.c1::after{width:50px;height:50px;top:-24px;left:40px}
+.cloud.c2{top:55px;left:35%;width:60px;height:20px;animation:cloudMove 55s linear infinite;opacity:.7}
+.cloud.c2::before{width:32px;height:32px;top:-14px;left:8px}
+.cloud.c2::after{width:40px;height:40px;top:-20px;left:30px}
+.cloud.c3{top:25px;left:65%;width:70px;height:22px;animation:cloudMove 70s linear infinite;opacity:.6}
+.cloud.c3::before{width:36px;height:36px;top:-16px;left:10px}
+.cloud.c3::after{width:44px;height:44px;top:-22px;left:34px}
+@keyframes cloudMove{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 100px))}}
+.farm-scene .fence{position:absolute;bottom:0;left:0;right:0;height:12px;background:repeating-linear-gradient(90deg,#8b5a2b 0 4px,transparent 4px 40px);opacity:.6}
+.farm-scene .ground{position:absolute;bottom:0;left:0;right:0;height:38%;background:linear-gradient(180deg,transparent,rgba(0,0,0,.15))}
+.farm-animals{position:absolute;bottom:8%;left:0;right:0;display:flex;justify-content:space-around;align-items:flex-end;flex-wrap:wrap;gap:8px;padding:0 20px}
+.scene-animal{font-size:2.5rem;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25));animation:bob 3s ease-in-out infinite;transition:.3s;cursor:pointer;position:relative}
+.scene-animal:hover{transform:scale(1.2) translateY(-5px)}
+.scene-animal.dropping{animation:dropIn .8s cubic-bezier(.68,-0.55,.27,1.55)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes dropIn{0%{transform:translateY(-200px) rotate(-180deg) scale(0);opacity:0}60%{transform:translateY(0) rotate(0) scale(1.2);opacity:1}80%{transform:translateY(-15px) scale(1.1)}100%{transform:translateY(0) scale(1);opacity:1}}
+.scene-badge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.4);color:#fff;padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:700;backdrop-filter:blur(8px)}
+[data-theme="light"] .scene-badge{background:rgba(0,0,0,.25)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;position:relative;transition:.22s;overflow:hidden}
+.card:hover{transform:translateY(-3px);border-color:rgba(34,197,94,.45);box-shadow:var(--card-shadow)}
+.card .head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.card .avatar{width:70px;height:70px;border-radius:16px;display:grid;place-items:center;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);flex-shrink:0;overflow:hidden}
+.card .avatar svg{width:60px;height:60px}
+.card h3{font-size:1.15rem}
+.card .price{color:var(--gold);font-weight:800;font-size:.92rem;margin-top:2px}
+.rows{display:flex;flex-direction:column;gap:5px;margin:12px 0;font-size:.85rem}
+.rows div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(128,128,128,.15)}
+.rows span:last-child{font-weight:700;color:var(--text)}
+.qty{display:flex;align-items:center;gap:8px;margin:14px 0}
+.qty button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:1.2rem;font-weight:700;transition:.15s}
+.qty button:hover{background:var(--green);color:#fff}
+.qty input{flex:1;height:38px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--text);text-align:center;font-weight:700;font-size:1rem;min-width:0}
+.badge{position:absolute;top:14px;right:14px;font-size:.68rem;font-weight:800;padding:5px 10px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35)}
+.life-bar{height:8px;background:var(--panel2);border-radius:10px;overflow:hidden;margin:4px 0 8px}
+.life-bar i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#10b981);transition:width .3s}
+.life-bar.warn i{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.life-bar.dead i{background:#3a4a63}
+.card.buying{animation:buyPulse .6s ease}
+@keyframes buyPulse{0%{transform:scale(1)}30%{transform:scale(1.02);box-shadow:0 0 30px rgba(34,197,94,.6)}100%{transform:scale(1)}}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.inv-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center;position:relative;overflow:hidden}
+.inv-card .emoji{font-size:2.4rem}
+.inv-card .nm{font-weight:700;margin:6px 0}
+.inv-card .amt{font-size:1.4rem;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.inv-card .prc{font-size:.78rem;color:var(--muted);margin:6px 0 12px}
+.inv-card .prc b{color:var(--text)}
+.inv-card.selling{animation:sellPulse .6s ease}
+@keyframes sellPulse{0%{transform:scale(1)}30%{transform:scale(1.05);box-shadow:0 0 30px rgba(245,158,11,.6)}100%{transform:scale(1)}}
+.market-row{display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+.trend{font-size:.78rem;font-weight:800;padding:4px 10px;border-radius:20px}
+.trend.up{background:rgba(34,197,94,.15);color:var(--green)}
+.trend.down{background:rgba(239,68,68,.15);color:#ff8a80}
+.withdraw-box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;max-width:640px}
+.info-banner{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:12px;padding:14px;font-size:.83rem;color:#a9c5f0;line-height:1.6;margin-bottom:18px}
+[data-theme="light"] .info-banner{color:#1e40af}
+.info-banner b{color:#dbe7ff}
+[data-theme="light"] .info-banner b{color:#1e3a8a}
+.warn-banner{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:14px;font-size:.83rem;color:#f8d78a;line-height:1.6;margin-bottom:18px}
+[data-theme="light"] .warn-banner{color:#92400e}
+.hist-item{display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:9px;gap:12px}
+.hist-item .hinfo{flex:1}
+.hist-item .ht{font-weight:700;font-size:.9rem}
+.hist-item .hd{font-size:.76rem;color:var(--muted);margin-top:3px}
+.hist-item .hval{font-weight:800;font-size:1rem;white-space:nowrap}
+.hist-item .hval.in{color:var(--green)}
+.hist-item .hval.out{color:#ff8a80}
+.hist-item .hval.pend{color:var(--gold)}
+.profile-header{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:30px;margin-bottom:22px;position:relative;overflow:hidden;display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.profile-header::before{content:"";position:absolute;top:-40%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(34,197,94,.12),transparent 70%);border-radius:50%}
+.profile-avatar-big{width:120px;height:120px;border-radius:30px;background:rgba(34,197,94,.15);border:2px solid rgba(34,197,94,.5);display:grid;place-items:center;font-size:4rem;box-shadow:0 15px 40px rgba(34,197,94,.25);position:relative;z-index:1;flex-shrink:0}
+.profile-info{flex:1;min-width:200px;position:relative;z-index:1}
+.profile-info h2{font-size:1.6rem;margin-bottom:6px}
+.profile-info .meta{color:var(--muted);font-size:.9rem;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.profile-info .joined{font-size:.78rem;color:var(--muted);margin-top:10px;opacity:.8}
+.avatar-change-btn{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);color:var(--green);padding:8px 14px;border-radius:10px;font-size:.8rem;font-weight:700;margin-top:10px}
+.avatar-change-btn:hover{background:rgba(34,197,94,.25)}
+.profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:22px}
+.profile-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}
+.profile-card h3{font-size:.78rem;color:var(--muted);margin-bottom:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.profile-stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(128,128,128,.15);font-size:.9rem}
+.profile-stat:last-child{border-bottom:none}
+.profile-stat span:first-child{color:var(--muted)}
+.profile-stat span:last-child{font-weight:700;color:var(--text)}
+.load-section{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;margin-bottom:22px}
+.load-section h3{font-size:1.1rem;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.load-section p{color:var(--muted);font-size:.85rem;margin-bottom:18px}
+.load-presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px}
+.load-preset{background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:.15s;font-weight:800;font-size:.95rem;color:var(--text)}
+.load-preset:hover{border-color:rgba(124,58,237,.5);transform:translateY(-2px)}
+.load-preset.sel{border-color:var(--papara);background:rgba(124,58,237,.15);color:#c4b5fd;box-shadow:0 0 15px rgba(124,58,237,.3)}
+.load-input-row{display:flex;gap:10px;margin-bottom:16px}
+.load-input-row input{flex:1;padding:14px 16px;border-radius:11px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:1rem;font-weight:700}
+.load-input-row input:focus{outline:none;border-color:var(--papara);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+.load-info{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:10px;padding:12px;font-size:.8rem;color:#c4b5fd;margin-bottom:16px;line-height:1.6}
+[data-theme="light"] .load-info{color:#6d28d9}
+.pending-loads{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:22px}
+.pending-loads h3{font-size:1rem;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.pending-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--panel2);border:1px solid rgba(245,158,11,.3);border-radius:11px;margin-bottom:8px;gap:12px;flex-wrap:wrap}
+.pending-item .pi-info{flex:1;min-width:180px}
+.pending-item .pi-title{font-weight:700;font-size:.88rem}
+.pending-item .pi-meta{font-size:.74rem;color:var(--muted);margin-top:3px}
+.pending-item .pi-status{font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:20px;white-space:nowrap}
+.pending-item .pi-amount{font-weight:800;color:var(--gold);font-size:.95rem}
+
+/* SUPPORT */
+.support-fab{position:fixed;bottom:24px;left:24px;z-index:900;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:14px 22px;border-radius:50px;font-weight:800;font-size:.95rem;box-shadow:0 8px 24px rgba(124,58,237,.5);transition:.18s;cursor:pointer;display:none}
+.support-fab.show{display:flex}
+.support-fab:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(124,58,237,.6)}
+.support-fab .sf-icon{font-size:1.3rem}
+.support-fab .sf-dot{position:absolute;top:6px;right:6px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid #fff;animation:pulseDot 1.5s infinite}
+
+.support-ticket{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;transition:.15s}
+.support-ticket.replied{border-color:rgba(34,197,94,.4)}
+.support-ticket.closed{opacity:.7}
+.st-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.st-title{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.st-status{font-size:.7rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.st-status.pending{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.35)}
+.st-status.replied{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35)}
+.st-status.closed{background:rgba(120,120,120,.2);color:#aaa;border:1px solid rgba(120,120,120,.35)}
+.st-meta{font-size:.72rem;color:var(--muted);margin-bottom:10px}
+.st-message{background:var(--panel);border-left:3px solid #7c3aed;padding:10px 14px;border-radius:8px;font-size:.85rem;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+.st-reply{background:rgba(34,197,94,.08);border-left:3px solid var(--green);padding:10px 14px;border-radius:8px;font-size:.85rem;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+.st-reply-meta{font-size:.7rem;color:var(--green);font-weight:700;margin-bottom:4px}
+.st-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.st-actions button{padding:8px 14px;border-radius:8px;border:none;font-weight:700;font-size:.78rem;cursor:pointer;transition:.15s}
+.st-actions .st-close{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#ff8a80}
+.st-actions .st-close:hover{background:rgba(239,68,68,.25)}
+.st-actions .st-reopen{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);color:var(--green)}
+.st-actions .st-reopen:hover{background:rgba(34,197,94,.25)}
+.st-actions .st-follow{background:var(--panel);border:1px solid var(--line);color:var(--text)}
+.st-actions .st-follow:hover{background:var(--panel2)}
+
+/* DASHBOARD */
+.dash-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:20px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 22px}
+.dash-header-left h2{font-size:1.3rem;margin-bottom:4px}
+.dash-header-left p{font-size:.82rem;color:var(--muted)}
+.dash-tabs{display:flex;gap:6px;background:var(--panel2);border:1px solid var(--line);padding:4px;border-radius:12px}
+.dash-tab{padding:8px 16px;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:.82rem;border-radius:8px;transition:.15s}
+.dash-tab.active{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
+.dash-tab:hover:not(.active){background:var(--panel);color:var(--text)}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;inset:0;background:radial-gradient(280px 100px at 100% 0%,rgba(34,197,94,.08),transparent);pointer-events:none}
+.kpi .kpi-icon{font-size:1.6rem;margin-bottom:8px}
+.kpi .kpi-lbl{color:var(--muted);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.kpi .kpi-val{font-size:1.5rem;font-weight:900;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.kpi .kpi-sub{font-size:.74rem;color:var(--muted)}
+.kpi .kpi-change{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:.72rem;font-weight:800;margin-top:6px}
+.kpi .kpi-change.up{background:rgba(34,197,94,.15);color:var(--green)}
+.kpi .kpi-change.down{background:rgba(239,68,68,.15);color:#ff8a80}
+.kpi .kpi-change.flat{background:rgba(245,158,11,.15);color:var(--gold)}
+.chart-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:24px}
+.chart-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;position:relative}
+.chart-card h3{font-size:1rem;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chart-card h3 .badge-live{font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35);display:inline-flex;align-items:center;gap:5px}
+.chart-card h3 .badge-live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulseDot 1.5s infinite}
+.chart-card p.chart-sub{font-size:.76rem;color:var(--muted);margin-bottom:14px}
+.chart-card canvas{max-height:260px}
+.chart-card.full{grid-column:1/-1}
+.heatmap-wrap{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:24px;overflow-x:auto}
+.heatmap-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.heatmap-header h3{font-size:1rem}
+.heatmap-legend{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted)}
+.heatmap-legend .leg-box{width:14px;height:14px;border-radius:3px}
+.heatmap{display:grid;grid-template-columns:60px repeat(24,1fr);gap:3px;min-width:720px}
+.heatmap .hm-label{font-size:.66rem;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;min-height:22px}
+.heatmap .hm-hour{font-size:.6rem;color:var(--muted);font-weight:600;text-align:center;min-height:18px;display:flex;align-items:center;justify-content:center}
+.heatmap .hm-cell{height:22px;border-radius:4px;background:var(--panel2);transition:.15s;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:rgba(255,255,255,.9)}
+.heatmap .hm-cell:hover{transform:scale(1.2);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.heatmap .hm-cell.lvl0{background:var(--panel2)}
+.heatmap .hm-cell.lvl1{background:rgba(34,197,94,.2)}
+.heatmap .hm-cell.lvl2{background:rgba(34,197,94,.4)}
+.heatmap .hm-cell.lvl3{background:rgba(34,197,94,.6)}
+.heatmap .hm-cell.lvl4{background:rgba(34,197,94,.8);color:#03150a}
+.heatmap .hm-cell.lvl5{background:#22c55e;color:#03150a}
+.forecast-box{background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(16,185,129,.05));border:1px solid rgba(34,197,94,.35);border-radius:16px;padding:24px;margin-bottom:24px;position:relative;overflow:hidden}
+.forecast-box::before{content:"";position:absolute;top:-30px;right:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(34,197,94,.2),transparent 70%);pointer-events:none}
+.forecast-box h3{font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;position:relative}
+.forecast-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;position:relative}
+.forecast-item{background:rgba(0,0,0,.2);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:16px}
+[data-theme="light"] .forecast-item{background:rgba(255,255,255,.6)}
+.forecast-item .f-lbl{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.forecast-item .f-val{font-size:1.3rem;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums}
+.forecast-item .f-sub{font-size:.72rem;color:var(--muted);margin-top:4px}
+.forecast-note{font-size:.8rem;color:var(--muted);margin-top:16px;line-height:1.6;padding-top:16px;border-top:1px dashed rgba(128,128,128,.2);position:relative}
+.product-bars{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.pbar-row{display:flex;align-items:center;gap:10px}
+.pbar-label{width:90px;font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.pbar-track{flex:1;height:20px;background:var(--panel2);border-radius:10px;overflow:hidden;position:relative}
+.pbar-fill{height:100%;border-radius:10px;transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:.68rem;font-weight:800;color:#03150a;min-width:0}
+.pbar-val{width:90px;text-align:right;font-size:.78rem;font-weight:800;color:var(--gold);flex-shrink:0}
+.empty-chart{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-chart .emoji{font-size:2.4rem;opacity:.5;margin-bottom:8px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}.heatmap{min-width:600px}.heatmap .hm-label{width:50px}}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;place-items:center;z-index:9998;backdrop-filter:blur(4px);padding:20px;overflow-y:auto}
+.modal.show{display:grid}
+.modal-box{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:30px;max-width:520px;width:100%;text-align:center;max-height:90vh;overflow-y:auto}
+.modal-box.left{text-align:left}
+.modal-box .big-icon{font-size:3.5rem;margin-bottom:14px}
+.modal-box h3{margin-bottom:12px;font-size:1.2rem}
+.modal-box p{color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:22px}
+.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.modal-actions .btn{width:auto;padding:12px 24px;flex:1;min-width:120px}
+.papara-info{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;text-align:left}
+.papara-info .pi-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(128,128,128,.15);font-size:.9rem}
+.papara-info .pi-row:last-child{border-bottom:none}
+.papara-info .pi-row span:first-child{color:var(--muted)}
+.papara-info .pi-row span:last-child{font-weight:800;color:var(--text)}
+.papara-num{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;padding:16px;border-radius:12px;text-align:center;margin:16px 0}
+.papara-num small{display:block;font-size:.7rem;opacity:.8;margin-bottom:4px;font-weight:600;letter-spacing:1px}
+.papara-num .num{font-size:1.5rem;font-weight:900;letter-spacing:2px;font-family:'Courier New',monospace}
+.copy-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:.75rem;font-weight:700;margin-top:8px;cursor:pointer}
+.copy-btn:hover{background:rgba(255,255,255,.25)}
+.toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:99999}
+.toast{background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--green);padding:14px 18px;border-radius:11px;font-weight:600;font-size:.88rem;box-shadow:0 12px 30px rgba(0,0,0,.4);transform:translateX(120%);transition:.35s;min-width:240px;color:var(--text)}
+.toast.show{transform:translateX(0)}
+.toast.err{border-left-color:var(--red)}
+.toast.gold{border-left-color:var(--gold)}
+.toast.purple{border-left-color:#7c3aed}
+.fly-money{position:fixed;font-size:1.4rem;font-weight:900;color:var(--green);pointer-events:none;z-index:99999;text-shadow:0 2px 8px rgba(0,0,0,.5);animation:flyUp 1.4s ease-out forwards}
+@keyframes flyUp{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-200px) scale(1.6);opacity:0}}
+.fly-icon{position:fixed;font-size:2.2rem;pointer-events:none;z-index:99998;animation:flyToWallet 1.2s cubic-bezier(.68,-0.55,.27,1.55) forwards}
+@keyframes flyToWallet{0%{transform:scale(0) rotate(0);opacity:0}20%{transform:scale(1.3) rotate(-20deg);opacity:1}100%{transform:scale(.3) translate(var(--tx,0),var(--ty,-200px));opacity:0}}
+.mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--panel2);border:1px solid var(--line);color:var(--text);width:44px;height:44px;border-radius:11px;font-size:1.3rem}
+@media(max-width:900px){
+  .app.show{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-280px;z-index:100;transition:.3s;width:260px}
+  .sidebar.open{left:0}
+  .mob-toggle{display:block}
+  .main{padding:16px;padding-top:70px}
+  .profile-header{flex-direction:column;text-align:center}
+  .farm-scene{height:220px}
+  .scene-animal{font-size:2rem}
+  .support-fab{bottom:80px;left:16px;padding:12px 18px;font-size:.88rem}
+}
+@media(min-width:901px){.mob-toggle{display:none!important}}
+</style>
+</head>
+<body>
+
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="svg-tavuk" viewBox="0 0 100 100"><ellipse cx="50" cy="70" rx="30" ry="22" fill="#f5c542"/><path d="M30 50 Q25 35 35 30 Q45 25 50 35 Q55 25 65 30 Q75 35 70 50" fill="#f5c542"/><circle cx="50" cy="35" r="15" fill="#f5c542"/><path d="M45 18 Q48 10 52 15 Q56 8 55 18 Q60 20 50 22 Q42 20 45 18Z" fill="#e74c3c"/><circle cx="46" cy="32" r="2.5" fill="#000"/><path d="M42 40 L50 42 L46 45Z" fill="#e67e22"/><path d="M75 65 Q85 60 82 72 Q78 78 72 75Z" fill="#d4a017"/><ellipse cx="50" cy="82" rx="5" ry="2" fill="#e67e22" opacity=".5"/></symbol>
+    <symbol id="svg-ari" viewBox="0 0 100 100"><ellipse cx="50" cy="55" rx="20" ry="25" fill="#f5c542"/><path d="M30 45 Q50 40 70 45" stroke="#000" stroke-width="4" fill="none"/><path d="M30 55 Q50 50 70 55" stroke="#000" stroke-width="4" fill="none"/><path d="M30 65 Q50 60 70 65" stroke="#000" stroke-width="4" fill="none"/><circle cx="50" cy="28" r="10" fill="#000"/><circle cx="46" cy="26" r="2" fill="#fff"/><circle cx="54" cy="26" r="2" fill="#fff"/><path d="M40 30 Q35 22 30 25" stroke="#000" stroke-width="2" fill="none"/><path d="M60 30 Q65 22 70 25" stroke="#000" stroke-width="2" fill="none"/><ellipse cx="30" cy="45" rx="12" ry="8" fill="#e0f2fe" opacity=".7" transform="rotate(-30 30 45)"/><ellipse cx="70" cy="45" rx="12" ry="8" fill="#e0f2fe" opacity=".7" transform="rotate(30 70 45)"/><circle cx="70" cy="75" r="4" fill="#f5c542" stroke="#000" stroke-width="1"/></symbol>
+    <symbol id="svg-koyun" viewBox="0 0 100 100"><ellipse cx="50" cy="55" rx="32" ry="26" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><circle cx="30" cy="45" r="12" fill="#f1f5f9"/><circle cx="45" cy="38" r="12" fill="#f1f5f9"/><circle cx="60" cy="40" r="11" fill="#f1f5f9"/><circle cx="72" cy="48" r="10" fill="#f1f5f9"/><ellipse cx="30" cy="72" rx="22" ry="14" fill="#4b5563"/><circle cx="20" cy="68" r="8" fill="#374151"/><circle cx="18" cy="66" r="1.5" fill="#fff"/><circle cx="22" cy="66" r="1.5" fill="#fff"/><ellipse cx="15" cy="72" rx="3" ry="2" fill="#000"/><circle cx="15" cy="73" r="2" fill="#f87171"/><path d="M25 60 Q20 55 25 52" stroke="#374151" stroke-width="2" fill="none"/></symbol>
+    <symbol id="svg-inek" viewBox="0 0 100 100"><ellipse cx="50" cy="58" rx="34" ry="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><ellipse cx="35" cy="50" rx="7" ry="10" fill="#0f172a" transform="rotate(-15 35 50)"/><ellipse cx="62" cy="62" rx="8" ry="11" fill="#0f172a" transform="rotate(20 62 62)"/><ellipse cx="48" cy="70" rx="6" ry="8" fill="#0f172a" opacity=".7"/><circle cx="22" cy="52" r="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><ellipse cx="14" cy="45" rx="4" ry="6" fill="#e5e7eb"/><ellipse cx="22" cy="42" rx="4" ry="6" fill="#e5e7eb"/><circle cx="16" cy="52" r="2.2" fill="#000"/><circle cx="26" cy="52" r="2.2" fill="#000"/><ellipse cx="20" cy="62" rx="6" ry="4" fill="#fbcfe8"/><circle cx="18" cy="62" r="1" fill="#000"/><circle cx="22" cy="62" r="1" fill="#000"/><path d="M70 45 Q78 40 80 50" stroke="#000" stroke-width="2" fill="none"/><path d="M70 50 Q80 55 78 60" stroke="#000" stroke-width="2" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-brand"><div class="logo">🌾</div><h1>Anadolu Çiftlik</h1></div>
+    <div class="auth-sub">Hayvancılık Yatırım Platformu</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth="login" type="button">Giriş Yap</button>
+      <button class="auth-tab" data-auth="register" type="button">Kayıt Ol</button>
+    </div>
+    <form class="auth-form active" id="loginForm" onsubmit="doLogin(event)">
+      <div class="auth-msg" id="loginMsg"></div>
+      <div class="form-group"><label>Telefon Numarası</label><input type="tel" id="loginPhone" placeholder="05XX XXX XX XX" required></div>
+      <div class="form-group"><label>Şifre</label><input type="password" id="loginPass" placeholder="••••••••" required></div>
+      <button type="submit" class="btn">🔓 Giriş Yap</button>
+      <a class="link" onclick="showForgot()">Şifremi unuttum?</a>
+    </form>
+    <form class="auth-form" id="registerForm" onsubmit="doRegister(event)">
+      <div class="welcome-bonus">🎁 Yeni üyelere özel <b>150 ₺ hoş geldin bonusu!</b></div>
+      <div class="auth-msg" id="registerMsg"></div>
+      <div class="form-group"><label>Ad Soyad</label><input type="text" id="regName" placeholder="Örn: Ahmet Yılmaz" required></div>
+      <div class="form-group"><label>Telefon Numarası</label><input type="tel" id="regPhone" placeholder="05XX XXX XX XX" required><small>Giriş için bu numarayı kullanacaksınız</small></div>
+      <div class="form-group"><label>Şifre</label><input type="password" id="regPass" placeholder="En az 4 karakter" required minlength="4"></div>
+      <div class="form-group"><label>Şifre (Tekrar)</label><input type="password" id="regPass2" placeholder="Şifreyi tekrar girin" required minlength="4"></div>
+      <div class="form-group"><label>Profil Avatarı Seç</label><div class="avatar-grid" id="avatarGrid"></div></div>
+      <button type="submit" class="btn">✅ Kayıt Ol ve 150 ₺ Kazan</button>
+    </form>
+    <form class="auth-form" id="forgotForm" onsubmit="doForgot(event)">
+      <div class="auth-msg" id="forgotMsg"></div>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;line-height:1.6">Kayıtlı telefon numaranızı girin. Sistemde kayıtlıysa size yeni bir geçici şifre göndereceğiz.</p>
+      <div class="form-group"><label>Telefon Numarası</label><input type="tel" id="forgotPhone" placeholder="05XX XXX XX XX" required></div>
+      <button type="submit" class="btn gold">🔑 Geçici Şifre Oluştur</button>
+      <a class="link" onclick="showLogin()">← Girişe dön</a>
+    </form>
+  </div>
+</div>
+
+<button class="mob-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<!-- YARDIM FAB -->
+<button class="support-fab" id="supportFab" onclick="openSupportModal()" type="button">
+  <span class="sf-icon">💬</span>
+  <span>Yardım</span>
+  <span class="sf-dot" id="supportDot" style="display:none"></span>
+</button>
+
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">🌾</div><div><h1>Anadolu Çiftlik</h1><small>YATIRIM PLATFORMU</small></div></div>
+    <div class="nav-sec">Çiftlik</div>
+    <button class="nav-btn active" data-tab="farm" type="button"><span class="ico">🐄</span> Hayvan Pazarı</button>
+    <button class="nav-btn" data-tab="inventory" type="button"><span class="ico">📦</span> Ürün & Yem</button>
+    <button class="nav-btn" data-tab="market" type="button"><span class="ico">💹</span> Piyasa Fiyatları</button>
+    <div class="nav-sec">Finans</div>
+    <button class="nav-btn" data-tab="withdraw" type="button"><span class="ico">🏦</span> Ödeme Çek</button>
+    <button class="nav-btn" data-tab="history" type="button"><span class="ico">📋</span> İşlem Geçmişi</button>
+    <button class="nav-btn" data-tab="stats" type="button"><span class="ico">📊</span> Dashboard</button>
+    <div class="nav-sec">Hesap</div>
+    <button class="nav-btn" data-tab="profile" type="button"><span class="ico">👤</span> Profilim</button>
+    <button class="nav-btn" data-tab="support" type="button"><span class="ico">💬</span> Destek Taleplerim <span id="navSupportBadge" style="display:none;background:var(--red);color:#fff;font-size:.65rem;padding:2px 7px;border-radius:20px;margin-left:auto;font-weight:800"></span></button>
+    <div class="spacer"></div>
+    <div class="trust-box"><b>🔒 Güvenli Yatırım</b>Tüm işlemler kayıt altındadır. Ödeme talepleri 1-3 iş günü içinde hesabınıza aktarılır.</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div><h1 class="page-title" id="pageTitle">Hayvan Pazarı <small id="pageSub">Yatırım yap, üret, sat, kazan</small></h1></div>
+      <div class="wallet-pill">
+        <div class="pill"><small>ÇEKİLEBİLİR BAKİYE</small><span id="wallet">0 ₺</span></div>
+        <button class="theme-btn" onclick="toggleTheme()" title="Tema değiştir" type="button"><span id="themeIcon">🌙</span></button>
+        <div class="user-chip" onclick="toggleUserMenu()">
+          <div class="user-avatar" id="userAvatar">🐄</div>
+          <div class="user-name" id="userName">Kullanıcı<small>Hesap</small></div>
+          <div class="dropdown" id="userMenu">
+            <button onclick="goProfile()" type="button">👤 Profilim</button>
+            <button onclick="goLoad()" type="button">💳 Bakiye Yükle</button>
+            <button onclick="goWithdraw()" type="button">🏦 Ödeme Çek</button>
+            <button onclick="goSupport()" type="button">💬 Destek Taleplerim <span class="notif-dot" id="menuSupportDot" style="display:none"></span></button>
+            <hr>
+            <button class="danger" onclick="openLogoutModal()" type="button">🚪 Çıkış Yap</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" id="statsRow">
+      <div class="stat"><div class="lbl">🐾 Aktif Hayvan</div><div class="val" id="sAnimals">0</div><div class="sub" id="sCap">Sınırsız kapasite</div></div>
+      <div class="stat"><div class="lbl">📦 Envanter Değeri</div><div class="val goldlive" id="sLive">0,0000 ₺</div><div class="sub" id="sHourly">Anlık üretim: 0 ₺/sa</div></div>
+      <div class="stat"><div class="lbl">🍽️ Yem Stoğu</div><div class="val gold" id="sFeed">0</div><div class="sub" id="sFeedDays">0 gün yeter</div></div>
+      <div class="stat"><div class="lbl">📈 Toplam Satış</div><div class="val purple" id="sEarned">0 ₺</div><div class="sub" id="sProfit">Net: 0 ₺</div></div>
+    </div>
+
+    <section class="section active" id="tab-farm">
+      <div class="farm-scene" id="farmScene">
+        <div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+        <div class="scene-badge" id="sceneBadge">🌾 Çiftliğin boş — hayvan al!</div>
+        <div class="farm-animals" id="farmAnimals"></div>
+        <div class="ground"></div><div class="fence"></div>
+      </div>
+      <div class="grid" id="animalGrid"></div>
+    </section>
+
+    <section class="section" id="tab-inventory">
+      <div class="section-head"><h2>📦 Ürün & Yem Yönetimi</h2><p>Ürünlerini sat, yem stoklarını takip et</p></div>
+      <div id="feedSummary"></div>
+      <div class="inv-grid" id="invGrid"></div>
+    </section>
+    <section class="section" id="tab-market">
+      <div class="section-head"><h2>💹 Canlı Piyasa Fiyatları</h2><p>Fiyatlar her 20 saniyede dalgalanır — doğru zamanda sat</p></div>
+      <div id="marketList"></div>
+    </section>
+    <section class="section" id="tab-withdraw">
+      <div class="section-head"><h2>🏦 Ödeme Çek</h2><p>Kazançlarını banka hesabına aktar</p></div>
+      <div class="info-banner"><b>ℹ️ Bilgilendirme:</b> Çekim talepleri admin onayından sonra 1-3 iş günü içinde işleme alınır. Minimum çekim tutarı <b>500 ₺</b>'dir.</div>
+      <div class="withdraw-box">
+        <div class="form-group"><label>Banka Adı</label><select id="wBank"><option value="">Banka seçiniz...</option><option>Ziraat Bankası</option><option>İş Bankası</option><option>Garanti BBVA</option><option>Yapı Kredi</option><option>Akbank</option><option>QNB Finansbank</option><option>Halkbank</option><option>Vakıfbank</option><option>Denizbank</option><option>Enpara.com</option><option>Diğer</option></select></div>
+        <div class="form-group"><label>IBAN</label><input type="text" id="wIban" placeholder="TR00 0000 0000 0000 0000 0000 00" maxlength="32"></div>
+        <div class="form-group"><label>Alıcı Adı Soyadı</label><input type="text" id="wName" placeholder="Örn: Ahmet Yılmaz"></div>
+        <div class="form-group"><label>Çekmek İstediğiniz Tutar (₺)</label><input type="number" id="wAmount" placeholder="0" min="500"><small>Çekilebilir bakiye: <b id="wBalance">0 ₺</b> • Minimum: 500 ₺</small></div>
+        <div class="warn-banner">⚠️ <b>Önemli:</b> IBAN ve alıcı bilgilerinin doğruluğunu kontrol ediniz.</div>
+        <button class="btn gold" style="padding:15px;font-size:1rem" onclick="requestWithdraw()" type="button">📤 Ödeme Talebi Oluştur</button>
+      </div>
+    </section>
+    <section class="section" id="tab-history">
+      <div class="section-head"><h2>📋 İşlem Geçmişi</h2><p>Tüm finansal hareketleriniz</p></div>
+      <div id="historyList"></div>
+    </section>
+
+    <section class="section" id="tab-stats">
+      <div class="dash-header">
+        <div class="dash-header-left"><h2>📊 Gelişmiş Dashboard</h2><p>Gerçek zamanlı performans, tahmin ve satış analizi</p></div>
+        <div class="dash-tabs">
+          <button class="dash-tab active" data-period="hourly" onclick="setDashPeriod('hourly')">🕐 Saatlik</button>
+          <button class="dash-tab" data-period="daily" onclick="setDashPeriod('daily')">📅 Günlük</button>
+          <button class="dash-tab" data-period="monthly" onclick="setDashPeriod('monthly')">📆 Aylık</button>
+        </div>
+      </div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="forecast-box" id="forecastBox"></div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>📈 Gelir Grafiği <span class="badge-live">CANLI</span></h3><p class="chart-sub" id="incomeChartSub">Saatlik toplam üretim değeri</p><canvas id="incomeChart"></canvas></div>
+        <div class="chart-card"><h3>🥧 Hayvan Dağılımı</h3><p class="chart-sub">Hangi hayvan ne kadar kazandırıyor</p><canvas id="animalChart"></canvas></div>
+        <div class="chart-card full"><h3>📦 Ürün Bazlı Saatlik Üretim Değeri</h3><p class="chart-sub">Her ürünün saatlik ₺ katkısı</p><div class="product-bars" id="productBars"></div></div>
+      </div>
+      <div class="heatmap-wrap">
+        <div class="heatmap-header"><h3>🔥 Satış Yoğunluğu Isı Haritası</h3><div class="heatmap-legend"><span>Az</span><span class="leg-box" style="background:var(--panel2)"></span><span class="leg-box" style="background:rgba(34,197,94,.2)"></span><span class="leg-box" style="background:rgba(34,197,94,.4)"></span><span class="leg-box" style="background:rgba(34,197,94,.6)"></span><span class="leg-box" style="background:rgba(34,197,94,.8)"></span><span class="leg-box" style="background:#22c55e"></span><span>Çok</span></div></div>
+        <div class="heatmap" id="heatmap"></div>
+      </div>
+      <div class="chart-card full" style="margin-bottom:24px"><h3>🏆 Ürün Satış Sıralaması</h3><p class="chart-sub">Hangi ürün en çok kazandırdı</p><div id="topProducts"></div></div>
+    </section>
+
+    <!-- DESTEK TALEPLERİM -->
+    <section class="section" id="tab-support">
+      <div class="section-head"><h2>💬 Destek Taleplerim</h2><p>Gönderdiğin mesajlar ve admin cevapları</p></div>
+      <div class="info-banner">
+        <b>ℹ️ Bilgilendirme:</b> Mesajlarınız admin tarafından en kısa sürede yanıtlanır. Yanıt geldiğinde bildirim alırsınız.
+      </div>
+      <button class="btn papara" style="padding:15px;font-size:1rem;margin-bottom:22px" onclick="openSupportModal()" type="button">✍️ Yeni Destek Talebi Oluştur</button>
+      <div id="supportList"></div>
+    </section>
+
+    <section class="section" id="tab-profile">
+      <div class="section-head"><h2>👤 Profilim</h2><p>Hesap bilgileri ve çiftlik özeti</p></div>
+      <div class="profile-header" id="profileHeader"></div>
+      <div class="pending-loads" id="pendingLoadsBox" style="display:none">
+        <h3>⏳ Bekleyen Bakiye Yüklemeleri</h3>
+        <div id="pendingLoadsList"></div>
+      </div>
+      <div class="load-section">
+        <h3>💳 Bakiye Yükle</h3>
+        <p>Papara ile bakiye yükle. Admin onayından sonra bakiyenize aktarılır. Minimum 50 ₺.</p>
+        <div class="load-presets" id="loadPresets">
+          <div class="load-preset" data-amt="100">100 ₺</div><div class="load-preset" data-amt="250">250 ₺</div><div class="load-preset" data-amt="500">500 ₺</div><div class="load-preset" data-amt="1000">1.000 ₺</div><div class="load-preset" data-amt="2500">2.500 ₺</div><div class="load-preset" data-amt="5000">5.000 ₺</div>
+        </div>
+        <div class="load-input-row">
+          <input type="number" id="loadAmount" placeholder="Tutar girin (₺)" min="50">
+          <button class="btn papara" style="width:auto;padding:14px 24px" onclick="openPaparaModal()" type="button">💜 Ödeme Yap</button>
+        </div>
+        <div class="load-info">💡 <b>Nasıl çalışır?</b> Tutarı girin → "Ödeme Yap" → Papara numaramıza ödeme yapın → "Ödemeyi Yaptım" butonuna basın → Talebiniz admin onayına düşer → Admin onayladıktan sonra bakiyeniz yüklenir.</div>
+      </div>
+      <div class="profile-grid" id="profileGrid"></div>
+    </section>
+  </main>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- YARDIM MODAL -->
+<div class="modal" id="supportModal">
+  <div class="modal-box left" style="max-width:600px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0;display:flex;align-items:center;gap:10px">💬 Yardım & Destek</h3>
+      <button onclick="closeSupportModal()" style="background:transparent;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;line-height:1" type="button">×</button>
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:18px;line-height:1.6">Sorununuzu veya sorunuzu aşağıya yazın. Admin en kısa sürede yanıtlayacaktır. Önceki taleplerinizi <b>Destek Taleplerim</b> sekmesinden görebilirsiniz.</p>
+    <div class="form-group">
+      <label>Mesaj Konusu</label>
+      <select id="supportSubject">
+        <option value="">Konu seçiniz...</option>
+        <option value="Bakiye Yükleme Sorunu">Bakiye Yükleme Sorunu</option>
+        <option value="Para Çekme Sorunu">Para Çekme Sorunu</option>
+        <option value="Hesap Girişi Sorunu">Hesap Girişi Sorunu</option>
+        <option value="Hayvan / Ürün Sorunu">Hayvan / Ürün Sorunu</option>
+        <option value="Ödeme Onayı Hakkında">Ödeme Onayı Hakkında</option>
+        <option value="Öneri / İstek">Öneri / İstek</option>
+        <option value="Diğer">Diğer</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Mesajınız</label>
+      <textarea id="supportMessage" placeholder="Sorununuzu detaylı bir şekilde açıklayın..."></textarea>
+      <small>Sorununuzu ne kadar detaylı yazarsanız o kadar hızlı çözüm bulunur.</small>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeSupportModal()" type="button">İptal</button>
+      <button class="btn papara" onclick="submitSupportTicket()" type="button">📤 Gönder</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="withdrawModal">
+  <div class="modal-box">
+    <div class="big-icon">✅</div>
+    <h3>Ödeme Talebiniz Alındı</h3>
+    <p id="withdrawModalText">Ödemeniz en kısa sürede hesabınıza aktarılacaktır.</p>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeWithdrawModal()" type="button">Tamam</button></div>
+  </div>
+</div>
+
+<div class="modal" id="logoutModal">
+  <div class="modal-box">
+    <div class="big-icon">🚪</div>
+    <h3>Çıkış Yap</h3>
+    <p>Hesabınızdan çıkış yapmak istediğinize emin misiniz? Tüm verileriniz güvenle saklı kalacaktır.</p>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeLogoutModal()" type="button">İptal</button>
+      <button class="btn danger" onclick="doLogout()" type="button">Evet, Çıkış Yap</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="paparaModal">
+  <div class="modal-box" style="max-width:520px;text-align:left">
+    <div style="text-align:center;margin-bottom:18px"><div style="font-size:3rem">💜</div><h3 style="margin-top:10px">Papara ile Bakiye Yükle</h3></div>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;text-align:center">Aşağıdaki Papara numarasına ödeme yapın, ardından "Ödemeyi Yaptım" butonuna basın.</p>
+    <div class="papara-num">
+      <small>PAPARA NUMARASI</small>
+      <div class="num" id="paparaNumText">1234567890</div>
+      <button class="copy-btn" onclick="copyPapara()" type="button">📋 Kopyala</button>
+    </div>
+    <div class="papara-info">
+      <div class="pi-row"><span>Yüklenecek Tutar</span><span id="paparaAmt">0 ₺</span></div>
+      <div class="pi-row"><span>İşlem Ücreti</span><span style="color:var(--green)">0 ₺ (Ücretsiz)</span></div>
+      <div class="pi-row"><span>Toplam Ödeme</span><span id="paparaTotal" style="color:var(--gold)">0 ₺</span></div>
+    </div>
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:12px;font-size:.78rem;color:#f8d78a;margin-bottom:16px;line-height:1.6">⚠️ <b>Önemli:</b> Papara uygulamasından yukarıdaki numaraya <b>tam olarak <span id="paparaWarnAmt">0</span> ₺</b> gönderin.</div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closePaparaModal()" type="button">İptal</button>
+      <button class="btn papara" onclick="confirmPaparaPayment()" type="button">✅ Ödemeyi Yaptım</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="pendingModal">
+  <div class="modal-box">
+    <div class="big-icon">⏳</div>
+    <h3>Ödeme Talebiniz Alındı</h3>
+    <p id="pendingModalText">Ödemeniz admin onayına gönderilmiştir. Onaylandıktan sonra bakiyenize aktarılacaktır.</p>
+    <div class="modal-actions"><button class="btn" onclick="closePendingModal()" type="button">Tamam</button></div>
+  </div>
+</div>
+
+<div class="modal" id="avatarModal">
+  <div class="modal-box" style="max-width:520px">
+    <h3 style="margin-bottom:16px">Avatar Seç</h3>
+    <div class="avatar-grid" id="avatarGridProfile" style="grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeAvatarModal()" type="button">İptal</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   API BAĞLANTI AYARLARI
+   ============================================================ */
+const API_BASE = "/api"; // Vercel'de aynı domain üzerinden çalışacak
+
+let authToken = null;
+try { authToken = localStorage.getItem("ciftlik_token"); } catch(e){}
+
+async function apiRequest(endpoint, method = "GET", body = null) {
+  const headers = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  
+  const options = { method, headers };
+  if (body) options.body = JSON.stringify(body);
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, options);
+    const data = await res.json();
+    if (res.status === 401) {
+      // Token geçersizse çıkış yap
+      doLogout();
+      throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın.");
+    }
+    if (!res.ok) throw new Error(data.error || "Bir hata oluştu");
+    return data;
+  } catch (err) {
+    console.error("API Hatası:", err);
+    throw err;
+  }
+}
+
+/* ============================================================
+   GLOBAL DEĞİŞKENLER
+   ============================================================ */
+let currentUser = null;
+let S = null; // Farm state (backend'den gelecek)
+let loadPresetAmount = 0;
+let paparaPendingAmount = 0;
+let currentTab = "farm";
+let renderedAnimals = {};
+let dashPeriod = "hourly";
+let selectedAvatar = "🐄";
+let refreshInterval = null;
+
+const SEC_PER_HOUR = 3600;
+const SEC_PER_DAY = 86400;
+const SEC_PER_MONTH = SEC_PER_DAY * 30;
+const ANIMAL_LIFE_SEC = SEC_PER_DAY * 30;
+const MIN_WITHDRAW = 500;
+const MIN_LOAD = 50;
+const WELCOME_BONUS = 150;
+const PAPARA_NUMBER = "9789310466";
+const BASE_FEED_CAP = 100;
+const AVATARS = ["🐔","🐝","🐑","🐄","🐓","🐎","🐖","🐐","🐕","🐈","🦁","🐯","🐻","🦊","🐼","🐨","🦉","🦅"];
+
+const ANIMALS = {
+  tavuk: { name:"Tavuk", emoji:"🐔", svg:"svg-tavuk", price:150,  monthly:300,   product:"yumurta", feedPerDay:0.2, color:"#f59e0b" },
+  ari:   { name:"Arı",   emoji:"🐝", svg:"svg-ari",   price:500,  monthly:1500,  product:"bal",     feedPerDay:0.1, color:"#d97706" },
+  koyun: { name:"Koyun", emoji:"🐑", svg:"svg-koyun", price:2000, monthly:5000,  product:"sut",     feedPerDay:1,   color:"#3b82f6" },
+  inek:  { name:"İnek",  emoji:"🐄", svg:"svg-inek",  price:5000, monthly:15000, product:"peynir",  feedPerDay:3,   color:"#a855f7" },
+};
+const PRODUCTS = {
+  yumurta: { name:"Yumurta", emoji:"🥚", base:2,  unit:"adet", color:"#f59e0b" },
+  bal:     { name:"Bal",     emoji:"🍯", base:10, unit:"kg",   color:"#d97706" },
+  sut:     { name:"Süt",     emoji:"🥛", base:8,  unit:"L",    color:"#3b82f6" },
+  peynir:  { name:"Peynir",  emoji:"🧀", base:25, unit:"kg",   color:"#a855f7" },
+};
+
+/* ============================================================
+   YARDIMCILAR
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const fmt = n => Math.round(n).toLocaleString("tr-TR");
+const fmtDec = (n, d=4) => Number(n).toFixed(d).replace(".", ",");
+const fmtLive = n => Number(n).toFixed(4).replace(".", ",");
+const escapeHtml = s => String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+function normalizePhone(p){ return (p||"").replace(/\D/g, "").slice(-10); }
+function formatPhoneDisplay(p){
+  const d = normalizePhone(p);
+  if(d.length !== 10) return p;
+  return `0${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6,8)} ${d.slice(8,10)}`;
+}
+
+/* ============================================================
+   TEMA & SES
+   ============================================================ */
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  const icon = document.getElementById("themeIcon");
+  if(icon) icon.textContent = theme === "light" ? "☀️" : "🌙";
+  try { localStorage.setItem("ciftlik_theme", theme); } catch(e){}
+  if(typeof incomeChart !== "undefined" && incomeChart) renderCharts();
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute("data-theme") || "dark";
+  applyTheme(cur === "dark" ? "light" : "dark"); playSound("click");
+}
+function initTheme(){ let t = "dark"; try { t = localStorage.getItem("ciftlik_theme") || "dark"; } catch(e){} applyTheme(t); }
+
+let audioCtx = null; let soundEnabled = true;
+try { soundEnabled = localStorage.getItem("ciftlik_sound") !== "0"; } catch(e){}
+function getAudioCtx(){ if(!audioCtx){ try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } return audioCtx; }
+function playSound(type){
+  if(!soundEnabled) return;
+  const ctx = getAudioCtx(); if(!ctx) return;
+  if(ctx.state === "suspended") ctx.resume();
+  const now = ctx.currentTime; const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  if(type === "click"){ osc.type="sine"; osc.frequency.value=800; gain.gain.setValueAtTime(.08,now); gain.gain.exponentialRampToValueAtTime(.001,now+.08); osc.start(now); osc.stop(now+.08); }
+  else if(type === "buy"){ osc.type="triangle"; osc.frequency.setValueAtTime(523,now); osc.frequency.exponentialRampToValueAtTime(784,now+.12); gain.gain.setValueAtTime(.12,now); gain.gain.exponentialRampToValueAtTime(.001,now+.25); osc.start(now); osc.stop(now+.25); }
+  else if(type === "sell"){ osc.type="sine"; osc.frequency.setValueAtTime(784,now); osc.frequency.exponentialRampToValueAtTime(1047,now+.15); gain.gain.setValueAtTime(.12,now); gain.gain.exponentialRampToValueAtTime(.001,now+.3); osc.start(now); osc.stop(now+.3); }
+  else if(type === "error"){ osc.type="sawtooth"; osc.frequency.setValueAtTime(200,now); osc.frequency.exponentialRampToValueAtTime(100,now+.2); gain.gain.setValueAtTime(.1,now); gain.gain.exponentialRampToValueAtTime(.001,now+.2); osc.start(now); osc.stop(now+.2); }
+  else if(type === "levelup"){ osc.type="triangle"; osc.frequency.setValueAtTime(523,now); osc.frequency.setValueAtTime(659,now+.1); osc.frequency.setValueAtTime(784,now+.2); osc.frequency.setValueAtTime(1047,now+.3); gain.gain.setValueAtTime(.1,now); gain.gain.exponentialRampToValueAtTime(.001,now+.5); osc.start(now); osc.stop(now+.5); }
+}
+
+/* ============================================================
+   AUTH & OTURUM
+   ============================================================ */
+function showLogin(){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.auth === 'login'));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  $("#loginForm").classList.add('active'); hideMsg();
+}
+function showRegister(){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.auth === 'register'));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  $("#registerForm").classList.add('active'); hideMsg();
+}
+function showForgot(){
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  $("#forgotForm").classList.add('active'); hideMsg();
+}
+function hideMsg(){ ["loginMsg","registerMsg","forgotMsg"].forEach(id=>{ const el = $("#"+id); if(el){ el.classList.remove("show"); el.textContent=""; } }); }
+function showMsg(id, msg, isErr=false){ const el = $("#"+id); el.textContent = msg; el.className = "auth-msg show " + (isErr?"err":"ok"); }
+
+function initAvatarGrid(){
+  const g1 = $("#avatarGrid"); const g2 = $("#avatarGridProfile");
+  if(g1){
+    g1.innerHTML = "";
+    AVATARS.forEach(a=>{
+      const d = document.createElement("div");
+      d.className = "avatar-opt" + (a===selectedAvatar ? " sel" : "");
+      d.textContent = a;
+      d.onclick = ()=>{ selectedAvatar = a; initAvatarGrid(); playSound("click"); };
+      g1.appendChild(d);
+    });
+  }
+  if(g2){
+    g2.innerHTML = "";
+    AVATARS.forEach(a=>{
+      const d = document.createElement("div");
+      d.className = "avatar-opt" + (a===currentUser?.avatar ? " sel" : "");
+      d.textContent = a;
+      d.onclick = ()=>{ 
+        // Not: Backend'de avatar güncelleme endpoint'i yok, şimdilik sadece arayüzde değiştiriyoruz.
+        currentUser.avatar = a;
+        $("#userAvatar").textContent = a;
+        closeAvatarModal();
+        renderProfile();
+        toast("✅ Avatar güncellendi (Sadece bu oturum için)");
+      };
+      g2.appendChild(d);
+    });
+  }
+}
+
+async function doRegister(e){
+  e.preventDefault();
+  const name = $("#regName").value.trim();
+  const phone = normalizePhone($("#regPhone").value.trim());
+  const pass = $("#regPass").value;
+  const pass2 = $("#regPass2").value;
+  
+  if(name.length < 3){ showMsg("registerMsg","❌ Ad soyad en az 3 karakter olmalı", true); playSound("error"); return; }
+  if(phone.length !== 10){ showMsg("registerMsg","❌ Geçerli bir telefon girin", true); playSound("error"); return; }
+  if(pass.length < 4){ showMsg("registerMsg","❌ Şifre en az 4 karakter olmalı", true); playSound("error"); return; }
+  if(pass !== pass2){ showMsg("registerMsg","❌ Şifreler uyuşmuyor", true); playSound("error"); return; }
+
+  try {
+    const data = await apiRequest("/register", "POST", { name, phone, password: pass, avatar: selectedAvatar });
+    showMsg("registerMsg",`✅ Kayıt başarılı! Hoş geldin bonusu eklendi.`, false);
+    playSound("levelup");
+    localStorage.setItem("ciftlik_token", data.token);
+    authToken = data.token;
+    setTimeout(()=>{
+      $("#regName").value=""; $("#regPhone").value=""; $("#regPass").value=""; $("#regPass2").value="";
+      startSession(data.token);
+    }, 900);
+  } catch(err) {
+    showMsg("registerMsg", "❌ " + err.message, true); playSound("error");
+  }
+}
+
+async function doLogin(e){
+  e.preventDefault();
+  const phone = normalizePhone($("#loginPhone").value);
+  const pass = $("#loginPass").value;
+  if(!phone || !pass){ showMsg("loginMsg","❌ Telefon ve şifre gerekli", true); playSound("error"); return; }
+
+  try {
+    const data = await apiRequest("/login", "POST", { phone, password: pass });
+    showMsg("loginMsg","✅ Giriş başarılı...", false); playSound("click");
+    localStorage.setItem("ciftlik_token", data.token);
+    authToken = data.token;
+    setTimeout(()=>{ $("#loginPhone").value=""; $("#loginPass").value=""; startSession(data.token); }, 400);
+  } catch(err) {
+    showMsg("loginMsg", "❌ " + err.message, true); playSound("error");
+  }
+}
+
+function doForgot(e){
+  e.preventDefault();
+  showMsg("forgotMsg", "❌ Bu özellik backend'de henüz aktif değil. Lütfen destek talebi oluşturun.", true);
+}
+
+function openLogoutModal(){ $("#logoutModal").classList.add("show"); $("#userMenu").classList.remove("show"); }
+function closeLogoutModal(){ $("#logoutModal").classList.remove("show"); }
+function doLogout(){ 
+  closeLogoutModal(); 
+  localStorage.removeItem("ciftlik_token");
+  authToken = null; currentUser = null; S = null;
+  if(refreshInterval) clearInterval(refreshInterval);
+  $("#authScreen").style.display = "grid";
+  $("#app").classList.remove("show");
+  $("#supportFab").classList.remove("show");
+  showLogin();
+}
+
+async function startSession(token) {
+  authToken = token;
+  try {
+    const data = await apiRequest("/farm-state");
+    currentUser = data.user;
+    S = data.farm;
+    
+    // Gelen verileri S objesine uyarla
+    S.owned = { tavuk: [], ari: [], koyun: [], inek: [] };
+    data.animals.forEach(a => {
+      if(S.owned[a.type]) S.owned[a.type].push(Number(a.age_seconds));
+    });
+    
+    S.inventory = { yumurta: 0, bal: 0, sut: 0, peynir: 0 };
+    data.inventory.forEach(i => { S.inventory[i.product] = Number(i.amount); });
+    
+    S.prices = { yumurta:2, bal:10, sut:8, peynir:25 };
+    S.pricesPrev = { ...S.prices };
+    S.history = data.history.map(h => ({
+      id: h.id, type: h.type, desc: h.description, amount: Number(h.amount), status: h.status, date: h.created_at
+    }));
+    S.totalSold = Number(S.total_sold || 0);
+    S.totalSpent = Number(S.total_spent || 0);
+    S.totalLoaded = Number(S.total_loaded || 0);
+    S.totalWithdrawn = Number(S.total_withdrawn || 0);
+    S.wallet = Number(S.wallet || 0);
+    S.feed = Number(S.feed || 0);
+    S.feedCap = Number(S.feed_cap || 100);
+    S.feedUsed = Number(S.feed_used || 0);
+    S.feedBought = Number(S.feed_bought || 0);
+    
+    S.qty = { tavuk:1, ari:1, koyun:1, inek:1 };
+    S.pendingWithdraws = data.withdrawRequests.filter(w => w.status === "pending");
+    S.salesByHour = Array(7).fill(null).map(()=>Array(24).fill(0));
+    S.productSales = { yumurta:0, bal:0, sut:0, peynir:0 };
+    S.incomeHistory = [];
+    S.incomeHistoryDaily = [];
+    S.incomeHistoryMonthly = [];
+    S.weeklyEarnings = [];
+    
+    $("#authScreen").style.display = "none";
+    $("#app").classList.add("show");
+    $("#supportFab").classList.add("show");
+    $("#userAvatar").textContent = currentUser.avatar || "🐄";
+    $("#userName").innerHTML = `${currentUser.name}<small>${formatPhoneDisplay(currentUser.phone)}</small>`;
+    
+    updateUI();
+    switchTab("farm");
+    
+    // Canlı veri yenileme (5 saniyede bir backend'den güncel durumu çek)
+    if(refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(syncFarmState, 5000);
+    
+  } catch (err) {
+    toast("❌ Oturum başlatılamadı: " + err.message, true);
+    doLogout();
+  }
+}
+
+async function syncFarmState() {
+  if (!authToken || !S) return;
+  try {
+    const data = await apiRequest("/farm-state");
+    currentUser = data.user;
+    
+    // Sadece gerekli alanları güncelle (tick bazlı)
+    S.wallet = Number(data.farm.wallet || 0);
+    S.feed = Number(data.farm.feed || 0);
+    S.totalSold = Number(data.farm.total_sold || 0);
+    S.totalSpent = Number(data.farm.total_spent || 0);
+    S.totalLoaded = Number(data.farm.total_loaded || 0);
+    S.totalWithdrawn = Number(data.farm.total_withdrawn || 0);
+    
+    // Hayvanlar
+    S.owned = { tavuk: [], ari: [], koyun: [], inek: [] };
+    data.animals.forEach(a => { if(S.owned[a.type]) S.owned[a.type].push(Number(a.age_seconds)); });
+    
+    // Envanter
+    S.inventory = { yumurta: 0, bal: 0, sut: 0, peynir: 0 };
+    data.inventory.forEach(i => { S.inventory[i.product] = Number(i.amount); });
+    
+    // Geçmiş (sadece son 50)
+    S.history = data.history.slice(0, 50).map(h => ({
+      id: h.id, type: h.type, desc: h.description, amount: Number(h.amount), status: h.status, date: h.created_at
+    }));
+    
+    S.pendingWithdraws = data.withdrawRequests.filter(w => w.status === "pending");
+    
+    updateLiveDOM();
+    if(currentTab === "farm") renderFarmScene();
+    if(currentTab === "stats") renderDashboardLive();
+    if(currentTab === "inventory") renderInventory();
+    
+  } catch(e) {
+    console.error("Sync hatası:", e);
+  }
+}
+
+function tryRestoreSession(){
+  if(!authToken) return false;
+  startSession(authToken);
+  return true;
+}
+
+/* ============================================================
+   AKTİF HAYVAN SAYILARI
+   ============================================================ */
+function aliveCount(key){ 
+  if(!S || !S.owned[key]) return 0;
+  return S.owned[key].filter(a => a < ANIMAL_LIFE_SEC).length; 
+}
+function totalAlive(){ return ["tavuk","ari","koyun","inek"].reduce((a,k)=>a+aliveCount(k),0); }
+function perSecond(key){ return ANIMALS[key].monthly / SEC_PER_MONTH; }
+function perHour(key){ return ANIMALS[key].monthly / (30 * 24); }
+function perDay(key){ return ANIMALS[key].monthly / 30; }
+function totalPerSecond(){ let s=0; for(const k in ANIMALS) s += aliveCount(k) * perSecond(k); return s; }
+function totalPerHour(){ return totalPerSecond() * SEC_PER_HOUR; }
+function inventoryValue(){ let v=0; if(!S) return 0; for(const p in PRODUCTS) v += (S.inventory[p]||0) * S.prices[p]; return v; }
+function feedNeededPerDay(){ let f=0; for(const k in ANIMALS) f += aliveCount(k) * ANIMALS[k].feedPerDay; return f; }
+
+/* ============================================================
+   AKSİYONLAR (API ÇAĞRILARI)
+   ============================================================ */
+function changeQty(key, d){ if(!S) return; S.qty[key] = Math.max(1, (S.qty[key]||1) + d); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); playSound("click"); }
+function setQty(key, val){ if(!S) return; S.qty[key] = Math.max(1, parseInt(val)||1); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); }
+function updateBuyButton(key){ if(!S) return; const btn = $("#buy-"+key); if(!btn) return; const cost = ANIMALS[key].price * S.qty[key]; btn.textContent = `🛒 Yatırım Yap (${fmt(cost)} ₺)`; }
+
+async function buyAnimal(key){
+  if(!S) return;
+  const qty = S.qty[key] || 1;
+  const btn = $("#buy-"+key);
+  if(btn) btn.disabled = true;
+  
+  try {
+    const res = await apiRequest("/buy-animal", "POST", { type: key, qty });
+    toast(`✅ ${res.message}`, false, true);
+    playSound("buy");
+    const card = $("#card-"+key); if(card){ card.classList.remove("buying"); void card.offsetWidth; card.classList.add("buying"); }
+    await syncFarmState();
+  } catch(err) {
+    toast("❌ " + err.message, true);
+    playSound("error");
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+}
+
+async function sellProduct(prod){
+  if(!S) return;
+  const have = S.inventory[prod] || 0;
+  if(have <= 0){ toast("❌ Satacak ürün yok!", true); playSound("error"); return; }
+  
+  try {
+    const res = await apiRequest("/sell-product", "POST", { product: prod });
+    toast(`💰 ${res.message} → +${fmt(res.earned)} ₺`, false, true);
+    playSound("sell"); 
+    showFlyingMoney("+" + fmt(res.earned) + " ₺", prod);
+    const card = document.querySelector(`[data-prod="${prod}"]`);
+    if(card){ card.classList.remove("selling"); void card.offsetWidth; card.classList.add("selling"); }
+    await syncFarmState();
+  } catch(err) {
+    toast("❌ " + err.message, true); playSound("error");
+  }
+}
+
+async function buyFeed(amount){
+  if(!S) return;
+  try {
+    const res = await apiRequest("/buy-feed", "POST", { amount });
+    toast(`🌾 ${res.message}`, false, true);
+    playSound("click");
+    await syncFarmState();
+  } catch(err) {
+    toast("❌ " + err.message, true); playSound("error");
+  }
+}
+
+async function requestWithdraw(){
+  if(!S) return;
+  const bank = $("#wBank").value; const ibanRaw = $("#wIban").value.trim(); const name = $("#wName").value.trim(); const amount = parseFloat($("#wAmount").value);
+  if(!bank){ toast("❌ Lütfen banka seçin", true); playSound("error"); return; }
+  if(!ibanRaw){ toast("❌ Lütfen IBAN girin", true); playSound("error"); return; }
+  const iban = ibanRaw.replace(/\s/g, "").toUpperCase();
+  if(!iban.startsWith("TR") || iban.length !== 26){ toast("❌ Geçerli bir TR IBAN girin", true); playSound("error"); return; }
+  if(!name || name.length < 3){ toast("❌ Lütfen ad soyad girin", true); playSound("error"); return; }
+  if(!amount || amount < MIN_WITHDRAW){ toast(`❌ Minimum çekim tutarı ${MIN_WITHDRAW} ₺`, true); playSound("error"); return; }
+  
+  try {
+    await apiRequest("/withdraw", "POST", { amount, bank, iban, name });
+    $("#withdrawModalText").innerHTML = `<b>${fmt(amount)} ₺</b> tutarındaki ödeme talebiniz alınmıştır.<br><br>Ödemeniz en kısa sürede hesabınıza aktarılacaktır.`;
+    $("#withdrawModal").classList.add("show");
+    $("#wBank").value=""; $("#wIban").value=""; $("#wName").value=""; $("#wAmount").value="";
+    playSound("sell");
+    await syncFarmState();
+  } catch(err) {
+    toast("❌ " + err.message, true); playSound("error");
+  }
+}
+function closeWithdrawModal(){ $("#withdrawModal").classList.remove("show"); }
+
+/* ============================================================
+   BAKİYE YÜKLEME & PAPARA
+   ============================================================ */
+function openPaparaModal(){
+  let amt = parseFloat($("#loadAmount").value) || loadPresetAmount;
+  if(!amt || amt < MIN_LOAD){ toast(`❌ Minimum yükleme tutarı ${MIN_LOAD} ₺`, true); playSound("error"); return; }
+  paparaPendingAmount = amt;
+  $("#paparaNumText").textContent = PAPARA_NUMBER;
+  $("#paparaAmt").textContent = fmt(amt) + " ₺";
+  $("#paparaTotal").textContent = fmt(amt) + " ₺";
+  $("#paparaWarnAmt").textContent = fmt(amt);
+  $("#paparaModal").classList.add("show"); playSound("click");
+}
+function closePaparaModal(){ $("#paparaModal").classList.remove("show"); }
+function copyPapara(){ navigator.clipboard?.writeText(PAPARA_NUMBER).then(()=>toast("📋 Papara numarası kopyalandı")).catch(()=>toast("Papara: " + PAPARA_NUMBER)); playSound("click"); }
+
+async function confirmPaparaPayment(){
+  if(!paparaPendingAmount || paparaPendingAmount < MIN_LOAD){ closePaparaModal(); return; }
+  const amt = paparaPendingAmount;
+  
+  try {
+    await apiRequest("/load-request", "POST", { amount: amt });
+    closePaparaModal();
+    $("#loadAmount").value = "";
+    document.querySelectorAll('.load-preset').forEach(p=>p.classList.remove('sel'));
+    loadPresetAmount = 0; paparaPendingAmount = 0;
+    $("#pendingModalText").innerHTML = `<b>${fmt(amt)} ₺</b> tutarındaki bakiye yükleme talebiniz alınmıştır.<br><br>Ödemeniz admin tarafından kontrol edildikten sonra bakiyenize aktarılacaktır.`;
+    $("#pendingModal").classList.add("show");
+    playSound("click");
+    await syncFarmState();
+  } catch(err) {
+    toast("❌ " + err.message, true); playSound("error");
+  }
+}
+function closePendingModal(){ $("#pendingModal").classList.remove("show"); }
+
+/* ============================================================
+   DESTEK TALEBİ
+   ============================================================ */
+function openSupportModal(){
+  playSound("click");
+  $("#supportSubject").value = "";
+  $("#supportMessage").value = "";
+  $("#supportModal").classList.add("show");
+  setTimeout(()=>$("#supportSubject").focus(), 100);
+}
+function closeSupportModal(){ $("#supportModal").classList.remove("show"); }
+
+async function submitSupportTicket(){
+  const subject = $("#supportSubject").value;
+  const message = $("#supportMessage").value.trim();
+  if(!subject){ toast("❌ Lütfen konu seçin", true); playSound("error"); return; }
+  if(!message || message.length < 10){ toast("❌ Mesajınız en az 10 karakter olmalı", true); playSound("error"); return; }
+  
+  try {
+    await apiRequest("/support-ticket", "POST", { subject, message });
+    closeSupportModal();
+    toast("✅ Destek talebiniz gönderildi!", false, true);
+    playSound("levelup");
+    await syncFarmState();
+    switchTab("support");
+  } catch(err) {
+    toast("❌ " + err.message, true); playSound("error");
+  }
+}
+
+/* ============================================================
+   RENDER FONKSİYONLARI
+   ============================================================ */
+function updateLiveDOM(){
+  if(!S) return;
+  const walletEl = $("#wallet"); if(walletEl) walletEl.textContent = fmt(S.wallet) + " ₺";
+  const liveEl = $("#sLive"); if(liveEl) liveEl.textContent = fmtLive(inventoryValue()) + " ₺";
+  const hourlyEl = $("#sHourly"); if(hourlyEl) hourlyEl.textContent = "Anlık üretim: " + fmt(totalPerHour()) + " ₺/sa";
+  const earnedEl = $("#sEarned"); if(earnedEl) earnedEl.textContent = fmt(S.totalSold) + " ₺";
+  const profitEl = $("#sProfit"); if(profitEl) profitEl.textContent = "Net: " + fmt(S.totalSold - S.totalSpent) + " ₺";
+}
+
+function updateUI(){
+  if(!S) return;
+  $("#wallet").textContent = fmt(S.wallet) + " ₺";
+  const wb = $("#wBalance"); if(wb) wb.textContent = fmt(S.wallet) + " ₺";
+  $("#sAnimals").textContent = totalAlive();
+  $("#sCap").textContent = "Sınırsız kapasite";
+  $("#sLive").textContent = fmtLive(inventoryValue()) + " ₺";
+  $("#sHourly").textContent = "Anlık üretim: " + fmt(totalPerHour()) + " ₺/sa";
+  $("#sFeed").textContent = fmt(S.feed) + " / " + fmt(S.feedCap);
+  const feedDays = feedNeededPerDay() > 0 ? (S.feed / feedNeededPerDay()).toFixed(1) : "∞";
+  $("#sFeedDays").textContent = feedDays + " gün yeter" + (S.feed <= 0 ? " ⚠️ YEM BİTTİ!" : "");
+  $("#sEarned").textContent = fmt(S.totalSold) + " ₺";
+  $("#sProfit").textContent = "Net: " + fmt(S.totalSold - S.totalSpent) + " ₺";
+
+  if(currentTab === "farm"){ renderFarm(); renderFarmScene(); }
+  if(currentTab === "inventory") renderInventory();
+  if(currentTab === "market") renderMarket();
+  if(currentTab === "history") renderHistory();
+  if(currentTab === "stats") renderDashboard();
+  if(currentTab === "profile") renderProfile();
+  if(currentTab === "support") renderSupport();
+  if(currentTab === "withdraw"){ const wb2 = $("#wBalance"); if(wb2) wb2.textContent = fmt(S.wallet) + " ₺"; }
+}
+
+function renderFarmScene(){
+  const g = $("#farmAnimals"); if(!g || !S) return;
+  const counts = { tavuk: aliveCount("tavuk"), ari: aliveCount("ari"), koyun: aliveCount("koyun"), inek: aliveCount("inek") };
+  let total = counts.tavuk + counts.ari + counts.koyun + counts.inek;
+  const maxIcons = 12; let icons = [];
+  if(total <= maxIcons){ for(const k in counts) for(let i=0; i<counts[k]; i++) icons.push(k); }
+  else { for(const k in counts){ const n = Math.round(counts[k] / total * maxIcons); for(let i=0; i<Math.max(1,n); i++) icons.push(k); } icons = icons.slice(0, maxIcons); }
+  const signature = icons.join(",");
+  if(g.dataset.sig === signature){
+    const badge = $("#sceneBadge");
+    if(badge){ if(total === 0) badge.textContent = "🌾 Çiftliğin boş — hayvan al!"; else badge.textContent = `🌾 Çiftliğinde ${total} aktif hayvan yaşıyor`; }
+    return;
+  }
+  g.dataset.sig = signature; g.innerHTML = "";
+  icons.forEach((k, idx)=>{
+    const el = document.createElement("div");
+    el.className = "scene-animal"; el.style.animationDelay = (idx * 0.3) + "s";
+    el.innerHTML = `<svg width="52" height="52"><use href="#${ANIMALS[k].svg}"/></svg>`;
+    g.appendChild(el);
+  });
+  const badge = $("#sceneBadge");
+  if(badge){ if(total === 0) badge.textContent = "🌾 Çiftliğin boş — hayvan al!"; else badge.textContent = `🌾 Çiftliğinde ${total} aktif hayvan yaşıyor`; }
+}
+
+function renderFarm(){
+  const g = $("#animalGrid"); if(!g || !S) return;
+  if(g.children.length === 0){
+    for(const key in ANIMALS){
+      const a = ANIMALS[key];
+      const card = document.createElement("div");
+      card.className = "card"; card.id = "card-"+key;
+      card.innerHTML = `
+        <div class="badge" id="cap-${key}">0</div>
+               <div class="head"><div class="avatar"><svg><use href="#${a.svg}"/></svg></div><div><h3>${a.name}</h3><div class="price">${fmt(a.price)} ₺ / adet</div></div></div>
+        <div class="rows" id="rows-${key}"></div>
+        <div class="life-bar" id="lifebar-${key}"><i style="width:0%"></i></div>
+        <div class="qty">
+          <button type="button" onclick="changeQty('${key}',-1)">−</button>
+          <input type="number" id="qty-${key}" value="${S.qty[key]}" min="1" oninput="setQty('${key}', this.value)">
+          <button type="button" onclick="changeQty('${key}',1)">+</button>
+        </div>
+        <button type="button" class="btn" id="buy-${key}" onclick="buyAnimal('${key}')">🛒 Yatırım Yap</button>
+      `;
+      g.appendChild(card);
+    }
+  }
+  for(const key in ANIMALS){
+    const a = ANIMALS[key];
+    const alive = aliveCount(key); const dead = S.owned[key].length - alive;
+    const capEl = $("#cap-"+key); if(capEl) capEl.textContent = `${alive} aktif`;
+    const ages = S.owned[key];
+    const avgAge = ages.length ? ages.reduce((a,b)=>a+b,0)/ages.length : 0;
+    const avgAgeDays = avgAge / SEC_PER_DAY;
+    const lifePct = Math.min(100, (avgAge / ANIMAL_LIFE_SEC) * 100);
+    const rowsEl = $("#rows-"+key);
+    if(rowsEl) rowsEl.innerHTML = `
+      <div><span>Ürün</span><span>${PRODUCTS[a.product].emoji} ${PRODUCTS[a.product].name}</span></div>
+      <div><span>⏱️ Saniyelik</span><span class="green">${fmtDec(perSecond(key), 6)} ₺</span></div>
+      <div><span>🕐 Saatlik</span><span class="green">${fmtDec(perHour(key), 2)} ₺</span></div>
+      <div><span>📅 Günlük</span><span class="green">${fmt(perDay(key))} ₺</span></div>
+      <div><span>📆 Aylık</span><span class="green">${fmt(a.monthly)} ₺</span></div>
+      <div><span>🌾 Günlük Yem</span><span>${a.feedPerDay} birim</span></div>
+      <div><span>🐾 Aktif / Biten</span><span>${alive} / ${dead}</span></div>
+      <div><span>Ortalama Yaş</span><span>${avgAgeDays.toFixed(2)} / 30 gün</span></div>
+    `;
+    const bar = $("#lifebar-"+key);
+    if(bar){ bar.className = "life-bar" + (lifePct > 80 ? " warn" : "") + (alive === 0 && ages.length > 0 ? " dead" : ""); bar.querySelector("i").style.width = lifePct + "%"; }
+    const inp = $("#qty-"+key); if(inp && document.activeElement !== inp) inp.value = S.qty[key];
+    updateBuyButton(key);
+  }
+}
+
+function renderInventory(){
+  const fs = $("#feedSummary"); if(!fs || !S) return;
+  const aliveByKey = {}; for(const k in ANIMALS) aliveByKey[k] = aliveCount(k);
+  fs.innerHTML = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="head"><div class="avatar"><svg width="50" height="50"><use href="#svg-tavuk"/></svg></div><div><h3>Yem Durumu</h3><div class="price">Tüm Hayvanlar İçin</div></div></div>
+      <div class="rows">
+        <div><span>Toplam Yem Stoğu</span><span class="gold">${fmt(S.feed)} / ${fmt(S.feedCap)} birim</span></div>
+        <div><span>Toplam Alınan Yem</span><span>${fmt(S.feedBought)} birim</span></div>
+        <div><span>Toplam Kullanılan Yem</span><span>${fmt(S.feedUsed)} birim</span></div>
+        <div><span>Günlük Tüketim</span><span>${feedNeededPerDay().toFixed(2)} birim</span></div>
+      </div>
+      <div class="rows" style="margin-top:10px">
+        <div><span>🐔 Tavuk (${aliveByKey.tavuk})</span><span>${(aliveByKey.tavuk * ANIMALS.tavuk.feedPerDay).toFixed(2)} yem/gün</span></div>
+        <div><span>🐝 Arı (${aliveByKey.ari})</span><span>${(aliveByKey.ari * ANIMALS.ari.feedPerDay).toFixed(2)} yem/gün</span></div>
+        <div><span>🐑 Koyun (${aliveByKey.koyun})</span><span>${(aliveByKey.koyun * ANIMALS.koyun.feedPerDay).toFixed(2)} yem/gün</span></div>
+        <div><span>🐄 İnek (${aliveByKey.inek})</span><span>${(aliveByKey.inek * ANIMALS.inek.feedPerDay).toFixed(2)} yem/gün</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button type="button" class="btn blue" onclick="buyFeed(10)">10 🌾 Al</button>
+        <button type="button" class="btn blue" onclick="buyFeed(50)">50 🌾 Al</button>
+        <button type="button" class="btn blue" onclick="buyFeed(200)">200 🌾 Al</button>
+      </div>
+    </div>
+  `;
+  const g = $("#invGrid"); g.innerHTML = "";
+  for(const p in PRODUCTS){
+    const prod = PRODUCTS[p]; const amt = S.inventory[p] || 0;
+    const price = S.prices[p]; const total = amt * price;
+    const card = document.createElement("div");
+    card.className = "inv-card"; card.dataset.prod = p;
+    card.innerHTML = `
+      <div class="emoji">${prod.emoji}</div>
+      <div class="nm">${prod.name}</div>
+      <div class="amt">${amt.toFixed(2)} ${prod.unit}</div>
+      <div class="prc">Fiyat: <b>${price.toFixed(2)} ₺</b><br>Değer: <b>${fmt(total)} ₺</b></div>
+      <button type="button" class="btn gold" onclick="sellProduct('${p}')" ${amt<=0?'disabled':''}>💰 Hepsini Sat</button>
+    `;
+    g.appendChild(card);
+  }
+}
+
+function renderMarket(){
+  const g = $("#marketList"); if(!g || !S) return; g.innerHTML = "";
+  for(const p in PRODUCTS){
+    const prod = PRODUCTS[p]; const cur = S.prices[p]; const prev = S.pricesPrev[p];
+    const up = cur >= prev; const pct = prev > 0 ? ((cur-prev)/prev*100) : 0;
+    const row = document.createElement("div");
+    row.className = "market-row";
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-size:1.6rem">${prod.emoji}</span><div><div style="font-weight:700">${prod.name}</div><div style="font-size:.8rem;color:var(--muted)">Temel: ${prod.base} ₺</div></div></div>
+      <div style="display:flex;align-items:center;gap:16px"><div style="text-align:right"><div style="font-weight:800;color:var(--gold)">${cur.toFixed(2)} ₺</div></div><div class="trend ${up?'up':'down'}">${up?"▲":"▼"} ${Math.abs(pct).toFixed(1)}%</div></div>
+    `;
+    g.appendChild(row);
+  }
+}
+
+function renderHistory(){
+  const g = $("#historyList"); if(!g || !S) return;
+  if(S.history.length === 0 && S.pendingWithdraws.length === 0){
+    g.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">Henüz işlem geçmişi yok.</div>`; return;
+  }
+  g.innerHTML = "";
+  for(const w of S.pendingWithdraws){
+    const div = document.createElement("div");
+    div.className = "hist-item";
+    div.innerHTML = `
+      <div class="hinfo"><div class="ht">⏳ Ödeme Talebi • ${w.bank}</div><div class="hd">Talep No: ${w.id} • ${new Date(w.created_at).toLocaleString("tr-TR")}</div></div>
+      <div class="hval pend">−${fmt(w.amount)} ₺<br><span style="font-size:.7rem">BEKLİYOR</span></div>
+    `;
+    g.appendChild(div);
+  }
+  for(const h of S.history){
+    const div = document.createElement("div");
+    div.className = "hist-item";
+    const sign = h.amount >= 0 ? "+" : "−";
+    const cls = h.amount > 0 ? "in" : "out";
+    const icons = { buy:"🛒", sell:"💰", feed:"🌾", withdraw:"🏦", bonus:"🎁", load:"💳" };
+    div.innerHTML = `
+      <div class="hinfo"><div class="ht">${icons[h.type]||"•"} ${h.desc}</div><div class="hd">${new Date(h.date).toLocaleString("tr-TR")}</div></div>
+      <div class="hval ${cls}">${h.amount === 0 ? "BEKLİYOR" : sign+fmt(Math.abs(h.amount))+" ₺"}</div>
+    `;
+    g.appendChild(div);
+  }
+}
+
+function renderProfile(){
+  if(!currentUser || !S) return;
+  const u = currentUser;
+  const joined = new Date(u.created_at || new Date()).toLocaleDateString("tr-TR", {day:"numeric",month:"long",year:"numeric"});
+  $("#profileHeader").innerHTML = `
+    <div class="profile-avatar-big">${u.avatar || "🐄"}</div>
+    <div class="profile-info">
+      <h2>${u.name}</h2>
+      <div class="meta">📱 ${formatPhoneDisplay(u.phone)}</div>
+      <div class="meta">🆔 Üye No: ${normalizePhone(u.phone).slice(-6)}</div>
+      <div class="joined">📅 Üyelik: ${joined}</div>
+      <button class="avatar-change-btn" onclick="openAvatarModal()" type="button">🎨 Avatarı Değiştir</button>
+    </div>
+  `;
+  
+  let hourlyT = 0; for(const k in ANIMALS) hourlyT += aliveCount(k) * perHour(k);
+  
+  $("#profileGrid").innerHTML = `
+    <div class="profile-card">
+      <h3>💰 Finansal Özet</h3>
+      <div class="profile-stat"><span>Çekilebilir Bakiye</span><span class="green">${fmt(S.wallet)} ₺</span></div>
+      <div class="profile-stat"><span>Toplam Satış</span><span>${fmt(S.totalSold)} ₺</span></div>
+      <div class="profile-stat"><span>Toplam Harcama</span><span>${fmt(S.totalSpent)} ₺</span></div>
+      <div class="profile-stat"><span>Toplam Yükleme</span><span class="blue">${fmt(S.totalLoaded || 0)} ₺</span></div>
+      <div class="profile-stat"><span>Çekilen</span><span>${fmt(S.totalWithdrawn)} ₺</span></div>
+    </div>
+    <div class="profile-card">
+      <h3>🐾 Çiftlik Özeti</h3>
+      <div class="profile-stat"><span>Toplam Hayvan</span><span>${totalAlive()} adet</span></div>
+      <div class="profile-stat"><span>🐔 Tavuk</span><span>${aliveCount('tavuk')}</span></div>
+      <div class="profile-stat"><span>🐝 Arı</span><span>${aliveCount('ari')}</span></div>
+      <div class="profile-stat"><span>🐑 Koyun</span><span>${aliveCount('koyun')}</span></div>
+      <div class="profile-stat"><span>🐄 İnek</span><span>${aliveCount('inek')}</span></div>
+    </div>
+    <div class="profile-card">
+      <h3>📦 Envanter & Üretim</h3>
+      <div class="profile-stat"><span>Envanter Değeri</span><span class="gold">${fmt(inventoryValue())} ₺</span></div>
+      <div class="profile-stat"><span>Saatlik Üretim</span><span class="green">${fmt(hourlyT)} ₺</span></div>
+      <div class="profile-stat"><span>Günlük Üretim</span><span class="green">${fmt(hourlyT*24)} ₺</span></div>
+      <div class="profile-stat"><span>Yem Stoğu</span><span>${fmt(S.feed)} birim</span></div>
+      <div class="profile-stat"><span>Bekleyen Çekim</span><span>${S.pendingWithdraws.length} adet</span></div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function setDashPeriod(p){
+  dashPeriod = p;
+  document.querySelectorAll(".dash-tab").forEach(t=>t.classList.toggle("active", t.dataset.period === p));
+  playSound("click"); renderDashboard();
+}
+function renderDashboardLive(){
+  if(!S) return;
+  const kpis = document.querySelectorAll(".kpi[data-live]");
+  kpis.forEach(k=>{
+    const key = k.dataset.live; const el = k.querySelector(".kpi-val"); if(!el) return;
+    if(key === "hourly") el.textContent = fmt(totalPerHour()) + " ₺";
+    if(key === "daily") el.textContent = fmt(totalPerHour()*24) + " ₺";
+    if(key === "monthly") el.textContent = fmt(totalPerHour()*24*30) + " ₺";
+  });
+}
+function renderDashboard(){
+  if(!S) return;
+  renderKPI(); renderForecast(); renderCharts(); renderProductBars(); renderHeatmap(); renderTopProducts();
+}
+function renderKPI(){
+  const hourly = totalPerHour(); const daily = hourly * 24; const monthly = daily * 30;
+  const totalSales = S.totalSold || 0; const totalInv = inventoryValue();
+  const profit = totalSales - S.totalSpent;
+  const profitClass = profit >= 0 ? "green" : "red";
+  
+  $("#kpiGrid").innerHTML = `
+    <div class="kpi" data-live="hourly"><div class="kpi-icon">🕐</div><div class="kpi-lbl">Saatlik Üretim</div><div class="kpi-val green">${fmt(hourly)} ₺</div></div>
+    <div class="kpi" data-live="daily"><div class="kpi-icon">📅</div><div class="kpi-lbl">Günlük Üretim</div><div class="kpi-val green">${fmt(daily)} ₺</div></div>
+    <div class="kpi" data-live="monthly"><div class="kpi-icon">📆</div><div class="kpi-lbl">Aylık Üretim</div><div class="kpi-val green">${fmt(monthly)} ₺</div></div>
+    <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-lbl">Net Durum</div><div class="kpi-val ${profitClass}">${profit >= 0 ? "+" : ""}${fmt(profit)} ₺</div><div class="kpi-sub">Toplam satış: ${fmt(totalSales)} ₺</div></div>
+    <div class="kpi"><div class="kpi-icon">💎</div><div class="kpi-lbl">Toplam Varlık</div><div class="kpi-val gold">${fmt(S.wallet + totalInv)} ₺</div><div class="kpi-sub">Bakiye: ${fmt(S.wallet)} ₺ • Envanter: ${fmt(totalInv)} ₺</div></div>
+  `;
+}
+function renderForecast(){
+  const hourly = totalPerHour(); const daily = hourly * 24; const monthly = daily * 30;
+  const sixMonth = monthly * 6; const yearly = monthly * 12;
+  const total = totalAlive(); let text = "";
+  if(total === 0) text = "🚀 <b>Henüz hayvanın yok.</b> Bir hayvan satın alarak üretime başla.";
+  else if(total < 5) text = `🌱 <b>Başlangıç seviyesi.</b> ${total} aktif hayvanın var. Daha fazla hayvan alarak günlük kazancını ${fmt(daily*2)} ₺'ye çıkarabilirsin.`;
+  else if(total < 20) text = `📈 <b>İyi gidiyorsun.</b> ${total} hayvanla günde ${fmt(daily)} ₺ üretim yapıyorsun. 1 ay içinde yaklaşık ${fmt(monthly)} ₺ biriktirebilirsin.`;
+  else text = `🔥 <b>Profesyonel çiftçi!</b> ${total} aktif hayvanla ayda ${fmt(monthly)} ₺. Yılda ${fmt(yearly)} ₺'ye ulaşabilirsin.`;
+  $("#forecastBox").innerHTML = `
+    <h3>🔮 Tahmin — "Bu hızla..."</h3>
+    <div class="forecast-grid">
+      <div class="forecast-item"><div class="f-lbl">1 Saatte</div><div class="f-val">${fmt(hourly)} ₺</div><div class="f-sub">Mevcut hızda</div></div>
+      <div class="forecast-item"><div class="f-lbl">1 Günde</div><div class="f-val">${fmt(daily)} ₺</div><div class="f-sub">24 saat tahmini</div></div>
+      <div class="forecast-item"><div class="f-lbl">1 Ayda</div><div class="f-val">${fmt(monthly)} ₺</div><div class="f-sub">30 gün tahmini</div></div>
+      <div class="forecast-item"><div class="f-lbl">6 Ayda</div><div class="f-val">${fmt(sixMonth)} ₺</div><div class="f-sub">Bileşik üretim</div></div>
+      <div class="forecast-item"><div class="f-lbl">1 Yılda</div><div class="f-val">${fmt(yearly)} ₺</div><div class="f-sub">Uzun vadeli</div></div>
+    </div>
+    <div class="forecast-note">${text}</div>
+  `;
+}
+let incomeChart, animalChart;
+function renderCharts(){
+  if(!$("#incomeChart") || typeof Chart === "undefined") return;
+  const css = getComputedStyle(document.documentElement);
+  const textColor = css.getPropertyValue("--muted").trim() || "#8ca0c4";
+  let data = []; let labels = []; let subText = "";
+  
+  // Backend'den anlık geçmiş gelmediği için sahte dalgalanma grafiği
+  data = Array(10).fill(null).map(() => totalPerHour());
+  labels = data.map((_,i)=>`${(i+1)*10}s`); subText = "Anlık üretim değeri";
+  
+  const subEl = $("#incomeChartSub"); if(subEl) subEl.textContent = subText;
+  if(!incomeChart){
+    incomeChart = new Chart($("#incomeChart"), {
+      type:"line", data:{ labels, datasets:[{ label:"Gelir ₺", data, borderColor:"#22c55e", backgroundColor:"rgba(34,197,94,.15)", fill:true, tension:.35, pointRadius:2, pointBackgroundColor:"#22c55e" }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:textColor}}}, scales:{ x:{ticks:{color:textColor, font:{size:10}}}, y:{ticks:{color:textColor, font:{size:10}}, beginAtZero:true} } }
+    });
+  } else { incomeChart.data.labels = labels; incomeChart.data.datasets[0].data = data; incomeChart.update("none"); }
+  
+  const animalValues = {};
+  for(const k in ANIMALS) animalValues[k] = aliveCount(k) * perHour(k);
+  const hasAnimals = Object.values(animalValues).some(v=>v>0);
+  const animalLabels = Object.keys(ANIMALS).map(k=>ANIMALS[k].name);
+  const animalData = hasAnimals ? Object.keys(ANIMALS).map(k=>Number(animalValues[k].toFixed(2))) : [1,1,1,1];
+  const animalColors = Object.keys(ANIMALS).map(k=>ANIMALS[k].color);
+  if(!animalChart){
+    animalChart = new Chart($("#animalChart"), {
+      type:"doughnut",
+      data:{ labels: animalLabels, datasets:[{ data: animalData, backgroundColor: animalColors, borderColor: "transparent", borderWidth: 0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:"bottom", labels:{color:textColor, font:{size:11}, padding:10}} } }
+    });
+  } else { animalChart.data.datasets[0].data = animalData; animalChart.update("none"); }
+}
+function renderProductBars(){
+  const g = $("#productBars"); if(!g) return;
+  const values = {};
+  for(const prod in PRODUCTS){ let v = 0; for(const k in ANIMALS){ if(ANIMALS[k].product === prod) v += aliveCount(k) * perHour(k); } values[prod] = v; }
+  const total = Object.values(values).reduce((a,b)=>a+b,0);
+  const maxVal = Math.max(...Object.values(values), 1);
+  if(total === 0){ g.innerHTML = `<div class="empty-chart"><div class="emoji">📦</div><p>Henüz üretim yok. Hayvan satın al.</p></div>`; return; }
+  g.innerHTML = "";
+  for(const prod in PRODUCTS){
+    const v = values[prod]; const pct = (v / maxVal) * 100;
+    const row = document.createElement("div"); row.className = "pbar-row";
+    row.innerHTML = `<div class="pbar-label">${PRODUCTS[prod].emoji} ${PRODUCTS[prod].name}</div><div class="pbar-track"><div class="pbar-fill" style="width:${pct}%;background:linear-gradient(90deg,${PRODUCTS[prod].color},${PRODUCTS[prod].color}cc)"></div></div><div class="pbar-val">${v.toFixed(2)} ₺/sa</div>`;
+    g.appendChild(row);
+  }
+}
+function renderHeatmap(){
+  const g = $("#heatmap"); if(!g) return;
+  const days = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
+  let html = `<div></div>`;
+  for(let h=0; h<24; h++) html += `<div class="hm-hour">${h % 2 === 0 ? h : ""}</div>`;
+  for(let d=0; d<7; d++){
+    html += `<div class="hm-label">${days[d]}</div>`;
+    for(let h=0; h<24; h++){
+      html += `<div class="hm-cell lvl0"></div>`;
+    }
+  }
+  g.innerHTML = html;
+}
+function renderTopProducts(){
+  const g = $("#topProducts"); if(!g) return;
+  g.innerHTML = `<div class="empty-chart"><div class="emoji">🏆</div><p>Backend satış istatistikleri entegre edilecek.</p></div>`;
+}
+
+/* ============================================================
+   UI & TOAST
+   ============================================================ */
+function toast(msg, isErr=false, isGold=false, isPurple=false){
+  const el = document.createElement("div");
+  el.className = "toast show" + (isErr?" err":"") + (isGold?" gold":"") + (isPurple?" purple":"");
+  el.textContent = msg;
+  $("#toasts").appendChild(el);
+  setTimeout(()=>{ el.classList.remove("show"); setTimeout(()=>el.remove(),400); }, 3000);
+}
+function toggleUserMenu(){ $("#userMenu").classList.toggle("show"); }
+document.addEventListener("click", (e)=>{ if(!e.target.closest(".user-chip")) $("#userMenu")?.classList.remove("show"); });
+
+function switchTab(tab){
+  if(!S) return;
+  currentTab = tab;
+  document.querySelectorAll(".nav-btn").forEach(x=>x.classList.toggle("active", x.dataset.tab === tab));
+  document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+  const sec = $("#tab-"+tab); if(sec) sec.classList.add("active");
+  const titles = {
+    farm:["Hayvan Pazarı","Yatırım yap, üret, sat, kazan"],
+    inventory:["Ürün & Yem","Ürünlerini sat, yemini yönet"],
+    market:["Piyasa Fiyatları","Canlı fiyatları takip et"],
+    withdraw:["Ödeme Çek","Kazançlarını banka hesabına aktar"],
+    history:["İşlem Geçmişi","Tüm finansal hareketleriniz"],
+    stats:["Dashboard","Gelişmiş performans analizi"],
+    profile:["Profilim","Hesap bilgilerin ve çiftlik özetin"],
+    support:["Destek Taleplerim","Gönderdiğin mesajlar ve admin cevapları"]
+  };
+  const pt = $("#pageTitle"); const ps = $("#pageSub");
+  if(pt && ps){
+    const textNode = Array.from(pt.childNodes).find(n => n.nodeType === 3);
+    if(textNode) textNode.textContent = titles[tab][0] + " ";
+    else pt.insertBefore(document.createTextNode(titles[tab][0] + " "), pt.firstChild);
+    ps.textContent = titles[tab][1];
+  }
+  document.querySelector(".sidebar").classList.remove("open");
+  $("#userMenu")?.classList.remove("show");
+  playSound("click");
+  if(tab==="farm"){ renderFarm(); renderFarmScene(); }
+  if(tab==="inventory") renderInventory();
+  if(tab==="market") renderMarket();
+  if(tab==="history") renderHistory();
+  if(tab==="stats") setTimeout(renderDashboard,50);
+  if(tab==="profile") renderProfile();
+  if(tab==="support") renderSupport();
+  if(tab==="withdraw"){ const wb = $("#wBalance"); if(wb) wb.textContent = fmt(S.wallet) + " ₺"; }
+}
+function goProfile(){ switchTab("profile"); }
+function goWithdraw(){ switchTab("withdraw"); }
+function goSupport(){ switchTab("support"); }
+function goLoad(){ switchTab("profile"); setTimeout(()=>{ const el = document.querySelector(".load-section"); if(el) el.scrollIntoView({behavior:"smooth", block:"center"}); $("#loadAmount")?.focus(); }, 100); }
+function openAvatarModal(){ initAvatarGrid(); $("#avatarModal").classList.add("show"); }
+function closeAvatarModal(){ $("#avatarModal").classList.remove("show"); }
+
+function renderSupport() {
+  const g = $("#supportList"); if(!g || !currentUser) return;
+  g.innerHTML = `<div class="card" style="text-align:center;padding:50px 20px"><div style="font-size:3rem;margin-bottom:10px;opacity:.5">📭</div><p style="color:var(--muted)">Destek talepleri API'den çekiliyor...</p></div>`;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+initTheme();
+initAvatarGrid();
+document.querySelectorAll('.auth-tab').forEach(t=>{
+  t.addEventListener('click', ()=>{ if(t.dataset.auth === 'login') showLogin(); else showRegister(); playSound("click"); });
+});
+document.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".nav-btn");
+  if(btn && btn.dataset.tab && S){ e.preventDefault(); e.stopPropagation(); switchTab(btn.dataset.tab); }
+});
+$("#wIban")?.addEventListener("input", function(e){
+  let v = e.target.value.replace(/\s/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if(v.length > 26) v = v.slice(0,26);
+  let out = "";
+  for(let i=0;i<v.length;i++){ if(i>0 && i%4===0) out += " "; out += v[i]; }
+  e.target.value = out;
+});
+document.querySelectorAll('.load-preset').forEach(p=>{
+  p.addEventListener('click', ()=>{
+    document.querySelectorAll('.load-preset').forEach(x=>x.classList.remove('sel'));
+    p.classList.add('sel');
+    const amt = parseFloat(p.dataset.amt);
+    loadPresetAmount = amt;
+    $("#loadAmount").value = amt;
+    playSound("click");
+  });
+});
+$("#loadAmount")?.addEventListener('input', ()=>{
+  document.querySelectorAll('.load-preset').forEach(x=>x.classList.remove('sel'));
+  loadPresetAmount = 0;
+});
+
+if(!tryRestoreSession()) showLogin();
+document.addEventListener("click", ()=>{ const ctx = getAudioCtx(); if(ctx && ctx.state === "suspended") ctx.resume(); }, { once: true });
+</script>
+</body>
+</html>

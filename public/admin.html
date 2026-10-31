@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Anadolu Çiftlik</title>
+<style>
+:root{
+  --bg:#0a0f1a; --panel:#111a2c; --panel2:#16223a; --line:#1f2c47;
+  --green:#22c55e; --gold:#f59e0b; --red:#ef4444; --blue:#3b82f6;
+  --text:#e9eef8; --muted:#8ca0c4; --purple:#a855f7;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+body{background:radial-gradient(1400px 700px at 15% -10%,#13233f,transparent),var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+::-webkit-scrollbar{width:9px}::-webkit-scrollbar-thumb{background:#26364f;border-radius:10px}
+.login-screen{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 20% 0%,#16233d,transparent),linear-gradient(180deg,#0a0f1a,#0d1524);z-index:9999;overflow-y:auto}
+.login-box{background:linear-gradient(165deg,#111a2c,#16223a);border:1px solid var(--line);border-radius:24px;padding:36px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.login-box .logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#f59e0b,#d97706);display:grid;place-items:center;font-size:2rem;margin:0 auto 16px;box-shadow:0 8px 24px rgba(245,158,11,.4)}
+.login-box h1{text-align:center;margin-bottom:6px;font-size:1.4rem}
+.login-box p{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:24px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:7px}
+.form-group input{width:100%;padding:13px 15px;border-radius:11px;background:#0b1424;border:1px solid var(--line);color:var(--text);font-size:.95rem;font-family:inherit;transition:.15s}
+.form-group input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.btn{width:100%;padding:14px;border:none;border-radius:11px;font-weight:800;font-size:.95rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:#1a1200;transition:.18s}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn.green{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
+.btn.red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn.blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#04121f}
+.btn.purple{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.auth-msg{padding:12px 14px;border-radius:10px;font-size:.85rem;margin-bottom:14px;display:none}
+.auth-msg.show{display:block}
+.auth-msg.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80}
+.auth-msg.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#7ceb9e}
+.app{display:none;min-height:100vh}
+.app.show{display:block}
+.topbar{background:linear-gradient(180deg,#0d1524,#0a0f1a);border-bottom:1px solid var(--line);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#d97706);display:grid;place-items:center;font-size:1.4rem;box-shadow:0 6px 18px rgba(245,158,11,.35)}
+.brand h1{font-size:1.1rem;font-weight:800;letter-spacing:.3px}
+.brand small{display:block;color:var(--muted);font-size:.7rem;letter-spacing:1.5px;font-weight:600}
+.admin-info{display:flex;align-items:center;gap:14px}
+.admin-badge{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:800;letter-spacing:.5px}
+.logout-btn{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#ff8a80;padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer}
+.logout-btn:hover{background:rgba(239,68,68,.25)}
+.main{padding:28px;max-width:1400px;margin:0 auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px}
+.stat{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;inset:0;background:radial-gradient(300px 120px at 100% 0%,rgba(245,158,11,.1),transparent)}
+.stat .lbl{color:var(--muted);font-size:.74rem;font-weight:600;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.5px}
+.stat .val{font-size:1.6rem;font-weight:800;margin-top:8px}
+.stat .val.gold{color:var(--gold)}.stat .val.green{color:var(--green)}.stat .val.red{color:#ff8a80}.stat .val.blue{color:#6cb8ff}.stat .val.purple{color:#c08bff}
+.section{display:none}
+.section.active{display:block}
+.tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+.tab{background:transparent;border:none;color:var(--muted);padding:10px 18px;font-weight:700;font-size:.9rem;border-radius:10px;transition:.15s;cursor:pointer;display:flex;align-items:center;gap:8px}
+.tab:hover{background:var(--panel2);color:var(--text)}
+.tab.active{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(217,119,6,.1));color:var(--gold);border:1px solid rgba(245,158,11,.35)}
+.tab .cnt{background:rgba(245,158,11,.25);color:var(--gold);font-size:.72rem;padding:2px 8px;border-radius:20px;font-weight:800}
+.tab .cnt.red{background:rgba(239,68,68,.2);color:#ff8a80}
+.tab .cnt.green{background:rgba(34,197,94,.2);color:var(--green)}
+.tab .cnt.purple{background:rgba(168,85,247,.2);color:#c4b5fd}
+.panel{background:linear-gradient(165deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:20px}
+.panel h2{font-size:1.1rem;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.panel h2 .info{font-size:.8rem;color:var(--muted);font-weight:500}
+.load-request{background:#0b1424;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;transition:.15s}
+.load-request:hover{border-color:rgba(245,158,11,.3)}
+.load-request.approved{opacity:.75;border-color:rgba(34,197,94,.3)}
+.load-request.rejected{opacity:.65;border-color:rgba(239,68,68,.3)}
+.req-user{display:flex;align-items:center;gap:14px;flex:1;min-width:250px}
+.req-avatar{width:52px;height:52px;border-radius:14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:grid;place-items:center;font-size:1.6rem;flex-shrink:0}
+.req-info{flex:1;min-width:0}
+.req-name{font-weight:800;font-size:.95rem;margin-bottom:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.req-meta{font-size:.75rem;color:var(--muted);line-height:1.6}
+.req-meta b{color:var(--text);font-weight:600}
+.req-amount{text-align:right;flex-shrink:0}
+.req-amount .amt{font-size:1.3rem;font-weight:900;color:var(--gold);margin-bottom:2px}
+.req-amount .id{font-size:.7rem;color:var(--muted);font-family:'Courier New',monospace}
+.req-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.req-actions button{padding:10px 18px;border-radius:10px;border:none;font-weight:800;font-size:.82rem;transition:.15s;cursor:pointer}
+.req-actions .approve{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
+.req-actions .approve:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.req-actions .reject{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80}
+.req-actions .reject:hover{background:rgba(239,68,68,.25)}
+.status-badge{padding:6px 14px;border-radius:20px;font-size:.72rem;font-weight:800;letter-spacing:.5px;flex-shrink:0}
+.status-badge.pending{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.35)}
+.status-badge.approved{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35)}
+.status-badge.rejected{background:rgba(239,68,68,.15);color:#ff8a80;border:1px solid rgba(239,68,68,.35)}
+.status-badge.replied{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35)}
+.status-badge.closed{background:rgba(120,120,120,.2);color:#aaa;border:1px solid rgba(120,120,120,.35)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty .emoji{font-size:3rem;margin-bottom:12px;opacity:.5}
+.user-card{background:#0b1424;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:12px;transition:.15s}
+.user-card:hover{border-color:rgba(34,197,94,.3)}
+.user-card-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.user-card-avatar{width:56px;height:56px;border-radius:16px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:grid;place-items:center;font-size:1.8rem;flex-shrink:0}
+.user-card-name{flex:1;min-width:160px}
+.user-card-name h4{font-size:1rem;margin-bottom:4px}
+.user-card-name .uid{font-size:.72rem;color:var(--muted);font-family:'Courier New',monospace}
+.user-card-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.08)}
+.user-stat{background:rgba(255,255,255,.02);border-radius:10px;padding:10px 12px}
+.user-stat .lbl{font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.user-stat .val{font-size:1rem;font-weight:800}
+.user-stat .val.gold{color:var(--gold)}.user-stat .val.green{color:var(--green)}.user-stat .val.blue{color:#6cb8ff}
+.search-box{width:100%;padding:12px 16px;border-radius:11px;background:#0b1424;border:1px solid var(--line);color:var(--text);font-size:.9rem;margin-bottom:16px;font-family:inherit}
+.search-box:focus{outline:none;border-color:rgba(245,158,11,.5);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+
+/* SUPPORT ADMIN */
+.support-ticket{background:#0b1424;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;transition:.15s}
+.support-ticket:hover{border-color:rgba(168,85,247,.4)}
+.support-ticket.replied{border-color:rgba(34,197,94,.35)}
+.support-ticket.closed{opacity:.65}
+.st-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.st-user{display:flex;align-items:center;gap:12px;flex:1;min-width:200px}
+.st-user-avatar{width:44px;height:44px;border-radius:12px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:grid;place-items:center;font-size:1.4rem;flex-shrink:0}
+.st-user-info{flex:1;min-width:0}
+.st-user-name{font-weight:800;font-size:.92rem;margin-bottom:3px}
+.st-user-meta{font-size:.72rem;color:var(--muted);line-height:1.5}
+.st-user-meta b{color:var(--text)}
+.st-subject{font-weight:800;font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.st-message{background:#0d1524;border-left:3px solid #7c3aed;padding:12px 16px;border-radius:8px;font-size:.86rem;line-height:1.6;margin-bottom:12px;white-space:pre-wrap;word-break:break-word}
+.st-replies{margin-bottom:12px}
+.st-reply{background:rgba(34,197,94,.08);border-left:3px solid var(--green);padding:10px 14px;border-radius:8px;font-size:.84rem;line-height:1.6;margin-bottom:8px;white-space:pre-wrap;word-break:break-word}
+.st-reply-meta{font-size:.7rem;color:var(--green);font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.st-reply-meta button{background:transparent;border:none;color:#ff8a80;font-size:.7rem;cursor:pointer;padding:2px 6px;border-radius:4px}
+.st-reply-meta button:hover{background:rgba(239,68,68,.15)}
+.st-reply-form{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(128,128,128,.2)}
+.st-reply-form textarea{width:100%;padding:12px 14px;border-radius:10px;background:#0d1524;border:1px solid var(--line);color:var(--text);font-size:.86rem;font-family:inherit;resize:vertical;min-height:80px;line-height:1.5}
+.st-reply-form textarea:focus{outline:none;border-color:rgba(34,197,94,.5);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+.st-reply-form .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.st-reply-form button{padding:9px 16px;border-radius:9px;border:none;font-weight:800;font-size:.82rem;cursor:pointer;transition:.15s}
+.st-reply-form .send-reply{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
+.st-reply-form .send-reply:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.st-reply-form .close-ticket{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80}
+.st-reply-form .close-ticket:hover{background:rgba(239,68,68,.25)}
+.st-reply-form .reopen-ticket{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--green)}
+.st-reply-form .reopen-ticket:hover{background:rgba(34,197,94,.25)}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--green);padding:14px 18px;border-radius:11px;font-weight:600;font-size:.88rem;box-shadow:0 12px 30px rgba(0,0,0,.5);transform:translateX(120%);transition:.35s;z-index:99999}
+.toast.show{transform:translateX(0)}
+.toast.err{border-left-color:var(--red)}
+@media(max-width:700px){
+  .load-request{flex-direction:column;align-items:stretch}
+  .req-actions{width:100%}
+  .req-actions button{flex:1}
+  .req-amount{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="logo">🛡️</div>
+    <h1>Admin Panel</h1>
+    <p>Anadolu Çiftlik Yönetim Sistemi</p>
+    <div class="auth-msg" id="loginMsg"></div>
+    <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="adminUser" placeholder="admin" autocomplete="off"></div>
+    <div class="form-group"><label>Şifre</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="off" onkeypress="if(event.key==='Enter') adminLogin()"></div>
+    <button class="btn" onclick="adminLogin()">🔓 Giriş Yap</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand"><div class="logo">🛡️</div><div><h1>Admin Panel</h1><small>ANADOLU ÇİFTLİK</small></div></div>
+    <div class="admin-info"><div class="admin-badge">👑 ADMIN</div><button class="logout-btn" onclick="adminLogout()">🚪 Çıkış</button></div>
+  </div>
+
+  <div class="main">
+    <div class="stats">
+      <div class="stat"><div class="lbl">👥 Toplam Üye</div><div class="val purple" id="sUsers">0</div></div>
+      <div class="stat"><div class="lbl">💳 Bekleyen Yükleme</div><div class="val gold" id="sPending">0</div></div>
+      <div class="stat"><div class="lbl">🏦 Bekleyen Çekim</div><div class="val red" id="sPendingWithdraw">0</div></div>
+      <div class="stat"><div class="lbl">💬 Destek Talebi</div><div class="val purple" id="sSupport">0</div></div>
+      <div class="stat"><div class="lbl">✅ Onaylanan Yükleme</div><div class="val green" id="sApproved">0</div></div>
+      <div class="stat"><div class="lbl">💰 Toplam Onaylanan</div><div class="val blue" id="sTotal">0 ₺</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="all">📊 Tüm Talepler <span class="cnt" id="cntAll">0</span></button>
+      <button class="tab" data-tab="pendingLoad">💳 Yükleme Bekleyen <span class="cnt" id="cntPendingLoad">0</span></button>
+      <button class="tab" data-tab="pendingWithdraw">🏦 Çekim Bekleyen <span class="cnt red" id="cntPendingWithdraw">0</span></button>
+      <button class="tab" data-tab="support">💬 Destek Talepleri <span class="cnt purple" id="cntSupport">0</span></button>
+      <button class="tab" data-tab="approved">✅ Onaylanan <span class="cnt green" id="cntApproved">0</span></button>
+      <button class="tab" data-tab="rejected">❌ Reddedilen <span class="cnt red" id="cntRejected">0</span></button>
+      <button class="tab" data-tab="users">👥 Üyeler <span class="cnt" id="cntUsers">0</span></button>
+    </div>
+
+    <div class="section active" id="tab-all"><div class="panel"><h2>📊 Tüm Talepler <span class="info" id="allInfo"></span></h2><div id="allList"></div></div></div>
+    <div class="section" id="tab-pendingLoad"><div class="panel"><h2>💳 Bekleyen Bakiye Yükleme <span class="info" id="pendingLoadInfo"></span></h2><div id="pendingLoadList"></div></div></div>
+    <div class="section" id="tab-pendingWithdraw"><div class="panel"><h2>🏦 Bekleyen Para Çekme <span class="info" id="pendingWithdrawInfo"></span></h2><div id="pendingWithdrawList"></div></div></div>
+
+    <!-- DESTEK -->
+    <div class="section" id="tab-support">
+      <div class="panel"><h2>💬 Destek Talepleri <span class="info" id="supportInfo"></span></h2><div id="supportList"></div></div>
+    </div>
+
+    <div class="section" id="tab-approved"><div class="panel"><h2>✅ Onaylanan Talepler</h2><div id="approvedList"></div></div></div>
+    <div class="section" id="tab-rejected"><div class="panel"><h2>❌ Reddedilen Talepler</h2><div id="rejectedList"></div></div></div>
+    <div class="section" id="tab-users">
+      <div class="panel">
+        <h2>👥 Kayıtlı Üyeler <span class="info" id="usersInfo"></span></h2>
+        <input type="text" class="search-box" id="userSearch" placeholder="🔍 Üye ara (isim, telefon, üye no)..." oninput="renderAll()">
+        <div id="usersList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   API BAĞLANTI AYARLARI
+   ============================================================ */
+const API_BASE = "/api";
+const ADMIN_TOKEN_KEY = "anadolu_admin_token";
+
+let adminToken = null;
+try { adminToken = localStorage.getItem(ADMIN_TOKEN_KEY); } catch(e){}
+
+async function apiRequest(endpoint, method = "GET", body = null) {
+  const headers = { "Content-Type": "application/json" };
+  if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
+  
+  const options = { method, headers };
+  if (body) options.body = JSON.stringify(body);
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, options);
+    const data = await res.json();
+    if (res.status === 401) {
+      adminLogout();
+      throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın.");
+    }
+    if (!res.ok) throw new Error(data.error || "Bir hata oluştu");
+    return data;
+  } catch (err) {
+    console.error("API Hatası:", err);
+    throw err;
+  }
+}
+
+/* ============================================================
+   YARDIMCILAR
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const fmt = n => Math.round(n).toLocaleString("tr-TR");
+const fmtDate = d => new Date(d).toLocaleString("tr-TR", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+const fmtPhone = p => p && p.length === 10 ? `0${p.slice(0,3)} ${p.slice(3,6)} ${p.slice(6,8)} ${p.slice(8,10)}` : p;
+const escapeHtml = s => String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+let currentData = { users: [], loads: [], withdraws: [], tickets: [] };
+let refreshInterval = null;
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+async function adminLogin() {
+  const username = $("#adminUser").value.trim();
+  const password = $("#adminPass").value;
+  const msg = $("#loginMsg");
+
+  if (!username || !password) {
+    msg.className = "auth-msg show err";
+    msg.textContent = "❌ Kullanıcı adı ve şifre gerekli";
+    return;
+  }
+
+  try {
+    const data = await apiRequest("/admin-login", "POST", { username, password });
+    msg.className = "auth-msg show ok";
+    msg.textContent = "✅ Giriş başarılı...";
+    localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+    adminToken = data.token;
+    setTimeout(() => {
+      $("#loginScreen").style.display = "none";
+      $("#app").classList.add("show");
+      startAdminSession();
+    }, 400);
+  } catch (err) {
+    msg.className = "auth-msg show err";
+    msg.textContent = "❌ " + err.message;
+  }
+}
+
+function adminLogout() {
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  adminToken = null;
+  if (refreshInterval) clearInterval(refreshInterval);
+  $("#loginScreen").style.display = "grid";
+  $("#app").classList.remove("show");
+  $("#adminUser").value = "";
+  $("#adminPass").value = "";
+  $("#loginMsg").className = "auth-msg";
+}
+
+function tryRestore() {
+  if (!adminToken) return false;
+  $("#loginScreen").style.display = "none";
+  $("#app").classList.add("show");
+  startAdminSession();
+  return true;
+}
+
+async function startAdminSession() {
+  await fetchAdminData();
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(fetchAdminData, 5000);
+}
+
+async function fetchAdminData() {
+  try {
+    const data = await apiRequest("/admin-pending");
+    currentData = {
+      users: data.users || [],
+      loads: data.loads || [],
+      withdraws: data.withdraws || [],
+      tickets: data.tickets || []
+    };
+    renderAll();
+  } catch (err) {
+    console.error("Veri çekme hatası:", err);
+  }
+}
+
+function showToast(msg, isErr = false) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isErr ? " err" : "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = "toast"; }, 3000);
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function renderAll() {
+  const { users, loads, withdraws, tickets } = currentData;
+
+  const pendingLoads = loads.filter(r => r.status === "pending");
+  const pendingWithdraws = withdraws.filter(r => r.status === "pending");
+  const approvedLoads = loads.filter(r => r.status === "approved");
+  const approvedWithdraws = withdraws.filter(r => r.status === "approved");
+  const rejectedLoads = loads.filter(r => r.status === "rejected");
+  const rejectedWithdraws = withdraws.filter(r => r.status === "rejected");
+  const pendingTickets = tickets.filter(t => t.status === "pending");
+  const allPending = [...pendingLoads, ...pendingWithdraws];
+
+  // Stats
+  $("#sUsers").textContent = users.length;
+  $("#sPending").textContent = pendingLoads.length;
+  $("#sPendingWithdraw").textContent = pendingWithdraws.length;
+  $("#sSupport").textContent = pendingTickets.length;
+  $("#sApproved").textContent = approvedLoads.length;
+  const totalApproved = approvedLoads.reduce((s, r) => s + Number(r.amount || 0), 0);
+  $("#sTotal").textContent = fmt(totalApproved) + " ₺";
+
+  // Counts
+  $("#cntAll").textContent = allPending.length + pendingTickets.length;
+  $("#cntPendingLoad").textContent = pendingLoads.length;
+  $("#cntPendingWithdraw").textContent = pendingWithdraws.length;
+  $("#cntSupport").textContent = pendingTickets.length;
+  $("#cntApproved").textContent = approvedLoads.length + approvedWithdraws.length;
+  $("#cntRejected").textContent = rejectedLoads.length + rejectedWithdraws.length;
+  $("#cntUsers").textContent = users.length;
+
+  // Info labels
+  $("#allInfo").textContent = `(${allPending.length} bekleyen ödeme / ${loads.length + withdraws.length} toplam)`;
+  $("#pendingLoadInfo").textContent = `(${pendingLoads.length} talep)`;
+  $("#pendingWithdrawInfo").textContent = `(${pendingWithdraws.length} talep)`;
+  $("#supportInfo").textContent = `(${pendingTickets.length} bekleyen / ${tickets.length} toplam)`;
+  $("#usersInfo").textContent = `(${users.length} üye)`;
+
+  // Lists
+  renderRequestList("allList", [...loads, ...withdraws].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+  renderRequestList("pendingLoadList", pendingLoads);
+  renderRequestList("pendingWithdrawList", pendingWithdraws);
+  renderRequestList("approvedList", [...approvedLoads, ...approvedWithdraws]);
+  renderRequestList("rejectedList", [...rejectedLoads, ...rejectedWithdraws]);
+  renderSupportList(tickets);
+  renderUsers(users);
+}
+
+function renderRequestList(containerId, list) {
+  const g = $("#" + containerId); if (!g) return;
+  if (list.length === 0) {
+    g.innerHTML = `<div class="empty"><div class="emoji">📭</div><p>Bu kategoride talep yok.</p></div>`;
+    return;
+  }
+  g.innerHTML = "";
+  list.forEach(r => {
+    const div = document.createElement("div");
+    const statusClass = r.status === "approved" ? "approved" : (r.status === "rejected" ? "rejected" : "");
+    div.className = "load-request " + statusClass;
+    const isLoad = r.type === "load";
+    const typeIcon = isLoad ? "💳" : "🏦";
+    const typeName = isLoad ? "Bakiye Yükleme" : "Para Çekme";
+    const userName = r.user?.name || "Bilinmeyen";
+    const userAvatar = r.user?.avatar || "🐄";
+    const userPhone = r.user?.phone || "-";
+    const reqId = (r.id || "").slice(0, 12);
+
+    let actionsHtml = "";
+    if (r.status === "pending") {
+      actionsHtml = `<div class="req-actions">
+        <button class="approve" onclick="approveRequest('${r.type}','${r.id}')">✅ Onayla</button>
+        <button class="reject" onclick="rejectRequest('${r.type}','${r.id}')">❌ Reddet</button>
+      </div>`;
+    } else if (r.status === "approved") {
+      actionsHtml = `<span class="status-badge approved">✅ ONAYLANDI</span>`;
+    } else {
+      actionsHtml = `<span class="status-badge rejected">❌ REDDEDİLDİ</span>`;
+    }
+
+    let extraInfo = "";
+    if (!isLoad && r.bank) {
+      extraInfo = `<br>🏦 <b>${r.bank}</b> • IBAN: <b>${(r.iban || "").slice(0, 10)}...</b> • Alıcı: <b>${r.name || "-"}</b>`;
+    }
+
+    div.innerHTML = `
+      <div class="req-user">
+        <div class="req-avatar">${userAvatar}</div>
+        <div class="req-info">
+          <div class="req-name">${typeIcon} ${escapeHtml(userName)} <span style="font-size:.72rem;color:var(--muted);font-weight:600">${typeName}</span></div>
+          <div class="req-meta">📱 <b>${fmtPhone(userPhone)}</b> • Talep No: <b>${reqId}</b><br>📅 ${fmtDate(r.created_at)}${extraInfo}${r.reject_reason ? `<br>❌ Sebep: ${r.reject_reason}` : ""}</div>
+        </div>
+      </div>
+      <div class="req-amount"><div class="amt">${fmt(r.amount)} ₺</div><div class="id">${reqId}</div></div>
+      ${actionsHtml}
+    `;
+    g.appendChild(div);
+  });
+}
+
+function renderSupportList(tickets) {
+  const g = $("#supportList"); if (!g) return;
+  if (tickets.length === 0) {
+    g.innerHTML = `<div class="empty"><div class="emoji">📭</div><p>Henüz destek talebi yok.</p></div>`;
+    return;
+  }
+  g.innerHTML = "";
+  tickets.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "support-ticket" + (t.status === "answered" ? " replied" : "") + (t.status === "closed" ? " closed" : "");
+    const statusMap = {
+      pending: { label: "⏳ BEKLEMEDE", cls: "pending" },
+      answered: { label: "✅ YANITLANDI", cls: "replied" },
+      closed: { label: "🔒 KAPALI", cls: "closed" }
+    };
+    const st = statusMap[t.status] || statusMap.pending;
+    const userName = t.user?.name || t.userName || "Bilinmeyen";
+    const userAvatar = t.user?.avatar || "🐄";
+    const userPhone = t.user?.phone || "-";
+    const ticketId = (t.id || "").slice(0, 12);
+
+    let repliesHtml = "";
+    (t.support_replies || []).forEach(r => {
+      repliesHtml += `<div class="st-reply">
+        <div class="st-reply-meta"><span>👑 ADMIN • ${fmtDate(r.created_at)}</span></div>
+        ${escapeHtml(r.message)}
+      </div>`;
+    });
+
+    const canReply = t.status !== "closed";
+    const replyForm = canReply ? `
+      <div class="st-reply-form">
+        <textarea id="reply-${t.id}" placeholder="Yanıtınızı buraya yazın..."></textarea>
+        <div class="actions">
+          <button class="send-reply" onclick="sendReply('${t.id}')" type="button">📤 Yanıt Gönder</button>
+        </div>
+      </div>
+    ` : `<div class="st-reply-form"><div class="actions"><span style="color:var(--muted);font-size:.8rem">Bu talep kapatılmıştır.</span></div></div>`;
+
+    div.innerHTML = `
+      <div class="st-header">
+        <div class="st-user">
+          <div class="st-user-avatar">${userAvatar}</div>
+          <div class="st-user-info">
+            <div class="st-user-name">${escapeHtml(userName)}</div>
+            <div class="st-user-meta">📱 <b>${fmtPhone(userPhone)}</b> • Talep No: <b>${ticketId}</b><br>📅 ${fmtDate(t.created_at)}</div>
+          </div>
+        </div>
+        <div class="status-badge ${st.cls}">${st.label}</div>
+      </div>
+      <div class="st-subject">💬 ${escapeHtml(t.subject)}</div>
+      <div class="st-message">${escapeHtml(t.message)}</div>
+      ${repliesHtml ? `<div class="st-replies">${repliesHtml}</div>` : ""}
+      ${replyForm}
+    `;
+    g.appendChild(div);
+  });
+}
+
+function renderUsers(users) {
+  const g = $("#usersList"); if (!g) return;
+  const searchEl = $("#userSearch");
+  const q = (searchEl?.value || "").toLowerCase().trim();
+  
+  let filtered = users;
+  if (q) {
+    filtered = users.filter(u => {
+      const name = (u.name || "").toLowerCase();
+      const phone = (u.phone || "").toLowerCase();
+      return name.includes(q) || phone.includes(q.replace(/\s/g, ""));
+    });
+  }
+  
+  if (filtered.length === 0) {
+    g.innerHTML = `<div class="empty"><div class="emoji">👥</div><p>${q ? "Arama sonucu bulunamadı." : "Henüz kayıtlı üye yok."}</p></div>`;
+    return;
+  }
+  
+  g.innerHTML = "";
+  filtered.forEach(u => {
+    const farm = u.farm || {};
+    const wallet = Number(farm.wallet || 0);
+    const totalLoaded = Number(farm.total_loaded || 0);
+    const totalSold = Number(farm.total_sold || 0);
+    const totalWithdrawn = Number(farm.total_withdrawn || 0);
+    const aliveAnimals = u.animals?.alive || 0;
+    const totalAnimals = u.animals?.total || 0;
+    
+    const div = document.createElement("div");
+    div.className = "user-card";
+    div.innerHTML = `
+      <div class="user-card-head">
+        <div class="user-card-avatar">${u.avatar || "🐄"}</div>
+        <div class="user-card-name">
+          <h4>${escapeHtml(u.name)}</h4>
+          <div class="uid">📱 ${fmtPhone(u.phone)} • 🆔 ${(u.phone || "").slice(-6)}</div>
+          <div class="uid">📅 Üyelik: ${fmtDate(u.created_at)}</div>
+        </div>
+      </div>
+      <div class="user-card-stats">
+        <div class="user-stat"><div class="lbl">💰 Bakiye</div><div class="val gold">${fmt(wallet)} ₺</div></div>
+        <div class="user-stat"><div class="lbl">💳 Toplam Yükleme</div><div class="val blue">${fmt(totalLoaded)} ₺</div></div>
+        <div class="user-stat"><div class="lbl">📈 Toplam Satış</div><div class="val green">${fmt(totalSold)} ₺</div></div>
+        <div class="user-stat"><div class="lbl">🏦 Çekilen</div><div class="val">${fmt(totalWithdrawn)} ₺</div></div>
+        <div class="user-stat"><div class="lbl">🐾 Aktif Hayvan</div><div class="val">${aliveAnimals} / ${totalAnimals}</div></div>
+      </div>
+    `;
+    g.appendChild(div);
+  });
+}
+
+/* ============================================================
+   ONAY / RED / CEVAP
+   ============================================================ */
+async function approveRequest(type, id) {
+  if (!confirm(`Bu ${type === "load" ? "bakiye yükleme" : "para çekme"} talebini onaylıyor musunuz?`)) return;
+  try {
+    await apiRequest("/admin-approve", "POST", { type, id });
+    showToast("✅ Talep onaylandı");
+    await fetchAdminData();
+  } catch (err) {
+    showToast("❌ " + err.message, true);
+  }
+}
+
+async function rejectRequest(type, id) {
+  const reason = prompt(`Reddetme sebebi nedir?`, "Ödeme doğrulanamadı");
+  if (reason === null) return;
+  try {
+    await apiRequest("/admin-reject", "POST", { type, id, reason: reason || "Admin reddi" });
+    showToast("❌ Talep reddedildi");
+    await fetchAdminData();
+  } catch (err) {
+    showToast("❌ " + err.message, true);
+  }
+}
+
+async function sendReply(ticketId) {
+  const ta = $("#reply-" + ticketId);
+  const message = ta ? ta.value.trim() : "";
+  if (!message || message.length < 2) {
+    showToast("❌ Yanıt boş olamaz", true);
+    return;
+  }
+  try {
+    await apiRequest("/admin-support-reply", "POST", { ticket_id: ticketId, message });
+    showToast("✅ Yanıt gönderildi");
+    await fetchAdminData();
+  } catch (err) {
+    showToast("❌ " + err.message, true);
+  }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    $("#tab-" + t.dataset.tab).classList.add("active");
+  });
+});
+
+if (!tryRestore()) {
+  // Giriş ekranında kal
+}
+</script>
+</body>
+</html>
