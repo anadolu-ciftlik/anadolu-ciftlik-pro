@@ -1,7 +1,12 @@
+
 {
   "version": 2,
+  "cleanUrls": false,
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/admin", "destination": "/public/admin.html" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    }
   ]
 }
