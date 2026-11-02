@@ -123,14 +123,35 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (path === "/toggle-auto-feed" && req.method === "POST") {
-      const user = await getUserFromReq(req);
-      if (!user) return err(res, "Oturum bulunamadı", 401);
+   if (path === "/toggle-auto-feed" && req.method === "POST") {
+  const user = await getUserFromReq(req);
+  if (!user) return err(res, "Oturum bulunamadı", 401);
 
-      const { enable } = req.body || {};
-      await supabase.from("farms").update({ auto_feed: enable }).eq("user_id", user.id);
-      return ok(res, { message: "Otomatik yem ayarı güncellendi", auto_feed: enable });
-    }
+  const enable = req.body?.enable;
+
+  if (typeof enable !== "boolean") {
+    return err(res, "Geçersiz otomatik yem ayarı");
+  }
+
+  await ensureFarm(user.id);
+
+  const { data, error } = await supabase
+    .from("farms")
+    .update({ auto_feed: enable })
+    .eq("user_id", user.id)
+    .select("auto_feed")
+    .single();
+
+  if (error) {
+    console.error("Otomatik yem kayıt hatası:", error);
+    return err(res, "Otomatik yem ayarı kaydedilemedi", 500);
+  }
+
+  return ok(res, {
+    message: "Otomatik yem ayarı güncellendi",
+    auto_feed: Boolean(data.auto_feed)
+  });
+}
 
     if (path === "/buy-animal" && req.method === "POST") {
       const user = await getUserFromReq(req);
