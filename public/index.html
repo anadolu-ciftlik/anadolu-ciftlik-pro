@@ -320,6 +320,7 @@ button{font-family:inherit;cursor:pointer}
 .empty-chart .emoji{font-size:2.4rem;opacity:.5;margin-bottom:8px}
 @media(max-width:900px){.chart-grid{grid-template-columns:1fr}.heatmap{min-width:600px}.heatmap .hm-label{width:50px}}
 
+/* MODAL & TOAST */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;place-items:center;z-index:9998;backdrop-filter:blur(4px);padding:20px;overflow-y:auto}
 .modal.show{display:grid}
 .modal-box{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:30px;max-width:520px;width:100%;text-align:center;max-height:90vh;overflow-y:auto}
@@ -350,6 +351,16 @@ button{font-family:inherit;cursor:pointer}
 .fly-icon{position:fixed;font-size:2.2rem;pointer-events:none;z-index:99998;animation:flyToWallet 1.2s cubic-bezier(.68,-0.55,.27,1.55) forwards}
 @keyframes flyToWallet{0%{transform:scale(0) rotate(0);opacity:0}20%{transform:scale(1.3) rotate(-20deg);opacity:1}100%{transform:scale(.3) translate(var(--tx,0),var(--ty,-200px));opacity:0}}
 .mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--panel2);border:1px solid var(--line);color:var(--text);width:44px;height:44px;border-radius:11px;font-size:1.3rem}
+
+/* YENİ YEM ÖZELLİKLERİ */
+#feedAlert{display:none;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80;padding:14px;border-radius:12px;font-weight:700;margin-bottom:16px;text-align:center;animation:pulseDot 1.5s infinite}
+.switch{position:relative;display:inline-block;width:50px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#3a4a63;transition:.3s;border-radius:34px}
+.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background-color:white;transition:.3s;border-radius:50%}
+input:checked + .slider{background-color:#22c55e}
+input:checked + .slider:before{transform:translateX(24px)}
+
 @media(max-width:900px){
   .app.show{grid-template-columns:1fr}
   .sidebar{position:fixed;left:-280px;z-index:100;transition:.3s;width:260px}
@@ -412,7 +423,6 @@ button{font-family:inherit;cursor:pointer}
 
 <button class="mob-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
 
-<!-- YARDIM FAB -->
 <button class="support-fab" id="supportFab" onclick="openSupportModal()" type="button">
   <span class="sf-icon">💬</span>
   <span>Yardım</span>
@@ -477,13 +487,16 @@ button{font-family:inherit;cursor:pointer}
 
     <section class="section" id="tab-inventory">
       <div class="section-head"><h2>📦 Ürün & Yem Yönetimi</h2><p>Ürünlerini sat, yem stoklarını takip et</p></div>
+      <div id="feedAlert"></div>
       <div id="feedSummary"></div>
       <div class="inv-grid" id="invGrid"></div>
     </section>
+
     <section class="section" id="tab-market">
-      <div class="section-head"><h2>💹 Canlı Piyasa Fiyatları</h2><p>Fiyatlar her 20 saniyede dalgalanır — doğru zamanda sat</p></div>
+      <div class="section-head"><h2>💹 Canlı Piyasa Fiyatları</h2><p>Ürünlerin temel satış fiyatları</p></div>
       <div id="marketList"></div>
     </section>
+
     <section class="section" id="tab-withdraw">
       <div class="section-head"><h2>🏦 Ödeme Çek</h2><p>Kazançlarını banka hesabına aktar</p></div>
       <div class="info-banner"><b>ℹ️ Bilgilendirme:</b> Çekim talepleri admin onayından sonra 1-3 iş günü içinde işleme alınır. Minimum çekim tutarı <b>500 ₺</b>'dir.</div>
@@ -491,11 +504,12 @@ button{font-family:inherit;cursor:pointer}
         <div class="form-group"><label>Banka Adı</label><select id="wBank"><option value="">Banka seçiniz...</option><option>Ziraat Bankası</option><option>İş Bankası</option><option>Garanti BBVA</option><option>Yapı Kredi</option><option>Akbank</option><option>QNB Finansbank</option><option>Halkbank</option><option>Vakıfbank</option><option>Denizbank</option><option>Enpara.com</option><option>Diğer</option></select></div>
         <div class="form-group"><label>IBAN</label><input type="text" id="wIban" placeholder="TR00 0000 0000 0000 0000 0000 00" maxlength="32"></div>
         <div class="form-group"><label>Alıcı Adı Soyadı</label><input type="text" id="wName" placeholder="Örn: Ahmet Yılmaz"></div>
-        <div class="form-group"><label>Çekmek İstediğiniz Tutar (₺)</label><input type="number" id="wAmount" placeholder="0" min="500"><small>Çekilebilir bakiye: <b id="wBalance">0 ₺</b> • Minimum: 500 ₺</small></div>
+        <div class="form-group"><label>Çekmek İstediğiniz Tutar (₺)</label><input type="number" id="wAmount" placeholder="0" min="500" step="0.01"><small>Çekilebilir bakiye: <b id="wBalance">0 ₺</b> • Minimum: 500 ₺</small></div>
         <div class="warn-banner">⚠️ <b>Önemli:</b> IBAN ve alıcı bilgilerinin doğruluğunu kontrol ediniz.</div>
         <button class="btn gold" style="padding:15px;font-size:1rem" onclick="requestWithdraw()" type="button">📤 Ödeme Talebi Oluştur</button>
       </div>
     </section>
+
     <section class="section" id="tab-history">
       <div class="section-head"><h2>📋 İşlem Geçmişi</h2><p>Tüm finansal hareketleriniz</p></div>
       <div id="historyList"></div>
@@ -513,7 +527,7 @@ button{font-family:inherit;cursor:pointer}
       <div class="kpi-grid" id="kpiGrid"></div>
       <div class="forecast-box" id="forecastBox"></div>
       <div class="chart-grid">
-        <div class="chart-card"><h3>📈 Gelir Grafiği <span class="badge-live">CANLI</span></h3><p class="chart-sub" id="incomeChartSub">Saatlik toplam üretim değeri</p><canvas id="incomeChart"></canvas></div>
+        <div class="chart-card"><h3>📈 Tahmini Üretim Grafiği <span class="badge-live">HESAPLAMA</span></h3><p class="chart-sub" id="incomeChartSub">Mevcut hayvan sayısına göre tahmini üretim değeri</p><canvas id="incomeChart"></canvas></div>
         <div class="chart-card"><h3>🥧 Hayvan Dağılımı</h3><p class="chart-sub">Hangi hayvan ne kadar kazandırıyor</p><canvas id="animalChart"></canvas></div>
         <div class="chart-card full"><h3>📦 Ürün Bazlı Saatlik Üretim Değeri</h3><p class="chart-sub">Her ürünün saatlik ₺ katkısı</p><div class="product-bars" id="productBars"></div></div>
       </div>
@@ -524,7 +538,6 @@ button{font-family:inherit;cursor:pointer}
       <div class="chart-card full" style="margin-bottom:24px"><h3>🏆 Ürün Satış Sıralaması</h3><p class="chart-sub">Hangi ürün en çok kazandırdı</p><div id="topProducts"></div></div>
     </section>
 
-    <!-- DESTEK TALEPLERİM -->
     <section class="section" id="tab-support">
       <div class="section-head"><h2>💬 Destek Taleplerim</h2><p>Gönderdiğin mesajlar ve admin cevapları</p></div>
       <div class="info-banner">
@@ -548,7 +561,7 @@ button{font-family:inherit;cursor:pointer}
           <div class="load-preset" data-amt="100">100 ₺</div><div class="load-preset" data-amt="250">250 ₺</div><div class="load-preset" data-amt="500">500 ₺</div><div class="load-preset" data-amt="1000">1.000 ₺</div><div class="load-preset" data-amt="2500">2.500 ₺</div><div class="load-preset" data-amt="5000">5.000 ₺</div>
         </div>
         <div class="load-input-row">
-          <input type="number" id="loadAmount" placeholder="Tutar girin (₺)" min="50">
+          <input type="number" id="loadAmount" placeholder="Tutar girin (₺)" min="50" step="0.01">
           <button class="btn papara" style="width:auto;padding:14px 24px" onclick="openPaparaModal()" type="button">💜 Ödeme Yap</button>
         </div>
         <div class="load-info">💡 <b>Nasıl çalışır?</b> Tutarı girin → "Ödeme Yap" → Papara numaramıza ödeme yapın → "Ödemeyi Yaptım" butonuna basın → Talebiniz admin onayına düşer → Admin onayladıktan sonra bakiyeniz yüklenir.</div>
@@ -560,7 +573,6 @@ button{font-family:inherit;cursor:pointer}
 
 <div class="toasts" id="toasts"></div>
 
-<!-- YARDIM MODAL -->
 <div class="modal" id="supportModal">
   <div class="modal-box left" style="max-width:600px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -659,7 +671,7 @@ button{font-family:inherit;cursor:pointer}
 /* ============================================================
    API BAĞLANTI AYARLARI
    ============================================================ */
-const API_BASE = "/api"; // Vercel'de aynı domain üzerinden çalışacak
+const API_BASE = "/api";
 
 let authToken = null;
 try { authToken = localStorage.getItem("ciftlik_token"); } catch(e){}
@@ -669,17 +681,22 @@ async function apiRequest(endpoint, method = "GET", body = null) {
   if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
   
   const options = { method, headers };
-  if (body) options.body = JSON.stringify(body);
+  if (body !== null && body !== undefined) options.body = JSON.stringify(body);
 
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, options);
-    const data = await res.json();
+    const raw = await res.text();
+    let data = {};
+    if (raw) {
+      try { data = JSON.parse(raw); }
+      catch { throw new Error("Sunucudan geçerli JSON yanıtı alınamadı. API yanıtını kontrol edin."); }
+    }
+
     if (res.status === 401) {
-      // Token geçersizse çıkış yap
       doLogout();
       throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın.");
     }
-    if (!res.ok) throw new Error(data.error || "Bir hata oluştu");
+    if (!res.ok) throw new Error(data.error || data.message || `Sunucu hatası (${res.status})`);
     return data;
   } catch (err) {
     console.error("API Hatası:", err);
@@ -691,7 +708,7 @@ async function apiRequest(endpoint, method = "GET", body = null) {
    GLOBAL DEĞİŞKENLER
    ============================================================ */
 let currentUser = null;
-let S = null; // Farm state (backend'den gelecek)
+let S = null;
 let loadPresetAmount = 0;
 let paparaPendingAmount = 0;
 let currentTab = "farm";
@@ -708,7 +725,7 @@ const MIN_WITHDRAW = 500;
 const MIN_LOAD = 50;
 const WELCOME_BONUS = 150;
 const PAPARA_NUMBER = "9789310466";
-const BASE_FEED_CAP = 100;
+const BASE_FEED_CAP = 1000;
 const AVATARS = ["🐔","🐝","🐑","🐄","🐓","🐎","🐖","🐐","🐕","🐈","🦁","🐯","🐻","🦊","🐼","🐨","🦉","🦅"];
 
 const ANIMALS = {
@@ -728,11 +745,21 @@ const PRODUCTS = {
    YARDIMCILAR
    ============================================================ */
 const $ = s => document.querySelector(s);
-const fmt = n => Math.round(n).toLocaleString("tr-TR");
-const fmtDec = (n, d=4) => Number(n).toFixed(d).replace(".", ",");
-const fmtLive = n => Number(n).toFixed(4).replace(".", ",");
+const fmt = n => (Number.isFinite(Number(n)) ? Math.round(Number(n)) : 0).toLocaleString("tr-TR");
+const fmtDec = (n, d=4) => (Number.isFinite(Number(n)) ? Number(n) : 0).toFixed(d).replace(".", ",");
+const fmtLive = n => (Number.isFinite(Number(n)) ? Number(n) : 0).toFixed(4).replace(".", ",");
 const escapeHtml = s => String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-function normalizePhone(p){ return (p||"").replace(/\D/g, "").slice(-10); }
+function normalizePhone(p){ let d = String(p || "").replace(/\D/g, ""); if(d.startsWith("90") && d.length === 12) d = d.slice(2); if(d.startsWith("0") && d.length === 11) d = d.slice(1); return d.length === 10 ? d : d.slice(-10); }
+function isValidTurkishIban(iban){
+  if(!/^TR\\d{24}$/.test(iban)) return false;
+  const rearranged = iban.slice(4) + iban.slice(0,4);
+  let remainder = "";
+  for(const ch of rearranged){
+    const digits = /[A-Z]/.test(ch) ? String(ch.charCodeAt(0) - 55) : ch;
+    remainder = String((Number(remainder + digits)) % 97);
+  }
+  return Number(remainder) === 1;
+}
 function formatPhoneDisplay(p){
   const d = normalizePhone(p);
   if(d.length !== 10) return p;
@@ -810,7 +837,6 @@ function initAvatarGrid(){
       d.className = "avatar-opt" + (a===currentUser?.avatar ? " sel" : "");
       d.textContent = a;
       d.onclick = ()=>{ 
-        // Not: Backend'de avatar güncelleme endpoint'i yok, şimdilik sadece arayüzde değiştiriyoruz.
         currentUser.avatar = a;
         $("#userAvatar").textContent = a;
         closeAvatarModal();
@@ -836,9 +862,10 @@ async function doRegister(e){
 
   try {
     const data = await apiRequest("/register", "POST", { name, phone, password: pass, avatar: selectedAvatar });
+    if(!data.token) throw new Error("Kayıt yanıtında oturum anahtarı bulunamadı.");
     showMsg("registerMsg",`✅ Kayıt başarılı! Hoş geldin bonusu eklendi.`, false);
     playSound("levelup");
-    localStorage.setItem("ciftlik_token", data.token);
+    try { localStorage.setItem("ciftlik_token", data.token); } catch(e) {}
     authToken = data.token;
     setTimeout(()=>{
       $("#regName").value=""; $("#regPhone").value=""; $("#regPass").value=""; $("#regPass2").value="";
@@ -857,8 +884,9 @@ async function doLogin(e){
 
   try {
     const data = await apiRequest("/login", "POST", { phone, password: pass });
+    if(!data.token) throw new Error("Giriş yanıtında oturum anahtarı bulunamadı.");
     showMsg("loginMsg","✅ Giriş başarılı...", false); playSound("click");
-    localStorage.setItem("ciftlik_token", data.token);
+    try { localStorage.setItem("ciftlik_token", data.token); } catch(e) {}
     authToken = data.token;
     setTimeout(()=>{ $("#loginPhone").value=""; $("#loginPass").value=""; startSession(data.token); }, 400);
   } catch(err) {
@@ -875,7 +903,7 @@ function openLogoutModal(){ $("#logoutModal").classList.add("show"); $("#userMen
 function closeLogoutModal(){ $("#logoutModal").classList.remove("show"); }
 function doLogout(){ 
   closeLogoutModal(); 
-  localStorage.removeItem("ciftlik_token");
+  try { localStorage.removeItem("ciftlik_token"); } catch(e) {}
   authToken = null; currentUser = null; S = null;
   if(refreshInterval) clearInterval(refreshInterval);
   $("#authScreen").style.display = "grid";
@@ -888,21 +916,28 @@ async function startSession(token) {
   authToken = token;
   try {
     const data = await apiRequest("/farm-state");
+    if (!data || !data.user || !data.farm) {
+      throw new Error("Sunucu kullanıcı veya çiftlik bilgilerini eksik gönderdi.");
+    }
     currentUser = data.user;
     S = data.farm;
     
-    // Gelen verileri S objesine uyarla
+    const animals = Array.isArray(data.animals) ? data.animals : [];
+    const inventoryRows = Array.isArray(data.inventory) ? data.inventory : [];
+    const historyRows = Array.isArray(data.history) ? data.history : [];
+    const withdrawRows = Array.isArray(data.withdrawRequests) ? data.withdrawRequests : [];
+
     S.owned = { tavuk: [], ari: [], koyun: [], inek: [] };
-    data.animals.forEach(a => {
+    animals.forEach(a => {
       if(S.owned[a.type]) S.owned[a.type].push(Number(a.age_seconds));
     });
     
     S.inventory = { yumurta: 0, bal: 0, sut: 0, peynir: 0 };
-    data.inventory.forEach(i => { S.inventory[i.product] = Number(i.amount); });
+    inventoryRows.forEach(i => { if (Object.prototype.hasOwnProperty.call(S.inventory, i.product)) S.inventory[i.product] = Number(i.amount) || 0; });
     
     S.prices = { yumurta:2, bal:10, sut:8, peynir:25 };
     S.pricesPrev = { ...S.prices };
-    S.history = data.history.map(h => ({
+    S.history = historyRows.map(h => ({
       id: h.id, type: h.type, desc: h.description, amount: Number(h.amount), status: h.status, date: h.created_at
     }));
     S.totalSold = Number(S.total_sold || 0);
@@ -911,12 +946,14 @@ async function startSession(token) {
     S.totalWithdrawn = Number(S.total_withdrawn || 0);
     S.wallet = Number(S.wallet || 0);
     S.feed = Number(S.feed || 0);
-    S.feedCap = Number(S.feed_cap || 100);
+    S.feedCap = Number(S.feed_cap || BASE_FEED_CAP);
     S.feedUsed = Number(S.feed_used || 0);
     S.feedBought = Number(S.feed_bought || 0);
+    S.auto_feed = Boolean(S.auto_feed);
     
     S.qty = { tavuk:1, ari:1, koyun:1, inek:1 };
-    S.pendingWithdraws = data.withdrawRequests.filter(w => w.status === "pending");
+    S.pendingWithdraws = withdrawRows.filter(w => w.status === "pending");
+    S.tickets = data.tickets || [];
     S.salesByHour = Array(7).fill(null).map(()=>Array(24).fill(0));
     S.productSales = { yumurta:0, bal:0, sut:0, peynir:0 };
     S.incomeHistory = [];
@@ -928,12 +965,12 @@ async function startSession(token) {
     $("#app").classList.add("show");
     $("#supportFab").classList.add("show");
     $("#userAvatar").textContent = currentUser.avatar || "🐄";
-    $("#userName").innerHTML = `${currentUser.name}<small>${formatPhoneDisplay(currentUser.phone)}</small>`;
+    $("#userName").innerHTML = `${escapeHtml(currentUser.name)}<small>${escapeHtml(formatPhoneDisplay(currentUser.phone))}</small>`;
     
     updateUI();
     switchTab("farm");
+    updateSupportBadge();
     
-    // Canlı veri yenileme (5 saniyede bir backend'den güncel durumu çek)
     if(refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(syncFarmState, 5000);
     
@@ -947,36 +984,57 @@ async function syncFarmState() {
   if (!authToken || !S) return;
   try {
     const data = await apiRequest("/farm-state");
-    currentUser = data.user;
-    
-    // Sadece gerekli alanları güncelle (tick bazlı)
-    S.wallet = Number(data.farm.wallet || 0);
-    S.feed = Number(data.farm.feed || 0);
-    S.totalSold = Number(data.farm.total_sold || 0);
-    S.totalSpent = Number(data.farm.total_spent || 0);
-    S.totalLoaded = Number(data.farm.total_loaded || 0);
-    S.totalWithdrawn = Number(data.farm.total_withdrawn || 0);
-    
-    // Hayvanlar
+    const farmData = data.farm || {};
+    currentUser = data.user || currentUser;
+
+    S.wallet = Number(farmData.wallet || 0);
+    S.feed = Number(farmData.feed || 0);
+    S.feedCap = Number(farmData.feed_cap || S.feedCap || BASE_FEED_CAP);
+    S.feedUsed = Number(farmData.feed_used || 0);
+    S.feedBought = Number(farmData.feed_bought || 0);
+    S.auto_feed = Boolean(farmData.auto_feed);
+    S.totalSold = Number(farmData.total_sold || 0);
+    S.totalSpent = Number(farmData.total_spent || 0);
+    S.totalLoaded = Number(farmData.total_loaded || 0);
+    S.totalWithdrawn = Number(farmData.total_withdrawn || 0);
+
+    const animals = Array.isArray(data.animals) ? data.animals : [];
+    const inventoryRows = Array.isArray(data.inventory) ? data.inventory : [];
+    const historyRows = Array.isArray(data.history) ? data.history : [];
+    const withdrawRows = Array.isArray(data.withdrawRequests) ? data.withdrawRequests : [];
+
     S.owned = { tavuk: [], ari: [], koyun: [], inek: [] };
-    data.animals.forEach(a => { if(S.owned[a.type]) S.owned[a.type].push(Number(a.age_seconds)); });
-    
-    // Envanter
+    animals.forEach(a => {
+      if (S.owned[a.type]) S.owned[a.type].push(Number(a.age_seconds) || 0);
+    });
+
     S.inventory = { yumurta: 0, bal: 0, sut: 0, peynir: 0 };
-    data.inventory.forEach(i => { S.inventory[i.product] = Number(i.amount); });
-    
-    // Geçmiş (sadece son 50)
-    S.history = data.history.slice(0, 50).map(h => ({
-      id: h.id, type: h.type, desc: h.description, amount: Number(h.amount), status: h.status, date: h.created_at
+    inventoryRows.forEach(i => {
+      if (Object.prototype.hasOwnProperty.call(S.inventory, i.product)) {
+        S.inventory[i.product] = Number(i.amount) || 0;
+      }
+    });
+
+    S.history = historyRows.slice(0, 50).map(h => ({
+      id: h.id, type: h.type, desc: h.description,
+      amount: Number(h.amount) || 0, status: h.status, date: h.created_at
     }));
-    
-    S.pendingWithdraws = data.withdrawRequests.filter(w => w.status === "pending");
-    
+
+    S.pendingWithdraws = withdrawRows.filter(w => w.status === "pending");
+    S.tickets = Array.isArray(data.tickets) ? data.tickets : [];
+
     updateLiveDOM();
-    if(currentTab === "farm") renderFarmScene();
-    if(currentTab === "stats") renderDashboardLive();
+    updateSupportBadge();
+    if(currentTab === "farm"){ renderFarm(); renderFarmScene(); }
+    if(currentTab === "stats") renderDashboard();
     if(currentTab === "inventory") renderInventory();
-    
+    if(currentTab === "history") renderHistory();
+    if(currentTab === "profile") renderProfile();
+    if(currentTab === "support") renderSupport();
+    if(currentTab === "withdraw"){
+      const balanceEl = $("#wBalance");
+      if(balanceEl) balanceEl.textContent = fmt(S.wallet) + " ₺";
+    }
   } catch(e) {
     console.error("Sync hatası:", e);
   }
@@ -1007,13 +1065,13 @@ function feedNeededPerDay(){ let f=0; for(const k in ANIMALS) f += aliveCount(k)
 /* ============================================================
    AKSİYONLAR (API ÇAĞRILARI)
    ============================================================ */
-function changeQty(key, d){ if(!S) return; S.qty[key] = Math.max(1, (S.qty[key]||1) + d); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); playSound("click"); }
-function setQty(key, val){ if(!S) return; S.qty[key] = Math.max(1, parseInt(val)||1); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); }
+function changeQty(key, d){ if(!S || !ANIMALS[key]) return; S.qty[key] = Math.min(1000, Math.max(1, (S.qty[key]||1) + d)); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); playSound("click"); }
+function setQty(key, val){ if(!S || !ANIMALS[key]) return; S.qty[key] = Math.min(1000, Math.max(1, parseInt(val,10)||1)); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); }
 function updateBuyButton(key){ if(!S) return; const btn = $("#buy-"+key); if(!btn) return; const cost = ANIMALS[key].price * S.qty[key]; btn.textContent = `🛒 Yatırım Yap (${fmt(cost)} ₺)`; }
 
 async function buyAnimal(key){
-  if(!S) return;
-  const qty = S.qty[key] || 1;
+  if(!S || !ANIMALS[key]) return;
+  const qty = Math.min(1000, Math.max(1, Number(S.qty[key]) || 1));
   const btn = $("#buy-"+key);
   if(btn) btn.disabled = true;
   
@@ -1051,6 +1109,8 @@ async function sellProduct(prod){
 
 async function buyFeed(amount){
   if(!S) return;
+  amount = Number(amount);
+  if(!Number.isInteger(amount) || amount <= 0){ toast("❌ Geçerli bir yem miktarı seçin.", true); return; }
   try {
     const res = await apiRequest("/buy-feed", "POST", { amount });
     toast(`🌾 ${res.message}`, false, true);
@@ -1061,15 +1121,27 @@ async function buyFeed(amount){
   }
 }
 
+async function toggleAutoFeed(isEnabled) {
+  try {
+    await apiRequest("/toggle-auto-feed", "POST", { enable: isEnabled });
+    S.auto_feed = isEnabled;
+    toast(isEnabled ? "🚚 Otomatik Yem Alımı Açıldı" : "🛑 Otomatik Yem Alımı Kapatıldı", false, true);
+  } catch(err) {
+    toast("❌ " + err.message, true);
+    document.getElementById("autoFeedToggle").checked = !isEnabled;
+  }
+}
+
 async function requestWithdraw(){
   if(!S) return;
   const bank = $("#wBank").value; const ibanRaw = $("#wIban").value.trim(); const name = $("#wName").value.trim(); const amount = parseFloat($("#wAmount").value);
   if(!bank){ toast("❌ Lütfen banka seçin", true); playSound("error"); return; }
   if(!ibanRaw){ toast("❌ Lütfen IBAN girin", true); playSound("error"); return; }
   const iban = ibanRaw.replace(/\s/g, "").toUpperCase();
-  if(!iban.startsWith("TR") || iban.length !== 26){ toast("❌ Geçerli bir TR IBAN girin", true); playSound("error"); return; }
+  if(!isValidTurkishIban(iban)){ toast("❌ Geçerli bir TR IBAN girin", true); playSound("error"); return; }
   if(!name || name.length < 3){ toast("❌ Lütfen ad soyad girin", true); playSound("error"); return; }
-  if(!amount || amount < MIN_WITHDRAW){ toast(`❌ Minimum çekim tutarı ${MIN_WITHDRAW} ₺`, true); playSound("error"); return; }
+  if(!Number.isFinite(amount) || amount < MIN_WITHDRAW){ toast(`❌ Minimum çekim tutarı ${MIN_WITHDRAW} ₺`, true); playSound("error"); return; }
+  if(amount > Number(S.wallet || 0)){ toast("❌ Çekim tutarı bakiyenizden fazla olamaz.", true); playSound("error"); return; }
   
   try {
     await apiRequest("/withdraw", "POST", { amount, bank, iban, name });
@@ -1089,7 +1161,7 @@ function closeWithdrawModal(){ $("#withdrawModal").classList.remove("show"); }
    ============================================================ */
 function openPaparaModal(){
   let amt = parseFloat($("#loadAmount").value) || loadPresetAmount;
-  if(!amt || amt < MIN_LOAD){ toast(`❌ Minimum yükleme tutarı ${MIN_LOAD} ₺`, true); playSound("error"); return; }
+  if(!Number.isFinite(amt) || amt < MIN_LOAD){ toast(`❌ Minimum yükleme tutarı ${MIN_LOAD} ₺`, true); playSound("error"); return; }
   paparaPendingAmount = amt;
   $("#paparaNumText").textContent = PAPARA_NUMBER;
   $("#paparaAmt").textContent = fmt(amt) + " ₺";
@@ -1150,12 +1222,36 @@ async function submitSupportTicket(){
   }
 }
 
+function updateSupportBadge(){
+  if(!S || !S.tickets) return;
+  const unread = S.tickets.filter(t => t.status === "answered").length;
+  const dot = $("#supportDot");
+  const navBadge = $("#navSupportBadge");
+  const menuDot = $("#menuSupportDot");
+  if(unread > 0){
+    if(dot) dot.style.display = "block";
+    if(navBadge){ navBadge.style.display = "inline-block"; navBadge.textContent = unread; }
+    if(menuDot) menuDot.style.display = "block";
+  } else {
+    if(dot) dot.style.display = "none";
+    if(navBadge) navBadge.style.display = "none";
+    if(menuDot) menuDot.style.display = "none";
+  }
+}
+
 /* ============================================================
    RENDER FONKSİYONLARI
    ============================================================ */
 function updateLiveDOM(){
   if(!S) return;
   const walletEl = $("#wallet"); if(walletEl) walletEl.textContent = fmt(S.wallet) + " ₺";
+  const animalsEl = $("#sAnimals"); if(animalsEl) animalsEl.textContent = totalAlive();
+  const feedEl = $("#sFeed"); if(feedEl) feedEl.textContent = fmt(S.feed) + " / " + fmt(S.feedCap);
+  const feedDaysEl = $("#sFeedDays");
+  if(feedDaysEl){
+    const need = feedNeededPerDay();
+    feedDaysEl.textContent = (need > 0 ? (S.feed / need).toFixed(1) : "∞") + " gün yeter" + (S.feed <= 0 ? " ⚠️ YEM BİTTİ!" : "");
+  }
   const liveEl = $("#sLive"); if(liveEl) liveEl.textContent = fmtLive(inventoryValue()) + " ₺";
   const hourlyEl = $("#sHourly"); if(hourlyEl) hourlyEl.textContent = "Anlık üretim: " + fmt(totalPerHour()) + " ₺/sa";
   const earnedEl = $("#sEarned"); if(earnedEl) earnedEl.textContent = fmt(S.totalSold) + " ₺";
@@ -1192,7 +1288,7 @@ function renderFarmScene(){
   let total = counts.tavuk + counts.ari + counts.koyun + counts.inek;
   const maxIcons = 12; let icons = [];
   if(total <= maxIcons){ for(const k in counts) for(let i=0; i<counts[k]; i++) icons.push(k); }
-  else { for(const k in counts){ const n = Math.round(counts[k] / total * maxIcons); for(let i=0; i<Math.max(1,n); i++) icons.push(k); } icons = icons.slice(0, maxIcons); }
+  else { for(const k in counts){ if(counts[k] <= 0) continue; const n = Math.max(1, Math.round(counts[k] / total * maxIcons)); for(let i=0; i<n; i++) icons.push(k); } icons = icons.slice(0, maxIcons); }
   const signature = icons.join(",");
   if(g.dataset.sig === signature){
     const badge = $("#sceneBadge");
@@ -1219,7 +1315,7 @@ function renderFarm(){
       card.className = "card"; card.id = "card-"+key;
       card.innerHTML = `
         <div class="badge" id="cap-${key}">0</div>
-               <div class="head"><div class="avatar"><svg><use href="#${a.svg}"/></svg></div><div><h3>${a.name}</h3><div class="price">${fmt(a.price)} ₺ / adet</div></div></div>
+        <div class="head"><div class="avatar"><svg><use href="#${a.svg}"/></svg></div><div><h3>${a.name}</h3><div class="price">${fmt(a.price)} ₺ / adet</div></div></div>
         <div class="rows" id="rows-${key}"></div>
         <div class="life-bar" id="lifebar-${key}"><i style="width:0%"></i></div>
         <div class="qty">
@@ -1260,29 +1356,41 @@ function renderFarm(){
 
 function renderInventory(){
   const fs = $("#feedSummary"); if(!fs || !S) return;
+  
+  const alertEl = $("#feedAlert");
+  if (alertEl) alertEl.style.display = S.feed <= 0 ? "block" : "none";
+
   const aliveByKey = {}; for(const k in ANIMALS) aliveByKey[k] = aliveCount(k);
+  const dailyNeed = feedNeededPerDay() || 1;
+  const feedPrice = Math.max(1, Math.floor(100 / dailyNeed));
+
   fs.innerHTML = `
     <div class="card" style="margin-bottom:20px">
-      <div class="head"><div class="avatar"><svg width="50" height="50"><use href="#svg-tavuk"/></svg></div><div><h3>Yem Durumu</h3><div class="price">Tüm Hayvanlar İçin</div></div></div>
+      <div class="head"><div class="avatar"><svg width="50" height="50"><use href="#svg-tavuk"/></svg></div><div><h3>Yem Durumu & Yönetimi</h3><div class="price">Kapasite: 1000 Birim</div></div></div>
       <div class="rows">
-        <div><span>Toplam Yem Stoğu</span><span class="gold">${fmt(S.feed)} / ${fmt(S.feedCap)} birim</span></div>
-        <div><span>Toplam Alınan Yem</span><span>${fmt(S.feedBought)} birim</span></div>
-        <div><span>Toplam Kullanılan Yem</span><span>${fmt(S.feedUsed)} birim</span></div>
-        <div><span>Günlük Tüketim</span><span>${feedNeededPerDay().toFixed(2)} birim</span></div>
+        <div><span>Toplam Yem Stoğu</span><span class="${S.feed <= 0 ? 'red' : 'gold'}">${fmt(S.feed)} / 1000 birim</span></div>
+        <div><span>Günlük Tüketim İhtiyacı</span><span>${feedNeededPerDay().toFixed(2)} birim</span></div>
+        <div><span>1 Günlük Yem Maliyeti</span><span class="green">100 ₺</span></div>
+        <div><span>Birim Fiyatı</span><span>${feedPrice} ₺ / birim</span></div>
       </div>
-      <div class="rows" style="margin-top:10px">
-        <div><span>🐔 Tavuk (${aliveByKey.tavuk})</span><span>${(aliveByKey.tavuk * ANIMALS.tavuk.feedPerDay).toFixed(2)} yem/gün</span></div>
-        <div><span>🐝 Arı (${aliveByKey.ari})</span><span>${(aliveByKey.ari * ANIMALS.ari.feedPerDay).toFixed(2)} yem/gün</span></div>
-        <div><span>🐑 Koyun (${aliveByKey.koyun})</span><span>${(aliveByKey.koyun * ANIMALS.koyun.feedPerDay).toFixed(2)} yem/gün</span></div>
-        <div><span>🐄 İnek (${aliveByKey.inek})</span><span>${(aliveByKey.inek * ANIMALS.inek.feedPerDay).toFixed(2)} yem/gün</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px">
+        <div>
+          <div style="font-weight:800;font-size:.9rem;color:#a9c5f0">🚚 Otomatik Yem Alımı</div>
+          <div style="font-size:.75rem;color:var(--muted)">Yem 10'un altına düşünce, 1 günlük yem otomatik alınır.</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="autoFeedToggle" ${S.auto_feed ? 'checked' : ''} onchange="toggleAutoFeed(this.checked)">
+          <span class="slider"></span>
+        </label>
       </div>
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <button type="button" class="btn blue" onclick="buyFeed(10)">10 🌾 Al</button>
-        <button type="button" class="btn blue" onclick="buyFeed(50)">50 🌾 Al</button>
-        <button type="button" class="btn blue" onclick="buyFeed(200)">200 🌾 Al</button>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button type="button" class="btn blue" onclick="buyFeed(${Math.ceil(dailyNeed)})">1 Günlük Al (~100 ₺)</button>
+        <button type="button" class="btn blue" onclick="buyFeed(100)">100 Birim Al</button>
+        <button type="button" class="btn blue" onclick="buyFeed(500)">500 Birim Al</button>
       </div>
     </div>
   `;
+  
   const g = $("#invGrid"); g.innerHTML = "";
   for(const p in PRODUCTS){
     const prod = PRODUCTS[p]; const amt = S.inventory[p] || 0;
@@ -1303,13 +1411,12 @@ function renderInventory(){
 function renderMarket(){
   const g = $("#marketList"); if(!g || !S) return; g.innerHTML = "";
   for(const p in PRODUCTS){
-    const prod = PRODUCTS[p]; const cur = S.prices[p]; const prev = S.pricesPrev[p];
-    const up = cur >= prev; const pct = prev > 0 ? ((cur-prev)/prev*100) : 0;
+    const prod = PRODUCTS[p]; const cur = Number(S.prices[p] ?? prod.base);
     const row = document.createElement("div");
     row.className = "market-row";
     row.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px"><span style="font-size:1.6rem">${prod.emoji}</span><div><div style="font-weight:700">${prod.name}</div><div style="font-size:.8rem;color:var(--muted)">Temel: ${prod.base} ₺</div></div></div>
-      <div style="display:flex;align-items:center;gap:16px"><div style="text-align:right"><div style="font-weight:800;color:var(--gold)">${cur.toFixed(2)} ₺</div></div><div class="trend ${up?'up':'down'}">${up?"▲":"▼"} ${Math.abs(pct).toFixed(1)}%</div></div>
+      <div style="display:flex;align-items:center;gap:16px"><div style="text-align:right"><div style="font-weight:800;color:var(--gold)">${cur.toFixed(2)} ₺</div><div style="font-size:.7rem;color:var(--muted)">Temel fiyat</div></div></div>
     `;
     g.appendChild(row);
   }
@@ -1325,7 +1432,7 @@ function renderHistory(){
     const div = document.createElement("div");
     div.className = "hist-item";
     div.innerHTML = `
-      <div class="hinfo"><div class="ht">⏳ Ödeme Talebi • ${w.bank}</div><div class="hd">Talep No: ${w.id} • ${new Date(w.created_at).toLocaleString("tr-TR")}</div></div>
+      <div class="hinfo"><div class="ht">⏳ Ödeme Talebi • ${escapeHtml(w.bank)}</div><div class="hd">Talep No: ${w.id.slice(0,8)} • ${new Date(w.created_at).toLocaleString("tr-TR")}</div></div>
       <div class="hval pend">−${fmt(w.amount)} ₺<br><span style="font-size:.7rem">BEKLİYOR</span></div>
     `;
     g.appendChild(div);
@@ -1337,7 +1444,7 @@ function renderHistory(){
     const cls = h.amount > 0 ? "in" : "out";
     const icons = { buy:"🛒", sell:"💰", feed:"🌾", withdraw:"🏦", bonus:"🎁", load:"💳" };
     div.innerHTML = `
-      <div class="hinfo"><div class="ht">${icons[h.type]||"•"} ${h.desc}</div><div class="hd">${new Date(h.date).toLocaleString("tr-TR")}</div></div>
+      <div class="hinfo"><div class="ht">${icons[h.type]||"•"} ${escapeHtml(h.desc)}</div><div class="hd">${new Date(h.date).toLocaleString("tr-TR")}</div></div>
       <div class="hval ${cls}">${h.amount === 0 ? "BEKLİYOR" : sign+fmt(Math.abs(h.amount))+" ₺"}</div>
     `;
     g.appendChild(div);
@@ -1351,7 +1458,7 @@ function renderProfile(){
   $("#profileHeader").innerHTML = `
     <div class="profile-avatar-big">${u.avatar || "🐄"}</div>
     <div class="profile-info">
-      <h2>${u.name}</h2>
+      <h2>${escapeHtml(u.name)}</h2>
       <div class="meta">📱 ${formatPhoneDisplay(u.phone)}</div>
       <div class="meta">🆔 Üye No: ${normalizePhone(u.phone).slice(-6)}</div>
       <div class="joined">📅 Üyelik: ${joined}</div>
@@ -1417,7 +1524,7 @@ function renderKPI(){
   const profit = totalSales - S.totalSpent;
   const profitClass = profit >= 0 ? "green" : "red";
   
-  $("#kpiGrid").innerHTML = `
+  $("#kpiGrid").innerHTML =`
     <div class="kpi" data-live="hourly"><div class="kpi-icon">🕐</div><div class="kpi-lbl">Saatlik Üretim</div><div class="kpi-val green">${fmt(hourly)} ₺</div></div>
     <div class="kpi" data-live="daily"><div class="kpi-icon">📅</div><div class="kpi-lbl">Günlük Üretim</div><div class="kpi-val green">${fmt(daily)} ₺</div></div>
     <div class="kpi" data-live="monthly"><div class="kpi-icon">📆</div><div class="kpi-lbl">Aylık Üretim</div><div class="kpi-val green">${fmt(monthly)} ₺</div></div>
@@ -1431,7 +1538,7 @@ function renderForecast(){
   const total = totalAlive(); let text = "";
   if(total === 0) text = "🚀 <b>Henüz hayvanın yok.</b> Bir hayvan satın alarak üretime başla.";
   else if(total < 5) text = `🌱 <b>Başlangıç seviyesi.</b> ${total} aktif hayvanın var. Daha fazla hayvan alarak günlük kazancını ${fmt(daily*2)} ₺'ye çıkarabilirsin.`;
-  else if(total < 20) text = `📈 <b>İyi gidiyorsun.</b> ${total} hayvanla günde ${fmt(daily)} ₺ üretim yapıyorsun. 1 ay içinde yaklaşık ${fmt(monthly)} ₺ biriktirebilirsin.`;
+  else if(total < 20) text = `📈 <b>İyi gidiyorsun.</b> ${total} hayvanla günde ${fmt(daily)} ₺ üretim yapıyorsun. mevcut hızla ayda yaklaşık ${fmt(monthly)} ₺ üretim tahmini oluşur.`;
   else text = `🔥 <b>Profesyonel çiftçi!</b> ${total} aktif hayvanla ayda ${fmt(monthly)} ₺. Yılda ${fmt(yearly)} ₺'ye ulaşabilirsin.`;
   $("#forecastBox").innerHTML = `
     <h3>🔮 Tahmin — "Bu hızla..."</h3>
@@ -1439,7 +1546,7 @@ function renderForecast(){
       <div class="forecast-item"><div class="f-lbl">1 Saatte</div><div class="f-val">${fmt(hourly)} ₺</div><div class="f-sub">Mevcut hızda</div></div>
       <div class="forecast-item"><div class="f-lbl">1 Günde</div><div class="f-val">${fmt(daily)} ₺</div><div class="f-sub">24 saat tahmini</div></div>
       <div class="forecast-item"><div class="f-lbl">1 Ayda</div><div class="f-val">${fmt(monthly)} ₺</div><div class="f-sub">30 gün tahmini</div></div>
-      <div class="forecast-item"><div class="f-lbl">6 Ayda</div><div class="f-val">${fmt(sixMonth)} ₺</div><div class="f-sub">Bileşik üretim</div></div>
+      <div class="forecast-item"><div class="f-lbl">6 Ayda</div><div class="f-val">${fmt(sixMonth)} ₺</div><div class="f-sub">Mevcut hızla tahmin</div></div>
       <div class="forecast-item"><div class="f-lbl">1 Yılda</div><div class="f-val">${fmt(yearly)} ₺</div><div class="f-sub">Uzun vadeli</div></div>
     </div>
     <div class="forecast-note">${text}</div>
@@ -1452,14 +1559,19 @@ function renderCharts(){
   const textColor = css.getPropertyValue("--muted").trim() || "#8ca0c4";
   let data = []; let labels = []; let subText = "";
   
-  // Backend'den anlık geçmiş gelmediği için sahte dalgalanma grafiği
-  data = Array(10).fill(null).map(() => totalPerHour());
-  labels = data.map((_,i)=>`${(i+1)*10}s`); subText = "Anlık üretim değeri";
+  const periodValue = dashPeriod === "daily" ? totalPerHour() * 24
+    : dashPeriod === "monthly" ? totalPerHour() * 24 * 30
+    : totalPerHour();
+  const periodLabel = dashPeriod === "daily" ? "Günlük üretim"
+    : dashPeriod === "monthly" ? "Aylık üretim" : "Saatlik üretim";
+  data = [periodValue];
+  labels = [periodLabel];
+  subText = "Mevcut aktif hayvanlara göre hesaplanan tahmini değer";
   
   const subEl = $("#incomeChartSub"); if(subEl) subEl.textContent = subText;
   if(!incomeChart){
     incomeChart = new Chart($("#incomeChart"), {
-      type:"line", data:{ labels, datasets:[{ label:"Gelir ₺", data, borderColor:"#22c55e", backgroundColor:"rgba(34,197,94,.15)", fill:true, tension:.35, pointRadius:2, pointBackgroundColor:"#22c55e" }] },
+      type:"bar", data:{ labels, datasets:[{ label:"Tahmini üretim değeri (₺)", data, backgroundColor:"#22c55e", borderRadius:8 }] },
       options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:textColor}}}, scales:{ x:{ticks:{color:textColor, font:{size:10}}}, y:{ticks:{color:textColor, font:{size:10}}, beginAtZero:true} } }
     });
   } else { incomeChart.data.labels = labels; incomeChart.data.datasets[0].data = data; incomeChart.update("none"); }
@@ -1468,7 +1580,7 @@ function renderCharts(){
   for(const k in ANIMALS) animalValues[k] = aliveCount(k) * perHour(k);
   const hasAnimals = Object.values(animalValues).some(v=>v>0);
   const animalLabels = Object.keys(ANIMALS).map(k=>ANIMALS[k].name);
-  const animalData = hasAnimals ? Object.keys(ANIMALS).map(k=>Number(animalValues[k].toFixed(2))) : [1,1,1,1];
+  const animalData = Object.keys(ANIMALS).map(k=>Number(animalValues[k].toFixed(2)));
   const animalColors = Object.keys(ANIMALS).map(k=>ANIMALS[k].color);
   if(!animalChart){
     animalChart = new Chart($("#animalChart"), {
@@ -1494,21 +1606,58 @@ function renderProductBars(){
   }
 }
 function renderHeatmap(){
-  const g = $("#heatmap"); if(!g) return;
-  const days = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
-  let html = `<div></div>`;
-  for(let h=0; h<24; h++) html += `<div class="hm-hour">${h % 2 === 0 ? h : ""}</div>`;
-  for(let d=0; d<7; d++){
-    html += `<div class="hm-label">${days[d]}</div>`;
-    for(let h=0; h<24; h++){
-      html += `<div class="hm-cell lvl0"></div>`;
-    }
-  }
-  g.innerHTML = html;
+  const g = $("#heatmap");
+  if(!g) return;
+  g.innerHTML = `<div class="empty-chart"><div class="emoji">📊</div><p>Satış yoğunluğu verisi API tarafından henüz sağlanmıyor.</p></div>`;
 }
+
 function renderTopProducts(){
   const g = $("#topProducts"); if(!g) return;
   g.innerHTML = `<div class="empty-chart"><div class="emoji">🏆</div><p>Backend satış istatistikleri entegre edilecek.</p></div>`;
+}
+
+/* ============================================================
+   DESTEK TALEPLERİ RENDER
+   ============================================================ */
+function renderSupport() {
+  const g = $("#supportList"); if(!g || !currentUser) return;
+  const tickets = S?.tickets || [];
+  
+  if(tickets.length === 0){
+    g.innerHTML = `<div class="card" style="text-align:center;padding:50px 20px"><div style="font-size:3rem;margin-bottom:10px;opacity:.5">📭</div><p style="color:var(--muted)">Henüz destek talebiniz yok.</p></div>`;
+    return;
+  }
+  
+  g.innerHTML = "";
+  tickets.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "support-ticket" + (t.status === "answered" ? " replied" : "") + (t.status === "closed" ? " closed" : "");
+    const statusMap = {
+      pending: { label: "⏳ BEKLEMEDE", cls: "pending" },
+      answered: { label: "✅ YANITLANDI", cls: "replied" },
+      closed: { label: "🔒 KAPALI", cls: "closed" }
+    };
+    const st = statusMap[t.status] || statusMap.pending;
+    
+    let repliesHtml = "";
+    (t.support_replies || []).forEach(r => {
+      repliesHtml += `<div class="st-reply">
+        <div class="st-reply-meta">👑 ADMIN • ${new Date(r.created_at).toLocaleString("tr-TR")}</div>
+        ${escapeHtml(r.message)}
+      </div>`;
+    });
+    
+    div.innerHTML = `
+      <div class="st-header">
+        <div class="st-title">💬 ${escapeHtml(t.subject)}</div>
+        <div class="st-status ${st.cls}">${st.label}</div>
+      </div>
+      <div class="st-meta">Talep No: ${t.id.slice(0,8)} • ${new Date(t.created_at).toLocaleString("tr-TR")}</div>
+      <div class="st-message">${escapeHtml(t.message)}</div>
+      ${repliesHtml}
+    `;
+    g.appendChild(div);
+  });
 }
 
 /* ============================================================
@@ -1524,6 +1673,20 @@ function toast(msg, isErr=false, isGold=false, isPurple=false){
 function toggleUserMenu(){ $("#userMenu").classList.toggle("show"); }
 document.addEventListener("click", (e)=>{ if(!e.target.closest(".user-chip")) $("#userMenu")?.classList.remove("show"); });
 
+function showFlyingMoney(text, prod){
+  const el = document.createElement("div");
+  el.className = "fly-money"; el.textContent = text;
+  const x = window.innerWidth / 2 + (Math.random() - 0.5) * 200; const y = window.innerHeight / 2;
+  el.style.left = x + "px"; el.style.top = y + "px";
+  document.body.appendChild(el); setTimeout(()=>el.remove(), 1500);
+  const icon = document.createElement("div");
+  icon.className = "fly-icon"; icon.textContent = PRODUCTS[prod]?.emoji || "💰";
+  icon.style.left = x + "px"; icon.style.top = y + "px";
+  const walletEl = $("#wallet");
+  if(walletEl){ const rect = walletEl.getBoundingClientRect(); icon.style.setProperty("--tx", (rect.left - x + rect.width/2) + "px"); icon.style.setProperty("--ty", (rect.top - y + rect.height/2) + "px"); }
+  document.body.appendChild(icon); setTimeout(()=>icon.remove(), 1300);
+}
+
 function switchTab(tab){
   if(!S) return;
   currentTab = tab;
@@ -1533,7 +1696,7 @@ function switchTab(tab){
   const titles = {
     farm:["Hayvan Pazarı","Yatırım yap, üret, sat, kazan"],
     inventory:["Ürün & Yem","Ürünlerini sat, yemini yönet"],
-    market:["Piyasa Fiyatları","Canlı fiyatları takip et"],
+    market:["Piyasa Fiyatları","Ürünlerin temel fiyatlarını görüntüle"],
     withdraw:["Ödeme Çek","Kazançlarını banka hesabına aktar"],
     history:["İşlem Geçmişi","Tüm finansal hareketleriniz"],
     stats:["Dashboard","Gelişmiş performans analizi"],
@@ -1565,11 +1728,6 @@ function goSupport(){ switchTab("support"); }
 function goLoad(){ switchTab("profile"); setTimeout(()=>{ const el = document.querySelector(".load-section"); if(el) el.scrollIntoView({behavior:"smooth", block:"center"}); $("#loadAmount")?.focus(); }, 100); }
 function openAvatarModal(){ initAvatarGrid(); $("#avatarModal").classList.add("show"); }
 function closeAvatarModal(){ $("#avatarModal").classList.remove("show"); }
-
-function renderSupport() {
-  const g = $("#supportList"); if(!g || !currentUser) return;
-  g.innerHTML = `<div class="card" style="text-align:center;padding:50px 20px"><div style="font-size:3rem;margin-bottom:10px;opacity:.5">📭</div><p style="color:var(--muted)">Destek talepleri API'den çekiliyor...</p></div>`;
-}
 
 /* ============================================================
    INIT
