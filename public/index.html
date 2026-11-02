@@ -989,6 +989,7 @@ async function syncFarmState() {
 
     S.wallet = Number(farmData.wallet || 0);
     S.feed = Number(farmData.feed || 0);
+    S.auto_feed = Boolean(data.farm.auto_feed);
     S.feedCap = Number(farmData.feed_cap || S.feedCap || BASE_FEED_CAP);
     S.feedUsed = Number(farmData.feed_used || 0);
     S.feedBought = Number(farmData.feed_bought || 0);
