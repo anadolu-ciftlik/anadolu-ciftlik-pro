@@ -1383,20 +1383,20 @@ function renderInventory(){
           <span class="slider"></span>
         </label>
       </div>
-           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:20px">
-        <button type="button" class="btn blue" onclick="buyFeed(${Math.ceil(dailyNeed)})" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:14px;border:1px solid rgba(59,130,246,.3)">
+                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:20px">
+        <button type="button" class="btn blue" onclick="buyFeed(${Math.ceil(dailyNeed)})" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:14px;border:1px solid rgba(59,130,246,.3); width:100%; max-width:none;">
           <span style="font-size:1.4rem;margin-bottom:6px">🌾</span>
           <span style="font-weight:800;font-size:.95rem">1 Günlük Al</span>
           <span style="font-size:.75rem;opacity:.8;font-weight:600;margin-top:4px">~100 ₺</span>
         </button>
         
-        <button type="button" class="btn blue" onclick="buyFeed(100)" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:14px;border:1px solid rgba(59,130,246,.3)">
+        <button type="button" class="btn blue" onclick="buyFeed(100)" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:14px;border:1px solid rgba(59,130,246,.3); width:100%; max-width:none;">
           <span style="font-size:1.4rem;margin-bottom:6px">📦</span>
           <span style="font-weight:800;font-size:.95rem">100 Birim</span>
           <span style="font-size:.75rem;opacity:.8;font-weight:600;margin-top:4px">Standart Paket</span>
         </button>
 
-        <button type="button" class="btn blue" onclick="buyFeed(500)" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:14px;border:1px solid rgba(59,130,246,.3)">
+        <button type="button" class="btn blue" onclick="buyFeed(500)" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:14px;border:1px solid rgba(59,130,246,.3); width:100%; max-width:none;">
           <span style="font-size:1.4rem;margin-bottom:6px">🚛</span>
           <span style="font-weight:800;font-size:.95rem">500 Birim</span>
           <span style="font-size:.75rem;opacity:.8;font-weight:600;margin-top:4px">Toptan Paket</span>
