@@ -111,13 +111,16 @@ module.exports = async (req, res) => {
         supabase.from("support_tickets").select("*, support_replies(*)").eq("user_id", user.id).order("created_at", { ascending: false })
       ]);
 
-      return ok(res, {
+           return ok(res, {
         user: { id: user.id, name: user.name, phone: user.phone, avatar: user.avatar, created_at: user.created_at },
-        farm, animals: animalsRes.data || [], inventory: inventoryRes.data || [],
+        farm: {
+          ...farm,
+          auto_feed: Boolean(farm.auto_feed) // <-- BU SATIRI EKLE
+        },
+        animals: animalsRes.data || [], inventory: inventoryRes.data || [],
         history: historyRes.data || [], loadRequests: loadReqRes.data || [],
         withdrawRequests: withdrawRes.data || [], tickets: ticketsRes.data || []
       });
-    }
 
     if (path === "/toggle-auto-feed" && req.method === "POST") {
       const user = await getUserFromReq(req);
