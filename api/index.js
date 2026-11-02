@@ -121,6 +121,7 @@ module.exports = async (req, res) => {
         history: historyRes.data || [], loadRequests: loadReqRes.data || [],
         withdrawRequests: withdrawRes.data || [], tickets: ticketsRes.data || []
       });
+    }
 
     if (path === "/toggle-auto-feed" && req.method === "POST") {
       const user = await getUserFromReq(req);
@@ -377,13 +378,14 @@ async function advanceAges(userId, farm) {
   if (deltaSec <= 0) return farm;
 
   const { data: animals } = await supabase.from("animals").select("*").eq("user_id", userId);
-  if (animals && animals.length > 0) {
-    const updates = animals.map(a => supabase.from("animals").update({ age_seconds: Number(a.age_seconds) + deltaSec }).eq("id", a.id));
+  const animalRows = animals || [];
+  if (animalRows.length > 0) {
+    const updates = animalRows.map(a => supabase.from("animals").update({ age_seconds: Number(a.age_seconds) + deltaSec }).eq("id", a.id));
     await Promise.all(updates);
   }
 
   const aliveCounts = { tavuk:0, ari:0, koyun:0, inek:0 };
-  animals.forEach(a => { if (Number(a.age_seconds) < ANIMAL_LIFE_SEC) aliveCounts[a.type]++; });
+  animalRows.forEach(a => { if (Number(a.age_seconds) + deltaSec < ANIMAL_LIFE_SEC) aliveCounts[a.type]++; });
   const feedFactor = Number(farm.feed) > 0 ? 1 : 0;
 
   for (const key in ANIMALS) {
