@@ -10,17 +10,14 @@ const ANIMALS = {
 const SEC_PER_MONTH = 86400 * 30;
 const ANIMAL_LIFE_SEC = 86400 * 30;
 const BASE_PRICES = { yumurta:2, bal:10, sut:8, peynir:25 };
+const FEED_CAP = 1000; // Yem stoğu kapasitesi 1000 olarak güncellendi
 
 module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { cors(res); return res.status(200).end(); }
 
-// Vercel üzerinden gelen API adresini belirle
-const requestedPath = req.query?.path ||
-  req.url.replace(/^\/api/, "").split("?")[0];
-
-const path = requestedPath === "/" || requestedPath === ""
-  ? "/index"
-  : requestedPath;
+  // Vercel üzerinden gelen API adresini belirle
+  const requestedPath = req.query?.path || req.url.replace(/^\/api/, "").split("?")[0];
+  const path = requestedPath === "/" || requestedPath === "" ? "/index" : requestedPath;
 
   try {
     // ================= AUTH =================
@@ -74,6 +71,37 @@ const path = requestedPath === "/" || requestedPath === ""
       let farm = await ensureFarm(user.id);
       farm = await advanceAges(user.id, farm);
 
+      // OTOMATİK YEM KONTROLÜ
+      if (farm.auto_feed && Number(farm.feed) < 10) {
+        const { data: animalsAuto } = await supabase.from("animals").select("type").eq("user_id", user.id);
+        const aliveAuto = { tavuk:0, ari:0, koyun:0, inek:0 };
+        (animalsAuto || []).forEach(a => { aliveAuto[a.type]++; });
+        
+        let dailyNeedAuto = 0;
+        for (const k in aliveAuto) dailyNeedAuto += aliveAuto[k] * ANIMALS[k].feedPerDay;
+        if (dailyNeedAuto === 0) dailyNeedAuto = 1;
+
+        const priceAuto = Math.max(1, Math.floor(100 / dailyNeedAuto));
+        const qtyAuto = Math.ceil(dailyNeedAuto);
+        const costAuto = qtyAuto * priceAuto;
+
+        if (Number(farm.wallet) >= costAuto) {
+          await supabase.from("farms").update({
+            wallet: Number(farm.wallet) - costAuto,
+            total_spent: Number(farm.total_spent) + costAuto,
+            feed: Number(farm.feed) + qtyAuto,
+            feed_bought: Number(farm.feed_bought) + qtyAuto
+          }).eq("user_id", user.id);
+          
+          await supabase.from("history").insert({ 
+            user_id: user.id, type: "feed", description: `Otomatik Yem Alımı (${qtyAuto} birim)`, amount: -costAuto 
+          });
+          
+          farm.feed = Number(farm.feed) + qtyAuto;
+          farm.wallet = Number(farm.wallet) - costAuto;
+        }
+      }
+
       const [animalsRes, inventoryRes, historyRes, loadReqRes, withdrawRes, ticketsRes] = await Promise.all([
         supabase.from("animals").select("*").eq("user_id", user.id),
         supabase.from("inventory").select("*").eq("user_id", user.id),
@@ -89,6 +117,15 @@ const path = requestedPath === "/" || requestedPath === ""
         history: historyRes.data || [], loadRequests: loadReqRes.data || [],
         withdrawRequests: withdrawRes.data || [], tickets: ticketsRes.data || []
       });
+    }
+
+    if (path === "/toggle-auto-feed" && req.method === "POST") {
+      const user = await getUserFromReq(req);
+      if (!user) return err(res, "Oturum bulunamadı", 401);
+
+      const { enable } = req.body || {};
+      await supabase.from("farms").update({ auto_feed: enable }).eq("user_id", user.id);
+      return ok(res, { message: "Otomatik yem ayarı güncellendi", auto_feed: enable });
     }
 
     if (path === "/buy-animal" && req.method === "POST") {
@@ -138,19 +175,48 @@ const path = requestedPath === "/" || requestedPath === ""
       if (!user) return err(res, "Oturum bulunamadı", 401);
 
       const { amount } = req.body || {};
-      const qty = Math.max(1, parseInt(amount) || 10);
       const farm = await ensureFarm(user.id);
-      const space = Number(farm.feed_cap) - Number(farm.feed);
+      
+      const space = FEED_CAP - Number(farm.feed);
+      
+      // Dinamik fiyat hesaplama: Hayvanların 1 günlük tüketimi * 100 tl
+      const { data: animals } = await supabase.from("animals").select("type").eq("user_id", user.id);
+      const aliveCounts = { tavuk:0, ari:0, koyun:0, inek:0 };
+      (animals || []).forEach(a => { aliveCounts[a.type]++; });
+      
+      let dailyFeedNeed = 0;
+      for (const k in aliveCounts) dailyFeedNeed += aliveCounts[k] * ANIMALS[k].feedPerDay;
+      if (dailyFeedNeed === 0) dailyFeedNeed = 1;
+
+      const feedPricePerUnit = Math.max(1, Math.floor(100 / dailyFeedNeed)); 
+      
+      let qty = parseInt(amount);
+      if (isNaN(qty) || qty <= 0) {
+        qty = Math.ceil(dailyFeedNeed); 
+      }
+      
       const realAmount = Math.min(qty, space);
-      if (realAmount <= 0) return err(res, "Yem deposu dolu");
+      if (realAmount <= 0) return err(res, "Yem deposu dolu (Kapasite: 1000)");
 
-      const cost = realAmount * 5;
-      if (Number(farm.wallet) < cost) return err(res, "Yetersiz bakiye");
+      const cost = realAmount * feedPricePerUnit;
+      if (Number(farm.wallet) < cost) return err(res, "Yetersiz bakiye! Gerekli: " + cost + " ₺");
 
-      await supabase.from("farms").update({ wallet: Number(farm.wallet) - cost, total_spent: Number(farm.total_spent) + cost, feed: Number(farm.feed) + realAmount, feed_bought: Number(farm.feed_bought) + realAmount }).eq("user_id", user.id);
-      await supabase.from("history").insert({ user_id: user.id, type: "feed", description: `${realAmount} birim yem alımı`, amount: -cost });
+      await supabase.from("farms").update({ 
+        wallet: Number(farm.wallet) - cost, 
+        total_spent: Number(farm.total_spent) + cost, 
+        feed: Number(farm.feed) + realAmount, 
+        feed_bought: Number(farm.feed_bought) + realAmount,
+        feed_cap: FEED_CAP
+      }).eq("user_id", user.id);
+      
+      await supabase.from("history").insert({ 
+        user_id: user.id, 
+        type: "feed", 
+        description: `${realAmount} birim yem alımı`, 
+        amount: -cost 
+      });
 
-      return ok(res, { message: `${realAmount} yem alındı`, cost });
+      return ok(res, { message: `${realAmount} yem alındı`, cost, price: feedPricePerUnit });
     }
 
     if (path === "/withdraw" && req.method === "POST") {
