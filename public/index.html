@@ -1123,13 +1123,36 @@ async function buyFeed(amount){
 }
 
 async function toggleAutoFeed(isEnabled) {
+  const checkbox = document.getElementById("autoFeedToggle");
+
+  if (checkbox) checkbox.disabled = true;
+
   try {
-    await apiRequest("/toggle-auto-feed", "POST", { enable: isEnabled });
-    S.auto_feed = isEnabled;
-    toast(isEnabled ? "🚚 Otomatik Yem Alımı Açıldı" : "🛑 Otomatik Yem Alımı Kapatıldı", false, true);
-  } catch(err) {
+    const res = await apiRequest(
+      "/toggle-auto-feed",
+      "POST",
+      { enable: isEnabled }
+    );
+
+    S.auto_feed = Boolean(res.auto_feed);
+
+    if (checkbox) checkbox.checked = S.auto_feed;
+
+    toast(
+      S.auto_feed
+        ? "🚚 Otomatik Yem Alımı Açıldı"
+        : "🛑 Otomatik Yem Alımı Kapatıldı",
+      false,
+      true
+    );
+
+    await syncFarmState();
+
+  } catch (err) {
+    if (checkbox) checkbox.checked = Boolean(S?.auto_feed);
     toast("❌ " + err.message, true);
-    document.getElementById("autoFeedToggle").checked = !isEnabled;
+  } finally {
+    if (checkbox) checkbox.disabled = false;
   }
 }
 
