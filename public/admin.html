@@ -1,611 +1,78 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — Anadolu Çiftlik</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yönetim Merkezi — Anadolu Çiftlik</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{
-  --bg:#0a0f1a; --panel:#111a2c; --panel2:#16223a; --line:#1f2c47;
-  --green:#22c55e; --gold:#f59e0b; --red:#ef4444; --blue:#3b82f6;
-  --text:#e9eef8; --muted:#8ca0c4; --purple:#a855f7;
-}
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
-body{background:radial-gradient(1400px 700px at 15% -10%,#13233f,transparent),var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-button{font-family:inherit;cursor:pointer}
-::-webkit-scrollbar{width:9px}::-webkit-scrollbar-thumb{background:#26364f;border-radius:10px}
-.login-screen{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 600px at 20% 0%,#16233d,transparent),linear-gradient(180deg,#0a0f1a,#0d1524);z-index:9999;overflow-y:auto}
-.login-box{background:linear-gradient(165deg,#111a2c,#16223a);border:1px solid var(--line);border-radius:24px;padding:36px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)}
-.login-box .logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#f59e0b,#d97706);display:grid;place-items:center;font-size:2rem;margin:0 auto 16px;box-shadow:0 8px 24px rgba(245,158,11,.4)}
-.login-box h1{text-align:center;margin-bottom:6px;font-size:1.4rem}
-.login-box p{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:24px}
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:7px}
-.form-group input{width:100%;padding:13px 15px;border-radius:11px;background:#0b1424;border:1px solid var(--line);color:var(--text);font-size:.95rem;font-family:inherit;transition:.15s}
-.form-group input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
-.btn{width:100%;padding:14px;border:none;border-radius:11px;font-weight:800;font-size:.95rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:#1a1200;transition:.18s}
-.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
-.btn.green{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
-.btn.red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
-.btn.blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#04121f}
-.btn.purple{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
-.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
-.auth-msg{padding:12px 14px;border-radius:10px;font-size:.85rem;margin-bottom:14px;display:none}
-.auth-msg.show{display:block}
-.auth-msg.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80}
-.auth-msg.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#7ceb9e}
-.app{display:none;min-height:100vh}
-.app.show{display:block}
-.topbar{background:linear-gradient(180deg,#0d1524,#0a0f1a);border-bottom:1px solid var(--line);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
-.brand{display:flex;align-items:center;gap:12px}
-.brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#d97706);display:grid;place-items:center;font-size:1.4rem;box-shadow:0 6px 18px rgba(245,158,11,.35)}
-.brand h1{font-size:1.1rem;font-weight:800;letter-spacing:.3px}
-.brand small{display:block;color:var(--muted);font-size:.7rem;letter-spacing:1.5px;font-weight:600}
-.admin-info{display:flex;align-items:center;gap:14px}
-.admin-badge{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:800;letter-spacing:.5px}
-.logout-btn{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#ff8a80;padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer}
-.logout-btn:hover{background:rgba(239,68,68,.25)}
-.main{padding:28px;max-width:1400px;margin:0 auto}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px}
-.stat{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
-.stat::before{content:"";position:absolute;inset:0;background:radial-gradient(300px 120px at 100% 0%,rgba(245,158,11,.1),transparent)}
-.stat .lbl{color:var(--muted);font-size:.74rem;font-weight:600;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.5px}
-.stat .val{font-size:1.6rem;font-weight:800;margin-top:8px}
-.stat .val.gold{color:var(--gold)}.stat .val.green{color:var(--green)}.stat .val.red{color:#ff8a80}.stat .val.blue{color:#6cb8ff}.stat .val.purple{color:#c08bff}
-.section{display:none}
-.section.active{display:block}
-.tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
-.tab{background:transparent;border:none;color:var(--muted);padding:10px 18px;font-weight:700;font-size:.9rem;border-radius:10px;transition:.15s;cursor:pointer;display:flex;align-items:center;gap:8px}
-.tab:hover{background:var(--panel2);color:var(--text)}
-.tab.active{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(217,119,6,.1));color:var(--gold);border:1px solid rgba(245,158,11,.35)}
-.tab .cnt{background:rgba(245,158,11,.25);color:var(--gold);font-size:.72rem;padding:2px 8px;border-radius:20px;font-weight:800}
-.tab .cnt.red{background:rgba(239,68,68,.2);color:#ff8a80}
-.tab .cnt.green{background:rgba(34,197,94,.2);color:var(--green)}
-.tab .cnt.purple{background:rgba(168,85,247,.2);color:#c4b5fd}
-.panel{background:linear-gradient(165deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:20px}
-.panel h2{font-size:1.1rem;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.panel h2 .info{font-size:.8rem;color:var(--muted);font-weight:500}
-.load-request{background:#0b1424;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;transition:.15s}
-.load-request:hover{border-color:rgba(245,158,11,.3)}
-.load-request.approved{opacity:.75;border-color:rgba(34,197,94,.3)}
-.load-request.rejected{opacity:.65;border-color:rgba(239,68,68,.3)}
-.req-user{display:flex;align-items:center;gap:14px;flex:1;min-width:250px}
-.req-avatar{width:52px;height:52px;border-radius:14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:grid;place-items:center;font-size:1.6rem;flex-shrink:0}
-.req-info{flex:1;min-width:0}
-.req-name{font-weight:800;font-size:.95rem;margin-bottom:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.req-meta{font-size:.75rem;color:var(--muted);line-height:1.6}
-.req-meta b{color:var(--text);font-weight:600}
-.req-amount{text-align:right;flex-shrink:0}
-.req-amount .amt{font-size:1.3rem;font-weight:900;color:var(--gold);margin-bottom:2px}
-.req-amount .id{font-size:.7rem;color:var(--muted);font-family:'Courier New',monospace}
-.req-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
-.req-actions button{padding:10px 18px;border-radius:10px;border:none;font-weight:800;font-size:.82rem;transition:.15s;cursor:pointer}
-.req-actions .approve{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
-.req-actions .approve:hover{filter:brightness(1.1);transform:translateY(-1px)}
-.req-actions .reject{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80}
-.req-actions .reject:hover{background:rgba(239,68,68,.25)}
-.status-badge{padding:6px 14px;border-radius:20px;font-size:.72rem;font-weight:800;letter-spacing:.5px;flex-shrink:0}
-.status-badge.pending{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.35)}
-.status-badge.approved{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35)}
-.status-badge.rejected{background:rgba(239,68,68,.15);color:#ff8a80;border:1px solid rgba(239,68,68,.35)}
-.status-badge.replied{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.35)}
-.status-badge.closed{background:rgba(120,120,120,.2);color:#aaa;border:1px solid rgba(120,120,120,.35)}
-.empty{text-align:center;padding:60px 20px;color:var(--muted)}
-.empty .emoji{font-size:3rem;margin-bottom:12px;opacity:.5}
-.user-card{background:#0b1424;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:12px;transition:.15s}
-.user-card:hover{border-color:rgba(34,197,94,.3)}
-.user-card-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
-.user-card-avatar{width:56px;height:56px;border-radius:16px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:grid;place-items:center;font-size:1.8rem;flex-shrink:0}
-.user-card-name{flex:1;min-width:160px}
-.user-card-name h4{font-size:1rem;margin-bottom:4px}
-.user-card-name .uid{font-size:.72rem;color:var(--muted);font-family:'Courier New',monospace}
-.user-card-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.08)}
-.user-stat{background:rgba(255,255,255,.02);border-radius:10px;padding:10px 12px}
-.user-stat .lbl{font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
-.user-stat .val{font-size:1rem;font-weight:800}
-.user-stat .val.gold{color:var(--gold)}.user-stat .val.green{color:var(--green)}.user-stat .val.blue{color:#6cb8ff}
-.search-box{width:100%;padding:12px 16px;border-radius:11px;background:#0b1424;border:1px solid var(--line);color:var(--text);font-size:.9rem;margin-bottom:16px;font-family:inherit}
-.search-box:focus{outline:none;border-color:rgba(245,158,11,.5);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
-
-/* SUPPORT ADMIN */
-.support-ticket{background:#0b1424;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;transition:.15s}
-.support-ticket:hover{border-color:rgba(168,85,247,.4)}
-.support-ticket.replied{border-color:rgba(34,197,94,.35)}
-.support-ticket.closed{opacity:.65}
-.st-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.st-user{display:flex;align-items:center;gap:12px;flex:1;min-width:200px}
-.st-user-avatar{width:44px;height:44px;border-radius:12px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:grid;place-items:center;font-size:1.4rem;flex-shrink:0}
-.st-user-info{flex:1;min-width:0}
-.st-user-name{font-weight:800;font-size:.92rem;margin-bottom:3px}
-.st-user-meta{font-size:.72rem;color:var(--muted);line-height:1.5}
-.st-user-meta b{color:var(--text)}
-.st-subject{font-weight:800;font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.st-message{background:#0d1524;border-left:3px solid #7c3aed;padding:12px 16px;border-radius:8px;font-size:.86rem;line-height:1.6;margin-bottom:12px;white-space:pre-wrap;word-break:break-word}
-.st-replies{margin-bottom:12px}
-.st-reply{background:rgba(34,197,94,.08);border-left:3px solid var(--green);padding:10px 14px;border-radius:8px;font-size:.84rem;line-height:1.6;margin-bottom:8px;white-space:pre-wrap;word-break:break-word}
-.st-reply-meta{font-size:.7rem;color:var(--green);font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.st-reply-meta button{background:transparent;border:none;color:#ff8a80;font-size:.7rem;cursor:pointer;padding:2px 6px;border-radius:4px}
-.st-reply-meta button:hover{background:rgba(239,68,68,.15)}
-.st-reply-form{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(128,128,128,.2)}
-.st-reply-form textarea{width:100%;padding:12px 14px;border-radius:10px;background:#0d1524;border:1px solid var(--line);color:var(--text);font-size:.86rem;font-family:inherit;resize:vertical;min-height:80px;line-height:1.5}
-.st-reply-form textarea:focus{outline:none;border-color:rgba(34,197,94,.5);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
-.st-reply-form .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-.st-reply-form button{padding:9px 16px;border-radius:9px;border:none;font-weight:800;font-size:.82rem;cursor:pointer;transition:.15s}
-.st-reply-form .send-reply{background:linear-gradient(135deg,#22c55e,#16a34a);color:#03150a}
-.st-reply-form .send-reply:hover{filter:brightness(1.08);transform:translateY(-1px)}
-.st-reply-form .close-ticket{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80}
-.st-reply-form .close-ticket:hover{background:rgba(239,68,68,.25)}
-.st-reply-form .reopen-ticket{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--green)}
-.st-reply-form .reopen-ticket:hover{background:rgba(34,197,94,.25)}
-
-.toast{position:fixed;bottom:24px;right:24px;background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--green);padding:14px 18px;border-radius:11px;font-weight:600;font-size:.88rem;box-shadow:0 12px 30px rgba(0,0,0,.5);transform:translateX(120%);transition:.35s;z-index:99999}
-.toast.show{transform:translateX(0)}
-.toast.err{border-left-color:var(--red)}
-@media(max-width:700px){
-  .load-request{flex-direction:column;align-items:stretch}
-  .req-actions{width:100%}
-  .req-actions button{flex:1}
-  .req-amount{text-align:left}
-}
+:root{--bg:#09111f;--p:#111d31;--p2:#172640;--line:#293b59;--t:#edf3ff;--m:#91a4c5;--gold:#f5ad32;--green:#2bd576;--red:#ff7070;--blue:#60a5fa;--purple:#b58aff}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Segoe UI,system-ui,sans-serif}body{background:radial-gradient(900px 500px at 10% 0%,#1a3152,transparent),var(--bg);color:var(--t);min-height:100vh}button,input,textarea{font:inherit}button{cursor:pointer}
+.login-screen{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:20px;background:#09111fee}.login-box{width:min(420px,100%);padding:34px;background:var(--p);border:1px solid var(--line);border-radius:22px;box-shadow:0 25px 80px #0008}.logo{width:60px;height:60px;margin:0 auto 16px;display:grid;place-items:center;border-radius:17px;background:linear-gradient(135deg,#ffc45b,#d97706);font-size:29px}.login-box h1,.login-box p{text-align:center}.login-box p{color:var(--m);font-size:13px;margin:8px 0 22px}.field{margin-bottom:14px}.field label{display:block;color:var(--m);font-size:11px;font-weight:800;margin-bottom:7px}.field input{width:100%;padding:13px;border-radius:10px;background:#091426;border:1px solid var(--line);color:var(--t);outline:none}.field input:focus,.search:focus,textarea:focus{border-color:var(--gold)}.btn{padding:11px 15px;border:0;border-radius:9px;background:var(--gold);color:#17120a;font-weight:800}.btn.block{width:100%;padding:14px}.btn.green{background:var(--green)}.btn.red{background:var(--red);color:white}.btn.ghost{background:#263752;color:var(--t)}.auth-msg{display:none;padding:10px;border-radius:8px;margin-bottom:13px;font-size:13px}.auth-msg.show{display:block}.auth-msg.err{background:#ff707022;color:#ffaaaa}.auth-msg.ok{background:#2bd57622;color:#9af0bd}
+.app{display:none}.app.show{display:block}.topbar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 25px;background:#0b1525ed;border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.brand{display:flex;align-items:center;gap:11px}.brand .logo{width:43px;height:43px;margin:0;font-size:22px}.brand h1{font-size:17px}.brand small{display:block;color:var(--m);font-size:10px;letter-spacing:2px}.admin-pill{color:var(--gold);background:#f5ad3218;border:1px solid #f5ad3244;border-radius:30px;padding:7px 12px;font-size:11px;font-weight:900}.logout{padding:9px 13px;border-radius:9px;background:#ff707018;border:1px solid #ff707055;color:#ffaaaa;font-weight:800}.main{max-width:1450px;margin:auto;padding:24px}.pagehead{display:flex;justify-content:space-between;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:18px}.pagehead p,.muted{color:var(--m);font-size:12px;margin-top:5px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.stat,.panel{background:linear-gradient(145deg,var(--p),var(--p2));border:1px solid var(--line);border-radius:15px}.stat{padding:17px}.stat small{display:block;color:var(--m);font-size:10px;font-weight:900;letter-spacing:.5px}.stat b{display:block;font-size:24px;margin-top:9px;overflow-wrap:anywhere}.gold{color:var(--gold)}.greenText{color:var(--green)}.redText{color:var(--red)}.blueText{color:var(--blue)}.purpleText{color:var(--purple)}
+.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid var(--line)}.tab{white-space:nowrap;padding:10px 13px;border:1px solid transparent;border-radius:9px;background:none;color:var(--m);font-weight:800;font-size:12px}.tab.active{color:var(--gold);background:#f5ad3218;border-color:#f5ad3244}.cnt{margin-left:4px;padding:2px 6px;border-radius:15px;background:#f5ad3225;color:var(--gold)}.section{display:none}.section.active{display:block}.panel{padding:19px;margin-bottom:16px}.panel h3{font-size:15px}.panelhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.charts{display:grid;grid-template-columns:1fr 1fr;gap:15px}.chart{height:260px;position:relative}.request,.ticket,.user{padding:15px;margin-bottom:10px;background:#091426;border:1px solid var(--line);border-radius:12px}.request{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.requser{display:flex;align-items:center;gap:11px;flex:1;min-width:210px}.avatar{width:45px;height:45px;border-radius:12px;background:#2bd57619;display:grid;place-items:center;font-size:22px;flex-shrink:0}.reqname{font-size:13px;font-weight:900}.meta{font-size:11px;color:var(--m);line-height:1.7;margin-top:4px;overflow-wrap:anywhere}.amount{font-size:19px;color:var(--gold);font-weight:900;white-space:nowrap}.actions{display:flex;gap:7px;flex-wrap:wrap}.actions button{padding:9px 12px;border:0;border-radius:8px;font-size:11px;font-weight:900}.approve{background:var(--green);color:#062012}.reject{background:#ff707022;color:#ffaaaa;border:1px solid #ff707055!important}.status{padding:6px 10px;border-radius:20px;font-size:10px;font-weight:900;background:#f5ad3218;color:var(--gold)}.status.approved,.status.answered{background:#2bd57618;color:var(--green)}.status.rejected{background:#ff707018;color:var(--red)}.status.closed{background:#9992;color:#ddd}.search{width:100%;padding:12px;border-radius:9px;background:#091426;border:1px solid var(--line);color:var(--t);margin-bottom:13px;outline:none}.userhead{display:flex;align-items:center;gap:11px;margin-bottom:12px}.userhead .avatar{width:48px;height:48px}.userhead>div:nth-child(2){flex:1}.userhead strong{font-size:13px}.userhead small{display:block;color:var(--m);font-size:11px;margin-top:4px;line-height:1.6}.userstats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding-top:11px;border-top:1px solid #ffffff15}.us{padding:9px;background:#ffffff07;border-radius:8px}.us small{display:block;color:var(--m);font-size:9px;font-weight:900;margin-bottom:5px}.us b{font-size:12px;overflow-wrap:anywhere}.tickethead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}.message{padding:12px;background:#ffffff08;border-left:3px solid var(--purple);border-radius:7px;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.reply{margin-top:8px;padding:10px;background:#2bd5760c;border-left:3px solid var(--green);font-size:12px;white-space:pre-wrap}.replyform{margin-top:12px}.replyform textarea{width:100%;min-height:75px;padding:10px;background:#091426;border:1px solid var(--line);border-radius:8px;color:var(--t);outline:none}.empty{text-align:center;padding:38px;color:var(--m);font-size:13px}.toast{position:fixed;right:20px;bottom:20px;z-index:20;padding:13px 17px;background:#20324d;border:1px solid var(--line);border-left:4px solid var(--green);border-radius:10px;transform:translateY(150%);transition:.25s;max-width:90vw;font-size:13px}.toast.show{transform:translateY(0)}.toast.err{border-left-color:var(--red)}
+@media(max-width:950px){.stats{grid-template-columns:repeat(2,1fr)}.userstats{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.main{padding:13px}.topbar{padding:12px}.charts{grid-template-columns:1fr}.stats{gap:8px}.stat{padding:13px}.stat b{font-size:20px}.userstats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <div class="logo">🛡️</div>
-    <h1>Admin Panel</h1>
-    <p>Anadolu Çiftlik Yönetim Sistemi</p>
-    <div class="auth-msg" id="loginMsg"></div>
-    <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="adminUser" placeholder="admin" autocomplete="off"></div>
-    <div class="form-group"><label>Şifre</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="off" onkeypress="if(event.key==='Enter') adminLogin()"></div>
-    <button class="btn" onclick="adminLogin()">🔓 Giriş Yap</button>
-  </div>
-</div>
-
+<div class="login-screen" id="loginScreen"><div class="login-box"><div class="logo">🛡️</div><h1>Yönetim Merkezi</h1><p>Anadolu Çiftlik yönetici girişi</p><div class="auth-msg" id="loginMsg"></div><div class="field"><label>KULLANICI ADI</label><input id="adminUser" autocomplete="username" placeholder="Kullanıcı adı"></div><div class="field"><label>ŞİFRE</label><input id="adminPass" type="password" autocomplete="current-password" placeholder="Şifre"></div><button class="btn block" id="loginButton">Giriş Yap →</button></div></div>
 <div class="app" id="app">
-  <div class="topbar">
-    <div class="brand"><div class="logo">🛡️</div><div><h1>Admin Panel</h1><small>ANADOLU ÇİFTLİK</small></div></div>
-    <div class="admin-info"><div class="admin-badge">👑 ADMIN</div><button class="logout-btn" onclick="adminLogout()">🚪 Çıkış</button></div>
-  </div>
-
-  <div class="main">
-    <div class="stats">
-      <div class="stat"><div class="lbl">👥 Toplam Üye</div><div class="val purple" id="sUsers">0</div></div>
-      <div class="stat"><div class="lbl">💳 Bekleyen Yükleme</div><div class="val gold" id="sPending">0</div></div>
-      <div class="stat"><div class="lbl">🏦 Bekleyen Çekim</div><div class="val red" id="sPendingWithdraw">0</div></div>
-      <div class="stat"><div class="lbl">💬 Destek Talebi</div><div class="val purple" id="sSupport">0</div></div>
-      <div class="stat"><div class="lbl">✅ Onaylanan Yükleme</div><div class="val green" id="sApproved">0</div></div>
-      <div class="stat"><div class="lbl">💰 Toplam Onaylanan</div><div class="val blue" id="sTotal">0 ₺</div></div>
-    </div>
-
-    <div class="tabs">
-      <button class="tab active" data-tab="all">📊 Tüm Talepler <span class="cnt" id="cntAll">0</span></button>
-      <button class="tab" data-tab="pendingLoad">💳 Yükleme Bekleyen <span class="cnt" id="cntPendingLoad">0</span></button>
-      <button class="tab" data-tab="pendingWithdraw">🏦 Çekim Bekleyen <span class="cnt red" id="cntPendingWithdraw">0</span></button>
-      <button class="tab" data-tab="support">💬 Destek Talepleri <span class="cnt purple" id="cntSupport">0</span></button>
-      <button class="tab" data-tab="approved">✅ Onaylanan <span class="cnt green" id="cntApproved">0</span></button>
-      <button class="tab" data-tab="rejected">❌ Reddedilen <span class="cnt red" id="cntRejected">0</span></button>
-      <button class="tab" data-tab="users">👥 Üyeler <span class="cnt" id="cntUsers">0</span></button>
-    </div>
-
-    <div class="section active" id="tab-all"><div class="panel"><h2>📊 Tüm Talepler <span class="info" id="allInfo"></span></h2><div id="allList"></div></div></div>
-    <div class="section" id="tab-pendingLoad"><div class="panel"><h2>💳 Bekleyen Bakiye Yükleme <span class="info" id="pendingLoadInfo"></span></h2><div id="pendingLoadList"></div></div></div>
-    <div class="section" id="tab-pendingWithdraw"><div class="panel"><h2>🏦 Bekleyen Para Çekme <span class="info" id="pendingWithdrawInfo"></span></h2><div id="pendingWithdrawList"></div></div></div>
-
-    <!-- DESTEK -->
-    <div class="section" id="tab-support">
-      <div class="panel"><h2>💬 Destek Talepleri <span class="info" id="supportInfo"></span></h2><div id="supportList"></div></div>
-    </div>
-
-    <div class="section" id="tab-approved"><div class="panel"><h2>✅ Onaylanan Talepler</h2><div id="approvedList"></div></div></div>
-    <div class="section" id="tab-rejected"><div class="panel"><h2>❌ Reddedilen Talepler</h2><div id="rejectedList"></div></div></div>
-    <div class="section" id="tab-users">
-      <div class="panel">
-        <h2>👥 Kayıtlı Üyeler <span class="info" id="usersInfo"></span></h2>
-        <input type="text" class="search-box" id="userSearch" placeholder="🔍 Üye ara (isim, telefon, üye no)..." oninput="renderAll()">
-        <div id="usersList"></div>
-      </div>
-    </div>
-  </div>
+<header class="topbar"><div class="brand"><div class="logo">🌾</div><div><h1>Anadolu Çiftlik</h1><small>YÖNETİM MERKEZİ</small></div></div><div style="display:flex;gap:10px;align-items:center"><span class="admin-pill">👑 YÖNETİCİ</span><button class="logout" id="logoutButton">Çıkış Yap</button></div></header>
+<main class="main">
+<div class="pagehead"><div><h2>Genel Bakış</h2><p>Sistemin mevcut durumunu ve üye taleplerini takip edin.</p></div><span class="muted" id="lastRefresh">Veriler yükleniyor…</span></div>
+<div class="stats">
+<div class="stat"><small>👥 TOPLAM ÜYE</small><b class="purpleText" id="sUsers">—</b></div>
+<div class="stat"><small>💰 ÜYE BAKİYELERİ TOPLAMI</small><b class="gold" id="sWallet">—</b></div>
+<div class="stat"><small>💳 TOPLAM YÜKLEME</small><b class="blueText" id="sLoaded">—</b></div>
+<div class="stat"><small>🏦 TOPLAM ÇEKİLEN</small><b class="redText" id="sWithdrawn">—</b></div>
+<div class="stat"><small>⏳ BEKLEYEN YÜKLEME</small><b class="gold" id="sPendingLoad">—</b></div>
+<div class="stat"><small>🏧 BEKLEYEN ÇEKİM</small><b class="redText" id="sPendingWithdraw">—</b></div>
+<div class="stat"><small>💬 BEKLEYEN DESTEK</small><b class="purpleText" id="sSupport">—</b></div>
+<div class="stat"><small>🐾 KAYITLI HAYVAN</small><b class="greenText" id="sAnimals">—</b></div>
 </div>
-
-<div class="toast" id="toast"></div>
-
+<nav class="tabs" id="tabs">
+<button class="tab active" data-tab="dashboard">📊 Genel Bakış</button><button class="tab" data-tab="all">📋 Tüm Talepler <span class="cnt" id="cntAll">0</span></button><button class="tab" data-tab="pendingLoad">💳 Yükleme <span class="cnt" id="cntPendingLoad">0</span></button><button class="tab" data-tab="pendingWithdraw">🏦 Çekim <span class="cnt" id="cntPendingWithdraw">0</span></button><button class="tab" data-tab="support">💬 Destek <span class="cnt" id="cntSupport">0</span></button><button class="tab" data-tab="approved">✅ Onaylanan</button><button class="tab" data-tab="rejected">❌ Reddedilen</button><button class="tab" data-tab="users">👥 Üyeler <span class="cnt" id="cntUsers">0</span></button>
+</nav>
+<section class="section active" id="tab-dashboard"><div class="charts"><div class="panel"><div class="panelhead"><h3>Son 7 Gün — Yükleme Talepleri</h3></div><div class="chart"><canvas id="loadChart"></canvas></div></div><div class="panel"><div class="panelhead"><h3>Son 7 Gün — Çekim Talepleri</h3></div><div class="chart"><canvas id="withdrawChart"></canvas></div></div></div><div class="panel"><div class="panelhead"><h3>Son İşlemler</h3><span class="muted">En son oluşturulan talepler</span></div><div id="recentList"></div></div><div class="panel"><h3>İstatistik notu</h3><p class="muted" style="line-height:1.8">Bakiyeler ve toplam yükleme/çekim değerleri mevcut üye-farm kayıtlarından hesaplanır. Grafikler son 7 gündeki talep kayıt sayılarını gösterir. Hayvan türü dağılımı, en çok satın alınan hayvan ve günlük/aylık gerçek para hareketi için ayrıca sunucu tarafında istatistik API'si eklenmelidir.</p></div></section>
+<section class="section" id="tab-all"><div class="panel"><div class="panelhead"><h3>Tüm Bakiye Talepleri</h3><span class="muted" id="allInfo"></span></div><div id="allList"></div></div></section>
+<section class="section" id="tab-pendingLoad"><div class="panel"><div class="panelhead"><h3>Bekleyen Yüklemeler</h3><span class="muted" id="pendingLoadInfo"></span></div><div id="pendingLoadList"></div></div></section>
+<section class="section" id="tab-pendingWithdraw"><div class="panel"><div class="panelhead"><h3>Bekleyen Para Çekme Talepleri</h3><span class="muted" id="pendingWithdrawInfo"></span></div><div id="pendingWithdrawList"></div></div></section>
+<section class="section" id="tab-support"><div class="panel"><div class="panelhead"><h3>Üye Destek Talepleri</h3><span class="muted" id="supportInfo"></span></div><div id="supportList"></div></div></section>
+<section class="section" id="tab-approved"><div class="panel"><h3 style="margin-bottom:14px">Onaylanan Talepler</h3><div id="approvedList"></div></div></section>
+<section class="section" id="tab-rejected"><div class="panel"><h3 style="margin-bottom:14px">Reddedilen Talepler</h3><div id="rejectedList"></div></div></section>
+<section class="section" id="tab-users"><div class="panel"><div class="panelhead"><h3>Kayıtlı Üyeler</h3><span class="muted" id="usersInfo"></span></div><input class="search" id="userSearch" placeholder="Üye adı veya telefon numarasıyla ara…"><div id="usersList"></div></div></section>
+</main></div><div class="toast" id="toast"></div>
 <script>
 "use strict";
-
-/* ============================================================
-   API BAĞLANTI AYARLARI
-   ============================================================ */
-const API_BASE = "/api";
-const ADMIN_TOKEN_KEY = "anadolu_admin_token";
-
-let adminToken = null;
-try { adminToken = localStorage.getItem(ADMIN_TOKEN_KEY); } catch(e){}
-
-async function apiRequest(endpoint, method = "GET", body = null) {
-  const headers = { "Content-Type": "application/json" };
-  if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
-  
-  const options = { method, headers };
-  if (body) options.body = JSON.stringify(body);
-
-  try {
-    const res = await fetch(`${API_BASE}${endpoint}`, options);
-    const data = await res.json();
-    if (res.status === 401) {
-      adminLogout();
-      throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın.");
-    }
-    if (!res.ok) throw new Error(data.error || "Bir hata oluştu");
-    return data;
-  } catch (err) {
-    console.error("API Hatası:", err);
-    throw err;
-  }
-}
-
-/* ============================================================
-   YARDIMCILAR
-   ============================================================ */
-const $ = s => document.querySelector(s);
-const fmt = n => Math.round(n).toLocaleString("tr-TR");
-const fmtDate = d => new Date(d).toLocaleString("tr-TR", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-const fmtPhone = p => p && p.length === 10 ? `0${p.slice(0,3)} ${p.slice(3,6)} ${p.slice(6,8)} ${p.slice(8,10)}` : p;
-const escapeHtml = s => String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-
-let currentData = { users: [], loads: [], withdraws: [], tickets: [] };
-let refreshInterval = null;
-
-/* ============================================================
-   AUTH
-   ============================================================ */
-async function adminLogin() {
-  const username = $("#adminUser").value.trim();
-  const password = $("#adminPass").value;
-  const msg = $("#loginMsg");
-
-  if (!username || !password) {
-    msg.className = "auth-msg show err";
-    msg.textContent = "❌ Kullanıcı adı ve şifre gerekli";
-    return;
-  }
-
-  try {
-    const data = await apiRequest("/admin-login", "POST", { username, password });
-    msg.className = "auth-msg show ok";
-    msg.textContent = "✅ Giriş başarılı...";
-    localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
-    adminToken = data.token;
-    setTimeout(() => {
-      $("#loginScreen").style.display = "none";
-      $("#app").classList.add("show");
-      startAdminSession();
-    }, 400);
-  } catch (err) {
-    msg.className = "auth-msg show err";
-    msg.textContent = "❌ " + err.message;
-  }
-}
-
-function adminLogout() {
-  localStorage.removeItem(ADMIN_TOKEN_KEY);
-  adminToken = null;
-  if (refreshInterval) clearInterval(refreshInterval);
-  $("#loginScreen").style.display = "grid";
-  $("#app").classList.remove("show");
-  $("#adminUser").value = "";
-  $("#adminPass").value = "";
-  $("#loginMsg").className = "auth-msg";
-}
-
-function tryRestore() {
-  if (!adminToken) return false;
-  $("#loginScreen").style.display = "none";
-  $("#app").classList.add("show");
-  startAdminSession();
-  return true;
-}
-
-async function startAdminSession() {
-  await fetchAdminData();
-  if (refreshInterval) clearInterval(refreshInterval);
-  refreshInterval = setInterval(fetchAdminData, 5000);
-}
-
-async function fetchAdminData() {
-  try {
-    const data = await apiRequest("/admin-pending");
-    currentData = {
-      users: data.users || [],
-      loads: data.loads || [],
-      withdraws: data.withdraws || [],
-      tickets: data.tickets || []
-    };
-    renderAll();
-  } catch (err) {
-    console.error("Veri çekme hatası:", err);
-  }
-}
-
-function showToast(msg, isErr = false) {
-  const t = $("#toast");
-  t.textContent = msg;
-  t.className = "toast show" + (isErr ? " err" : "");
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => { t.className = "toast"; }, 3000);
-}
-
-/* ============================================================
-   RENDER
-   ============================================================ */
-function renderAll() {
-  const { users, loads, withdraws, tickets } = currentData;
-
-  const pendingLoads = loads.filter(r => r.status === "pending");
-  const pendingWithdraws = withdraws.filter(r => r.status === "pending");
-  const approvedLoads = loads.filter(r => r.status === "approved");
-  const approvedWithdraws = withdraws.filter(r => r.status === "approved");
-  const rejectedLoads = loads.filter(r => r.status === "rejected");
-  const rejectedWithdraws = withdraws.filter(r => r.status === "rejected");
-  const pendingTickets = tickets.filter(t => t.status === "pending");
-  const allPending = [...pendingLoads, ...pendingWithdraws];
-
-  // Stats
-  $("#sUsers").textContent = users.length;
-  $("#sPending").textContent = pendingLoads.length;
-  $("#sPendingWithdraw").textContent = pendingWithdraws.length;
-  $("#sSupport").textContent = pendingTickets.length;
-  $("#sApproved").textContent = approvedLoads.length;
-  const totalApproved = approvedLoads.reduce((s, r) => s + Number(r.amount || 0), 0);
-  $("#sTotal").textContent = fmt(totalApproved) + " ₺";
-
-  // Counts
-  $("#cntAll").textContent = allPending.length + pendingTickets.length;
-  $("#cntPendingLoad").textContent = pendingLoads.length;
-  $("#cntPendingWithdraw").textContent = pendingWithdraws.length;
-  $("#cntSupport").textContent = pendingTickets.length;
-  $("#cntApproved").textContent = approvedLoads.length + approvedWithdraws.length;
-  $("#cntRejected").textContent = rejectedLoads.length + rejectedWithdraws.length;
-  $("#cntUsers").textContent = users.length;
-
-  // Info labels
-  $("#allInfo").textContent = `(${allPending.length} bekleyen ödeme / ${loads.length + withdraws.length} toplam)`;
-  $("#pendingLoadInfo").textContent = `(${pendingLoads.length} talep)`;
-  $("#pendingWithdrawInfo").textContent = `(${pendingWithdraws.length} talep)`;
-  $("#supportInfo").textContent = `(${pendingTickets.length} bekleyen / ${tickets.length} toplam)`;
-  $("#usersInfo").textContent = `(${users.length} üye)`;
-
-  // Lists
-  renderRequestList("allList", [...loads, ...withdraws].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-  renderRequestList("pendingLoadList", pendingLoads);
-  renderRequestList("pendingWithdrawList", pendingWithdraws);
-  renderRequestList("approvedList", [...approvedLoads, ...approvedWithdraws]);
-  renderRequestList("rejectedList", [...rejectedLoads, ...rejectedWithdraws]);
-  renderSupportList(tickets);
-  renderUsers(users);
-}
-
-function renderRequestList(containerId, list) {
-  const g = $("#" + containerId); if (!g) return;
-  if (list.length === 0) {
-    g.innerHTML = `<div class="empty"><div class="emoji">📭</div><p>Bu kategoride talep yok.</p></div>`;
-    return;
-  }
-  g.innerHTML = "";
-  list.forEach(r => {
-    const div = document.createElement("div");
-    const statusClass = r.status === "approved" ? "approved" : (r.status === "rejected" ? "rejected" : "");
-    div.className = "load-request " + statusClass;
-    const isLoad = r.type === "load";
-    const typeIcon = isLoad ? "💳" : "🏦";
-    const typeName = isLoad ? "Bakiye Yükleme" : "Para Çekme";
-    const userName = r.user?.name || "Bilinmeyen";
-    const userAvatar = r.user?.avatar || "🐄";
-    const userPhone = r.user?.phone || "-";
-    const reqId = (r.id || "").slice(0, 12);
-
-    let actionsHtml = "";
-    if (r.status === "pending") {
-      actionsHtml = `<div class="req-actions">
-        <button class="approve" onclick="approveRequest('${r.type}','${r.id}')">✅ Onayla</button>
-        <button class="reject" onclick="rejectRequest('${r.type}','${r.id}')">❌ Reddet</button>
-      </div>`;
-    } else if (r.status === "approved") {
-      actionsHtml = `<span class="status-badge approved">✅ ONAYLANDI</span>`;
-    } else {
-      actionsHtml = `<span class="status-badge rejected">❌ REDDEDİLDİ</span>`;
-    }
-
-    let extraInfo = "";
-    if (!isLoad && r.bank) {
-      extraInfo = `<br>🏦 <b>${r.bank}</b> • IBAN: <b>${(r.iban || "").slice(0, 10)}...</b> • Alıcı: <b>${r.name || "-"}</b>`;
-    }
-
-    div.innerHTML = `
-      <div class="req-user">
-        <div class="req-avatar">${userAvatar}</div>
-        <div class="req-info">
-          <div class="req-name">${typeIcon} ${escapeHtml(userName)} <span style="font-size:.72rem;color:var(--muted);font-weight:600">${typeName}</span></div>
-          <div class="req-meta">📱 <b>${fmtPhone(userPhone)}</b> • Talep No: <b>${reqId}</b><br>📅 ${fmtDate(r.created_at)}${extraInfo}${r.reject_reason ? `<br>❌ Sebep: ${r.reject_reason}` : ""}</div>
-        </div>
-      </div>
-      <div class="req-amount"><div class="amt">${fmt(r.amount)} ₺</div><div class="id">${reqId}</div></div>
-      ${actionsHtml}
-    `;
-    g.appendChild(div);
-  });
-}
-
-function renderSupportList(tickets) {
-  const g = $("#supportList"); if (!g) return;
-  if (tickets.length === 0) {
-    g.innerHTML = `<div class="empty"><div class="emoji">📭</div><p>Henüz destek talebi yok.</p></div>`;
-    return;
-  }
-  g.innerHTML = "";
-  tickets.forEach(t => {
-    const div = document.createElement("div");
-    div.className = "support-ticket" + (t.status === "answered" ? " replied" : "") + (t.status === "closed" ? " closed" : "");
-    const statusMap = {
-      pending: { label: "⏳ BEKLEMEDE", cls: "pending" },
-      answered: { label: "✅ YANITLANDI", cls: "replied" },
-      closed: { label: "🔒 KAPALI", cls: "closed" }
-    };
-    const st = statusMap[t.status] || statusMap.pending;
-    const userName = t.user?.name || t.userName || "Bilinmeyen";
-    const userAvatar = t.user?.avatar || "🐄";
-    const userPhone = t.user?.phone || "-";
-    const ticketId = (t.id || "").slice(0, 12);
-
-    let repliesHtml = "";
-    (t.support_replies || []).forEach(r => {
-      repliesHtml += `<div class="st-reply">
-        <div class="st-reply-meta"><span>👑 ADMIN • ${fmtDate(r.created_at)}</span></div>
-        ${escapeHtml(r.message)}
-      </div>`;
-    });
-
-    const canReply = t.status !== "closed";
-    const replyForm = canReply ? `
-      <div class="st-reply-form">
-        <textarea id="reply-${t.id}" placeholder="Yanıtınızı buraya yazın..."></textarea>
-        <div class="actions">
-          <button class="send-reply" onclick="sendReply('${t.id}')" type="button">📤 Yanıt Gönder</button>
-        </div>
-      </div>
-    ` : `<div class="st-reply-form"><div class="actions"><span style="color:var(--muted);font-size:.8rem">Bu talep kapatılmıştır.</span></div></div>`;
-
-    div.innerHTML = `
-      <div class="st-header">
-        <div class="st-user">
-          <div class="st-user-avatar">${userAvatar}</div>
-          <div class="st-user-info">
-            <div class="st-user-name">${escapeHtml(userName)}</div>
-            <div class="st-user-meta">📱 <b>${fmtPhone(userPhone)}</b> • Talep No: <b>${ticketId}</b><br>📅 ${fmtDate(t.created_at)}</div>
-          </div>
-        </div>
-        <div class="status-badge ${st.cls}">${st.label}</div>
-      </div>
-      <div class="st-subject">💬 ${escapeHtml(t.subject)}</div>
-      <div class="st-message">${escapeHtml(t.message)}</div>
-      ${repliesHtml ? `<div class="st-replies">${repliesHtml}</div>` : ""}
-      ${replyForm}
-    `;
-    g.appendChild(div);
-  });
-}
-
-function renderUsers(users) {
-  const g = $("#usersList"); if (!g) return;
-  const searchEl = $("#userSearch");
-  const q = (searchEl?.value || "").toLowerCase().trim();
-  
-  let filtered = users;
-  if (q) {
-    filtered = users.filter(u => {
-      const name = (u.name || "").toLowerCase();
-      const phone = (u.phone || "").toLowerCase();
-      return name.includes(q) || phone.includes(q.replace(/\s/g, ""));
-    });
-  }
-  
-  if (filtered.length === 0) {
-    g.innerHTML = `<div class="empty"><div class="emoji">👥</div><p>${q ? "Arama sonucu bulunamadı." : "Henüz kayıtlı üye yok."}</p></div>`;
-    return;
-  }
-  
-  g.innerHTML = "";
-  filtered.forEach(u => {
-    const farm = u.farm || {};
-    const wallet = Number(farm.wallet || 0);
-    const totalLoaded = Number(farm.total_loaded || 0);
-    const totalSold = Number(farm.total_sold || 0);
-    const totalWithdrawn = Number(farm.total_withdrawn || 0);
-    const aliveAnimals = u.animals?.alive || 0;
-    const totalAnimals = u.animals?.total || 0;
-    
-    const div = document.createElement("div");
-    div.className = "user-card";
-    div.innerHTML = `
-      <div class="user-card-head">
-        <div class="user-card-avatar">${u.avatar || "🐄"}</div>
-        <div class="user-card-name">
-          <h4>${escapeHtml(u.name)}</h4>
-          <div class="uid">📱 ${fmtPhone(u.phone)} • 🆔 ${(u.phone || "").slice(-6)}</div>
-          <div class="uid">📅 Üyelik: ${fmtDate(u.created_at)}</div>
-        </div>
-      </div>
-      <div class="user-card-stats">
-        <div class="user-stat"><div class="lbl">💰 Bakiye</div><div class="val gold">${fmt(wallet)} ₺</div></div>
-        <div class="user-stat"><div class="lbl">💳 Toplam Yükleme</div><div class="val blue">${fmt(totalLoaded)} ₺</div></div>
-        <div class="user-stat"><div class="lbl">📈 Toplam Satış</div><div class="val green">${fmt(totalSold)} ₺</div></div>
-        <div class="user-stat"><div class="lbl">🏦 Çekilen</div><div class="val">${fmt(totalWithdrawn)} ₺</div></div>
-        <div class="user-stat"><div class="lbl">🐾 Aktif Hayvan</div><div class="val">${aliveAnimals} / ${totalAnimals}</div></div>
-      </div>
-    `;
-    g.appendChild(div);
-  });
-}
-
-/* ============================================================
-   ONAY / RED / CEVAP
-   ============================================================ */
-async function approveRequest(type, id) {
-  if (!confirm(`Bu ${type === "load" ? "bakiye yükleme" : "para çekme"} talebini onaylıyor musunuz?`)) return;
-  try {
-    await apiRequest("/admin-approve", "POST", { type, id });
-    showToast("✅ Talep onaylandı");
-    await fetchAdminData();
-  } catch (err) {
-    showToast("❌ " + err.message, true);
-  }
-}
-
-async function rejectRequest(type, id) {
-  const reason = prompt(`Reddetme sebebi nedir?`, "Ödeme doğrulanamadı");
-  if (reason === null) return;
-  try {
-    await apiRequest("/admin-reject", "POST", { type, id, reason: reason || "Admin reddi" });
-    showToast("❌ Talep reddedildi");
-    await fetchAdminData();
-  } catch (err) {
-    showToast("❌ " + err.message, true);
-  }
-}
-
-async function sendReply(ticketId) {
-  const ta = $("#reply-" + ticketId);
-  const message = ta ? ta.value.trim() : "";
-  if (!message || message.length < 2) {
-    showToast("❌ Yanıt boş olamaz", true);
-    return;
-  }
-  try {
-    await apiRequest("/admin-support-reply", "POST", { ticket_id: ticketId, message });
-    showToast("✅ Yanıt gönderildi");
-    await fetchAdminData();
-  } catch (err) {
-    showToast("❌ " + err.message, true);
-  }
-}
-
-/* ============================================================
-   INIT
-   ============================================================ */
-document.querySelectorAll(".tab").forEach(t => {
-  t.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-    document.querySelectorAll(".section").forEach(x => x.classList.remove("active"));
-    t.classList.add("active");
-    $("#tab-" + t.dataset.tab).classList.add("active");
-  });
-});
-
-if (!tryRestore()) {
-  // Giriş ekranında kal
-}
+const API_BASE="/api",TOKEN_KEY="anadolu_admin_token",$=s=>document.querySelector(s);
+const fmt=n=>Math.round(Number(n)||0).toLocaleString("tr-TR"),money=n=>fmt(n)+" ₺";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const date=d=>d?new Date(d).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}):"-";
+const phone=p=>{p=String(p||"-");return p.length===10?"0"+p.slice(0,3)+" "+p.slice(3,6)+" "+p.slice(6,8)+" "+p.slice(8):p};
+let token=null,dataState={users:[],loads:[],withdraws:[],tickets:[]},timer=null,chartLoad=null,chartWithdraw=null;
+try{token=localStorage.getItem(TOKEN_KEY)}catch(e){}
+async function api(path,method="GET",body=null){const headers={"Content-Type":"application/json"};if(token)headers.Authorization="Bearer "+token;const opt={method,headers};if(body!==null)opt.body=JSON.stringify(body);const res=await fetch(API_BASE+path,opt);let d={};try{d=await res.json()}catch(e){}if(res.status===401){logout();throw Error(d.error||"Oturum süresi doldu.");}if(!res.ok)throw Error(d.error||"İstek başarısız oldu.");return d}
+function toast(msg,error=false){const x=$("#toast");x.textContent=msg;x.className="toast show"+(error?" err":"");clearTimeout(x._t);x._t=setTimeout(()=>x.className="toast",3000)}
+function loginMsg(msg,error){$("#loginMsg").textContent=msg;$("#loginMsg").className="auth-msg show "+(error?"err":"ok")}
+async function login(){const username=$("#adminUser").value.trim(),password=$("#adminPass").value;if(!username||!password)return loginMsg("Kullanıcı adı ve şifre gereklidir.",true);$("#loginButton").disabled=true;try{const d=await api("/admin-login","POST",{username,password});if(!d.token)throw Error("Oturum anahtarı alınamadı.");token=d.token;localStorage.setItem(TOKEN_KEY,token);$("#loginScreen").style.display="none";$("#app").classList.add("show");await start();}catch(e){loginMsg(e.message,true)}finally{$("#loginButton").disabled=false}}
+function logout(){try{localStorage.removeItem(TOKEN_KEY)}catch(e){}token=null;if(timer)clearInterval(timer);timer=null;$("#loginScreen").style.display="grid";$("#app").classList.remove("show")}
+async function start(){await loadData();if(timer)clearInterval(timer);timer=setInterval(loadData,15000)}
+async function loadData(){try{const d=await api("/admin-pending");dataState={users:d.users||[],loads:d.loads||[],withdraws:d.withdraws||[],tickets:d.tickets||[]};render();$("#lastRefresh").textContent="Son güncelleme: "+new Date().toLocaleTimeString("tr-TR")}catch(e){console.error(e);if(token)toast("Veriler alınamadı: "+e.message,true)}}
+function tab(name){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));document.querySelectorAll(".section").forEach(x=>x.classList.toggle("active",x.id==="tab-"+name))}
+function render(){const {users,loads,withdraws,tickets}=dataState,pL=loads.filter(x=>x.status==="pending"),pW=withdraws.filter(x=>x.status==="pending"),aL=loads.filter(x=>x.status==="approved"),aW=withdraws.filter(x=>x.status==="approved"),rejL=loads.filter(x=>x.status==="rejected"),rejW=withdraws.filter(x=>x.status==="rejected"),pT=tickets.filter(x=>x.status==="pending");
+const sum=(key)=>users.reduce((s,u)=>s+Number(u.farm?.[key]||0),0);
+$("#sUsers").textContent=fmt(users.length);$("#sWallet").textContent=money(sum("wallet"));$("#sLoaded").textContent=money(sum("total_loaded"));$("#sWithdrawn").textContent=money(sum("total_withdrawn"));$("#sPendingLoad").textContent=fmt(pL.length);$("#sPendingWithdraw").textContent=fmt(pW.length);$("#sSupport").textContent=fmt(pT.length);$("#sAnimals").textContent=fmt(users.reduce((s,u)=>s+Number(u.animals?.total||0),0));
+$("#cntAll").textContent=loads.length+withdraws.length;$("#cntPendingLoad").textContent=pL.length;$("#cntPendingWithdraw").textContent=pW.length;$("#cntSupport").textContent=pT.length;$("#cntUsers").textContent=users.length;
+$("#allInfo").textContent=(loads.length+withdraws.length)+" kayıt";$("#pendingLoadInfo").textContent=pL.length+" bekleyen";$("#pendingWithdrawInfo").textContent=pW.length+" bekleyen";$("#supportInfo").textContent=pT.length+" bekleyen / "+tickets.length+" toplam";$("#usersInfo").textContent=users.length+" üye";
+const all=[...loads.map(x=>({...x,type:"load"})),...withdraws.map(x=>({...x,type:"withdraw"}))].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+requests("allList",all);requests("pendingLoadList",pL.map(x=>({...x,type:"load"})));requests("pendingWithdrawList",pW.map(x=>({...x,type:"withdraw"})));requests("approvedList",[...aL.map(x=>({...x,type:"load"})),...aW.map(x=>({...x,type:"withdraw"}))]);requests("rejectedList",[...rejL.map(x=>({...x,type:"load"})),...rejW.map(x=>({...x,type:"withdraw"}))]);support(tickets);members(users);recent(all.slice(0,6));charts(loads,withdraws)}
+function requests(id,arr){const root=$("#"+id);if(!arr.length){root.innerHTML='<div class="empty">📭<br>Bu kategoride kayıt yok.</div>';return}root.innerHTML="";arr.forEach(r=>{const load=r.type==="load",status=r.status||"pending",u=r.user||{},el=document.createElement("div");el.className="request";const extra=!load&&r.bank?`<br>🏦 ${esc(r.bank)} · IBAN: ${esc(String(r.iban||"").slice(0,8))}… · Alıcı: ${esc(r.name||"-")}`:"";let action=status==="pending"?`<div class="actions"><button class="approve" data-action="approve" data-type="${r.type}" data-id="${esc(r.id)}">Onayla</button><button class="reject" data-action="reject" data-type="${r.type}" data-id="${esc(r.id)}">Reddet</button></div>`:`<span class="status ${status}">${status==="approved"?"ONAYLANDI":"REDDEDİLDİ"}</span>`;el.innerHTML=`<div class="requser"><div class="avatar">${esc(u.avatar||"🐄")}</div><div><div class="reqname">${load?"💳 Bakiye Yükleme":"🏦 Para Çekme"} · ${esc(u.name||"Bilinmeyen")}</div><div class="meta">📱 ${esc(phone(u.phone))} · Talep: ${esc(String(r.id||"").slice(0,12))}<br>📅 ${esc(date(r.created_at))}${extra}${r.reject_reason?`<br>Red nedeni: ${esc(r.reject_reason)}`:""}</div></div></div><div class="amount">${money(r.amount)}</div>${action}`;root.appendChild(el)})}
+function recent(arr){const root=$("#recentList");if(!arr.length){root.innerHTML='<div class="empty">Henüz talep yok.</div>';return}root.innerHTML="";arr.forEach(r=>{const el=document.createElement("div");el.className="request";el.innerHTML=`<div class="requser"><div class="avatar">${r.type==="load"?"💳":"🏦"}</div><div><div class="reqname">${r.type==="load"?"Yükleme":"Çekim"} · ${esc(r.user?.name||"Bilinmeyen")}</div><div class="meta">${esc(date(r.created_at))}</div></div></div><div class="amount">${money(r.amount)}</div><span class="status ${esc(r.status||"pending")}">${r.status==="approved"?"Onaylandı":r.status==="rejected"?"Reddedildi":"Beklemede"}</span>`;root.appendChild(el)})}
+function charts(loads,withdraws){if(typeof Chart==="undefined")return;const labels=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);labels.push(d.toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"}))}const vals=a=>labels.map(l=>a.filter(x=>new Date(x.created_at).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"})===l).length);const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#91a4c5"},grid:{color:"#ffffff10"}},y:{beginAtZero:true,ticks:{precision:0,color:"#91a4c5"},grid:{color:"#ffffff10"}}}};if(chartLoad)chartLoad.destroy();if(chartWithdraw)chartWithdraw.destroy();chartLoad=new Chart($("#loadChart"),{type:"bar",data:{labels,datasets:[{data:vals(loads),backgroundColor:"#60a5fa99",borderRadius:6}]},options:opts});chartWithdraw=new Chart($("#withdrawChart"),{type:"bar",data:{labels,datasets:[{data:vals(withdraws),backgroundColor:"#ff707099",borderRadius:6}]},options:opts})}
+function support(arr){const root=$("#supportList");if(!arr.length){root.innerHTML='<div class="empty">💬<br>Destek talebi bulunmuyor.</div>';return}root.innerHTML="";arr.forEach(t=>{const u=t.user||{},s=t.status||"pending",el=document.createElement("article");el.className="ticket";const replies=(t.support_replies||[]).map(r=>`<div class="reply"><b>Yönetici yanıtı · ${esc(date(r.created_at))}</b><br>${esc(r.message)}</div>`).join("");const form=s!=="closed"?`<div class="replyform"><textarea id="reply-${esc(t.id)}" placeholder="Yanıtınızı yazın…"></textarea><div class="actions" style="margin-top:8px"><button class="btn green" data-action="reply" data-id="${esc(t.id)}">Yanıt Gönder</button></div></div>`:'<p class="muted" style="margin-top:10px">Talep kapatılmış.</p>';el.innerHTML=`<div class="tickethead"><div><b>${esc(u.name||t.userName||"Bilinmeyen üye")}</b><div class="meta">📱 ${esc(phone(u.phone))} · ${esc(date(t.created_at))}</div></div><span class="status ${s}">${s==="answered"?"YANITLANDI":s==="closed"?"KAPALI":"BEKLEMEDE"}</span></div><h4 style="font-size:13px;margin-bottom:8px">${esc(t.subject||"Destek talebi")}</h4><div class="message">${esc(t.message||"")}</div>${replies}${form}`;root.appendChild(el)})}
+function members(arr){const q=$("#userSearch").value.trim().toLocaleLowerCase("tr-TR"),root=$("#usersList"),list=arr.filter(u=>(String(u.name||"")+" "+String(u.phone||"")).toLocaleLowerCase("tr-TR").includes(q));if(!list.length){root.innerHTML='<div class="empty">Üye bulunamadı.</div>';return}root.innerHTML="";list.forEach(u=>{const f=u.farm||{},a=u.animals||{},el=document.createElement("article");el.className="user";el.innerHTML=`<div class="userhead"><div class="avatar">${esc(u.avatar||"🐄")}</div><div><strong>${esc(u.name||"İsimsiz üye")}</strong><small>📱 ${esc(phone(u.phone))}<br>🆔 ${esc(String(u.id||"").slice(0,12))} · 📅 ${esc(date(u.created_at))}</small></div></div><div class="userstats"><div class="us"><small>BAKİYE</small><b class="gold">${money(f.wallet)}</b></div><div class="us"><small>YÜKLEME</small><b class="blueText">${money(f.total_loaded)}</b></div><div class="us"><small>SATIŞ</small><b class="greenText">${money(f.total_sold)}</b></div><div class="us"><small>ÇEKİM</small><b class="redText">${money(f.total_withdrawn)}</b></div><div class="us"><small>HAYVAN</small><b>${fmt(a.alive||0)} aktif / ${fmt(a.total||0)} toplam</b></div></div>`;root.appendChild(el)})}
+async function approve(type,id){if(!confirm(type==="load"?"Bu yükleme talebini onaylıyor musunuz?":"Bu çekim talebini onaylıyor musunuz?"))return;try{await api("/admin-approve","POST",{type,id});toast("Talep onaylandı.");await loadData()}catch(e){toast(e.message,true)}}
+async function reject(type,id){const reason=prompt("Reddetme nedeni:","Ödeme doğrulanamadı");if(reason===null)return;try{await api("/admin-reject","POST",{type,id,reason:reason.trim()||"Yönetici reddi"});toast("Talep reddedildi.");await loadData()}catch(e){toast(e.message,true)}}
+async function reply(id){const msg=$("#reply-"+CSS.escape(id))?.value.trim()||"";if(msg.length<2)return toast("Yanıt en az 2 karakter olmalıdır.",true);try{await api("/admin-support-reply","POST",{ticket_id:id,message:msg});toast("Yanıt gönderildi.");await loadData()}catch(e){toast(e.message,true)}}
+$("#loginButton").addEventListener("click",login);$("#adminPass").addEventListener("keydown",e=>{if(e.key==="Enter")login()});$("#logoutButton").addEventListener("click",logout);$("#userSearch").addEventListener("input",()=>members(dataState.users));$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)tab(b.dataset.tab)});document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(!b)return;if(b.dataset.action==="approve")approve(b.dataset.type,b.dataset.id);if(b.dataset.action==="reject")reject(b.dataset.type,b.dataset.id);if(b.dataset.action==="reply")reply(b.dataset.id)});if(token){$("#loginScreen").style.display="none";$("#app").classList.add("show");start()}
 </script>
-</body>
-</html>
+</body></html>
