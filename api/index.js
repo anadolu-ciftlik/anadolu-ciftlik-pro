@@ -382,6 +382,121 @@ module.exports = async (req, res) => {
       return ok(res, { message: "Cevap gönderildi" });
     }
 
+        // ================= ADMIN ÜYE YÖNETİMİ =================
+
+    // Üye detaylarını görüntüleme
+    if (path === "/admin-user-detail" && req.method === "GET") {
+      const admin = await getAdminFromReq(req);
+      if (!admin) return err(res, "Yetkisiz", 401);
+
+      const userId = req.query?.user_id;
+      if (!userId) return err(res, "Üye bilgisi gerekli");
+
+      const [userRes, farmRes, animalsRes, inventoryRes, historyRes] =
+        await Promise.all([
+          supabase.from("users")
+            .select("id, name, phone, avatar, created_at")
+            .eq("id", userId)
+            .single(),
+
+          supabase.from("farms")
+            .select("*")
+            .eq("user_id", userId)
+            .single(),
+
+          supabase.from("animals")
+            .select("*")
+            .eq("user_id", userId),
+
+          supabase.from("inventory")
+            .select("*")
+            .eq("user_id", userId),
+
+          supabase.from("history")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        ]);
+
+      if (userRes.error || !userRes.data) {
+        return err(res, "Üye bulunamadı");
+      }
+
+      return ok(res, {
+        user: userRes.data,
+        farm: farmRes.data || null,
+        animals: animalsRes.data || [],
+        inventory: inventoryRes.data || [],
+        history: historyRes.data || []
+      });
+    }
+
+    // Üye bakiyesini düzenleme
+    if (path === "/admin-adjust-balance" && req.method === "POST") {
+      const admin = await getAdminFromReq(req);
+      if (!admin) return err(res, "Yetkisiz", 401);
+
+      const { user_id, balance } = req.body || {};
+      const newBalance = Number(balance);
+
+      if (!user_id) return err(res, "Üye bilgisi gerekli");
+
+      if (
+        balance === undefined ||
+        balance === null ||
+        balance === "" ||
+        !Number.isFinite(newBalance) ||
+        newBalance < 0 ||
+        newBalance > 1000000000
+      ) {
+        return err(res, "Geçerli bir bakiye girin");
+      }
+
+      const { data: farm, error: farmError } = await supabase
+        .from("farms")
+        .select("wallet")
+        .eq("user_id", user_id)
+        .single();
+
+      if (farmError || !farm) {
+        return err(res, "Üyenin çiftlik bilgisi bulunamadı");
+      }
+
+      const oldBalance = Number(farm.wallet || 0);
+      const difference = newBalance - oldBalance;
+
+      const { error: updateError } = await supabase
+        .from("farms")
+        .update({ wallet: newBalance })
+        .eq("user_id", user_id);
+
+      if (updateError) {
+        console.error("Bakiye güncelleme hatası:", updateError);
+        return err(res, "Bakiye güncellenemedi", 500);
+      }
+
+      const { error: historyError } = await supabase
+        .from("history")
+        .insert({
+          user_id,
+          type: "admin_adjustment",
+          description: `Yönetici tarafından bakiye düzenlendi. Eski bakiye: ${oldBalance} ₺, Yeni bakiye: ${newBalance} ₺`,
+          amount: difference
+        });
+
+      if (historyError) {
+        console.error("Bakiye işlem geçmişi kayıt hatası:", historyError);
+        return err(res, "Bakiye güncellendi ancak işlem geçmişi kaydedilemedi", 500);
+      }
+
+      return ok(res, {
+        message: "Üye bakiyesi güncellendi",
+        old_balance: oldBalance,
+        new_balance: newBalance
+      });
+    }
+
     // Eşleşen rota yoksa
     return err(res, "Endpoint bulunamadı: " + path, 404);
 
