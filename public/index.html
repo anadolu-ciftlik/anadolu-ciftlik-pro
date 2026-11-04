@@ -709,6 +709,17 @@ async function apiRequest(endpoint, method = "GET", body = null) {
    ============================================================ */
 let currentUser = null;
 let S = null;
+let referralInfo = null;
+let pendingReferralCode = "";
+try {
+  const referralFromUrl = new URLSearchParams(window.location.search).get("ref");
+  if (referralFromUrl) {
+    pendingReferralCode = referralFromUrl.trim().toUpperCase();
+    localStorage.setItem("ciftlik_referral_code", pendingReferralCode);
+  } else {
+    pendingReferralCode = (localStorage.getItem("ciftlik_referral_code") || "").trim().toUpperCase();
+  }
+} catch(e) {}
 let loadPresetAmount = 0;
 let paparaPendingAmount = 0;
 let currentTab = "farm";
@@ -861,8 +872,13 @@ async function doRegister(e){
   if(pass !== pass2){ showMsg("registerMsg","❌ Şifreler uyuşmuyor", true); playSound("error"); return; }
 
   try {
-    const data = await apiRequest("/register", "POST", { name, phone, password: pass, avatar: selectedAvatar });
+    const data = await apiRequest("/register", "POST", {
+      name, phone, password: pass, avatar: selectedAvatar,
+      referral_code: pendingReferralCode || ""
+    });
     if(!data.token) throw new Error("Kayıt yanıtında oturum anahtarı bulunamadı.");
+    try { localStorage.removeItem("ciftlik_referral_code"); } catch(e) {}
+    pendingReferralCode = "";
     showMsg("registerMsg",`✅ Kayıt başarılı! Hoş geldin bonusu eklendi.`, false);
     playSound("levelup");
     try { localStorage.setItem("ciftlik_token", data.token); } catch(e) {}
@@ -910,6 +926,55 @@ function doLogout(){
   $("#app").classList.remove("show");
   $("#supportFab").classList.remove("show");
   showLogin();
+}
+
+async function loadReferralInfo() {
+  try {
+    referralInfo = await apiRequest("/referral-info");
+  } catch (error) {
+    console.warn("Referans bilgileri yüklenemedi:", error);
+    referralInfo = referralInfo || null;
+  }
+}
+
+function getReferralLink() {
+  if (!referralInfo?.referral_code) return "";
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("ref", referralInfo.referral_code);
+  return url.toString();
+}
+
+async function shareReferralLink() {
+  if (!getReferralLink()) await loadReferralInfo();
+  const link = getReferralLink();
+  if (!link) return toast("❌ Referans bağlantısı şu anda oluşturulamadı.", true);
+  const shareText = "Anadolu Çiftlik'e benim referans bağlantımla katıl! Kayıt ol ve çiftliğini kur: " + link;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "Anadolu Çiftlik Referansım", text: shareText, url: link });
+    } else if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(link);
+      toast("✅ Referans bağlantısı kopyalandı.");
+    } else {
+      window.prompt("Referans bağlantını kopyala:", link);
+    }
+  } catch (error) {
+    if (error?.name !== "AbortError") window.prompt("Referans bağlantını kopyala:", link);
+  }
+}
+
+async function copyReferralLink() {
+  if (!getReferralLink()) await loadReferralInfo();
+  const link = getReferralLink();
+  if (!link) return toast("❌ Referans bağlantısı alınamadı.", true);
+  try {
+    await navigator.clipboard.writeText(link);
+    toast("✅ Referans bağlantısı kopyalandı.");
+  } catch (error) {
+    window.prompt("Referans bağlantını kopyala:", link);
+  }
 }
 
 async function startSession(token) {
@@ -1505,7 +1570,24 @@ function renderProfile(){
   
   let hourlyT = 0; for(const k in ANIMALS) hourlyT += aliveCount(k) * perHour(k);
   
+  const referralCode = referralInfo?.referral_code || "Hazırlanıyor...";
+  const referralCount = Number(referralInfo?.referral_count || 0);
+  const referralTotal = Number(referralInfo?.referral_total || 0);
+
   $("#profileGrid").innerHTML = `
+    <div class="profile-card" style="grid-column:1/-1;border-color:rgba(245,158,11,.35)">
+      <h3>🎁 Referans Programı</h3>
+      <div style="font-size:.9rem;line-height:1.6;margin-bottom:14px;color:var(--text)">
+        Arkadaşlarını Anadolu Çiftlik'e davet et. Referans bağlantınla kayıt olan kişi ilk kez çiftliğine giriş yaptığında hesabına <b class="gold">150 ₺</b> ödül eklensin.
+      </div>
+      <div class="profile-stat"><span>Referans kodun</span><span>${escapeHtml(referralCode)}</span></div>
+      <div class="profile-stat"><span>Başarılı davet</span><span>${referralCount} kişi</span></div>
+      <div class="profile-stat"><span>Toplam referans kazancı</span><span class="green">${fmt(referralTotal)} ₺</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <button type="button" class="btn gold" style="flex:1;min-width:190px" onclick="shareReferralLink()">📤 Referans Linkini Paylaş</button>
+        <button type="button" class="btn ghost" style="flex:1;min-width:150px" onclick="copyReferralLink()">🔗 Linki Kopyala</button>
+      </div>
+    </div>
     <div class="profile-card">
       <h3>💰 Finansal Özet</h3>
       <div class="profile-stat"><span>Çekilebilir Bakiye</span><span class="green">${fmt(S.wallet)} ₺</span></div>
@@ -1755,7 +1837,10 @@ function switchTab(tab){
   if(tab==="market") renderMarket();
   if(tab==="history") renderHistory();
   if(tab==="stats") setTimeout(renderDashboard,50);
-  if(tab==="profile") renderProfile();
+  if(tab==="profile") {
+    renderProfile();
+    loadReferralInfo().then(() => { if(currentTab === "profile") renderProfile(); });
+  }
   if(tab==="support") renderSupport();
   if(tab==="withdraw"){ const wb = $("#wBalance"); if(wb) wb.textContent = fmt(S.wallet) + " ₺"; }
 }
