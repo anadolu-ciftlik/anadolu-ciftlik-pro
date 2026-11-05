@@ -58,6 +58,10 @@ button{font-family:inherit;cursor:pointer}
 .auth-msg.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#7ceb9e}
 .welcome-bonus{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px;font-size:.83rem;color:#f8d78a;line-height:1.6;margin-bottom:18px;text-align:center}
 .welcome-bonus b{color:var(--gold);font-size:1rem}
+.avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+.avatar-opt{aspect-ratio:1;border-radius:12px;background:var(--panel2);border:2px solid var(--line);display:grid;place-items:center;font-size:1.6rem;cursor:pointer;transition:.15s}
+.avatar-opt:hover{border-color:rgba(34,197,94,.5);transform:scale(1.05)}
+.avatar-opt.sel{border-color:var(--green);background:rgba(34,197,94,.15);box-shadow:0 0 12px rgba(34,197,94,.4)}
 .app{display:none;grid-template-columns:260px 1fr;min-height:100vh}
 .app.show{display:grid}
 .sidebar{background:linear-gradient(180deg,var(--panel),var(--bg));border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
@@ -387,6 +391,14 @@ input:checked + .slider:before{transform:translateX(24px)}
         <div style="position:relative;">
           <input type="password" id="regPass" placeholder="Şifrenizi oluşturun" required oninput="checkPasswordStrength()" style="padding-right:40px;">
           <button type="button" onclick="togglePasswordVisibility('regPass', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem;">👁️</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Şifre (Tekrar)</label>
+        <div style="position:relative;">
+          <input type="password" id="regPass2" placeholder="Şifrenizi tekrar girin" required style="padding-right:40px;">
+          <button type="button" onclick="togglePasswordVisibility('regPass2', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem;">👁️</button>
         </div>
       </div>
 
@@ -857,32 +869,38 @@ function checkPasswordStrength() {
 
 async function doRegister(e){
   e.preventDefault();
+  
+  try { localStorage.removeItem("ciftlik_referral_code"); } catch(e) {}
+  pendingReferralCode = "";
+  
   const name = $("#regName").value.trim();
   const surname = $("#regSurname").value.trim();
   const phone = normalizePhone($("#regPhone").value.trim());
   const email = $("#regEmail").value.trim();
   const pass = $("#regPass").value;
+  const pass2 = $("#regPass2").value;
   
   if(name.length < 2){ showMsg("registerMsg","❌ Ad en az 2 karakter olmalı", true); playSound("error"); return; }
   if(surname.length < 2){ showMsg("registerMsg","❌ Soyad en az 2 karakter olmalı", true); playSound("error"); return; }
   if(phone.length !== 10){ showMsg("registerMsg","❌ Geçerli bir telefon girin", true); playSound("error"); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg("registerMsg","❌ Geçerli bir e-posta adresi girin", true); playSound("error"); return; }
   if(pass.length < 8){ showMsg("registerMsg","❌ Şifre en az 8 karakter olmalı", true); playSound("error"); return; }
+  if(pass !== pass2){ showMsg("registerMsg","❌ Şifreler uyuşmuyor", true); playSound("error"); return; }
 
   try {
     const data = await apiRequest("/register", "POST", {
       name, surname, phone, email, password: pass,
-      referral_code: pendingReferralCode || ""
+      referral_code: ""
     });
+    
     if(!data.token) throw new Error("Kayıt yanıtında oturum anahtarı bulunamadı.");
-    try { localStorage.removeItem("ciftlik_referral_code"); } catch(e) {}
-    pendingReferralCode = "";
+    
     showMsg("registerMsg",`✅ Kayıt başarılı! Hoş geldin bonusu eklendi.`, false);
     playSound("levelup");
     try { localStorage.setItem("ciftlik_token", data.token); } catch(e) {}
     authToken = data.token;
     setTimeout(()=>{
-      $("#regName").value=""; $("#regSurname").value=""; $("#regPhone").value=""; $("#regEmail").value=""; $("#regPass").value="";
+      $("#regName").value=""; $("#regSurname").value=""; $("#regPhone").value=""; $("#regEmail").value=""; $("#regPass").value=""; $("#regPass2").value="";
       startSession(data.token);
     }, 900);
   } catch(err) {
