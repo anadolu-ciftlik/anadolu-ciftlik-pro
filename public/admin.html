@@ -39,7 +39,7 @@
 <div class="stat"><small>🐾 KAYITLI HAYVAN</small><b class="greenText" id="sAnimals">—</b></div>
 </div>
 <nav class="tabs" id="tabs">
-<button class="tab active" data-tab="dashboard">📊 Genel Bakış</button><button class="tab" data-tab="all">📋 Tüm Talepler <span class="cnt" id="cntAll">0</span></button><button class="tab" data-tab="pendingLoad">💳 Yükleme <span class="cnt" id="cntPendingLoad">0</span></button><button class="tab" data-tab="pendingWithdraw">🏦 Çekim <span class="cnt" id="cntPendingWithdraw">0</span></button><button class="tab" data-tab="support">💬 Destek <span class="cnt" id="cntSupport">0</span></button><button class="tab" data-tab="approved">✅ Onaylanan</button><button class="tab" data-tab="rejected">❌ Reddedilen</button><button class="tab" data-tab="users">👥 Üyeler <span class="cnt" id="cntUsers">0</span></button>
+<button class="tab active" data-tab="dashboard">📊 Genel Bakış</button><button class="tab" data-tab="all">📋 Tüm Talepler <span class="cnt" id="cntAll">0</span></button><button class="tab" data-tab="pendingLoad">💳 Yükleme <span class="cnt" id="cntPendingLoad">0</span></button><button class="tab" data-tab="pendingWithdraw">🏦 Çekim <span class="cnt" id="cntPendingWithdraw">0</span></button><button class="tab" data-tab="support">💬 Destek <span class="cnt" id="cntSupport">0</span></button><button class="tab" data-tab="approved">✅ Onaylanan</button><button class="tab" data-tab="rejected">❌ Reddedilen</button><button class="tab" data-tab="users">👥 Üye İşlemleri <span class="cnt" id="cntUsers">0</span></button>
 </nav>
 <section class="section active" id="tab-dashboard"><div class="charts"><div class="panel"><div class="panelhead"><h3>Son 7 Gün — Yükleme Talepleri</h3></div><div class="chart"><canvas id="loadChart"></canvas></div></div><div class="panel"><div class="panelhead"><h3>Son 7 Gün — Çekim Talepleri</h3></div><div class="chart"><canvas id="withdrawChart"></canvas></div></div></div><div class="panel"><div class="panelhead"><h3>Son İşlemler</h3><span class="muted">En son oluşturulan talepler</span></div><div id="recentList"></div></div><div class="panel"><h3>İstatistik notu</h3><p class="muted" style="line-height:1.8">Bakiyeler ve toplam yükleme/çekim değerleri mevcut üye-farm kayıtlarından hesaplanır. Grafikler son 7 gündeki talep kayıt sayılarını gösterir. Hayvan türü dağılımı, en çok satın alınan hayvan ve günlük/aylık gerçek para hareketi için ayrıca sunucu tarafında istatistik API'si eklenmelidir.</p></div></section>
 <section class="section" id="tab-all"><div class="panel"><div class="panelhead"><h3>Tüm Bakiye Talepleri</h3><span class="muted" id="allInfo"></span></div><div id="allList"></div></div></section>
@@ -48,7 +48,7 @@
 <section class="section" id="tab-support"><div class="panel"><div class="panelhead"><h3>Üye Destek Talepleri</h3><span class="muted" id="supportInfo"></span></div><div id="supportList"></div></div></section>
 <section class="section" id="tab-approved"><div class="panel"><h3 style="margin-bottom:14px">Onaylanan Talepler</h3><div id="approvedList"></div></div></section>
 <section class="section" id="tab-rejected"><div class="panel"><h3 style="margin-bottom:14px">Reddedilen Talepler</h3><div id="rejectedList"></div></div></section>
-<section class="section" id="tab-users"><div class="panel"><div class="panelhead"><h3>Kayıtlı Üyeler</h3><span class="muted" id="usersInfo"></span></div><input class="search" id="userSearch" placeholder="Üye adı veya telefon numarasıyla ara…"><div id="usersList"></div></div></section>
+<section class="section" id="tab-users"><div class="panel"><div class="panelhead"><h3>Üye İşlemleri</h3><span class="muted" id="usersInfo"></span></div><input class="search" id="userSearch" placeholder="Üye adı veya telefon numarasıyla ara…"><div id="usersList"></div></div></section>
 </main></div><div class="toast" id="toast"></div>
 <div class="modal-backdrop" id="userDetailModal" aria-hidden="true">
   <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
@@ -91,7 +91,7 @@ function members(arr){
  root.innerHTML="";
  list.forEach(u=>{
   const f=u.farm||{},a=u.animals||{},el=document.createElement("article");el.className="user";
-  el.innerHTML=`<div class="userhead"><div class="avatar">${esc(u.avatar||"🐄")}</div><div><strong>${esc(u.name||"İsimsiz üye")}</strong><small>📱 ${esc(phone(u.phone))}<br>🆔 ${esc(String(u.id||"").slice(0,12))} · 📅 ${esc(date(u.created_at))}</small></div><button class="btn ghost" type="button" data-action="detail" data-id="${esc(u.id)}">Detayları Gör ve Yönet</button></div><div class="userstats"><div class="us"><small>BAKİYE</small><b class="gold">${money(f.wallet)}</b></div><div class="us"><small>YÜKLEME</small><b class="blueText">${money(f.total_loaded)}</b></div><div class="us"><small>SATIŞ</small><b class="greenText">${money(f.total_sold)}</b></div><div class="us"><small>ÇEKİM</small><b class="redText">${money(f.total_withdrawn)}</b></div><div class="us"><small>HAYVAN</small><b>${fmt(a.alive||0)} aktif / ${fmt(a.total||0)} toplam</b></div></div>`;
+  el.innerHTML=`<div class="userhead"><div class="avatar">${esc(u.avatar||"🐄")}</div><div><strong>${esc(u.name||"İsimsiz üye")}</strong><small>📱 ${esc(phone(u.phone))}<br>🆔 ${esc(String(u.id||"").slice(0,12))} · 📅 ${esc(date(u.created_at))}</small></div><div class="actions"><button class="btn ghost" type="button" data-action="detail" data-id="${esc(u.id)}">Detayları Gör ve Yönet</button><button class="btn red" type="button" data-action="delete-user" data-id="${esc(u.id)}" data-name="${esc(u.name||"İsimsiz üye")}">Üyeyi Sil</button></div></div><div class="userstats"><div class="us"><small>BAKİYE</small><b class="gold">${money(f.wallet)}</b></div><div class="us"><small>YÜKLEME</small><b class="blueText">${money(f.total_loaded)}</b></div><div class="us"><small>SATIŞ</small><b class="greenText">${money(f.total_sold)}</b></div><div class="us"><small>ÇEKİM</small><b class="redText">${money(f.total_withdrawn)}</b></div><div class="us"><small>HAYVAN</small><b>${fmt(a.alive||0)} aktif / ${fmt(a.total||0)} toplam</b></div></div>`;
   root.appendChild(el);
  });
 }
@@ -116,6 +116,25 @@ async function openUserDetail(userId){
   $("#balanceForm").addEventListener("submit",e=>saveUserBalance(e,userId));
  }catch(e){content.innerHTML=`<div class="empty">Üye detayları alınamadı: ${esc(e.message)}</div>`}
 }
+async function deleteUser(userId, userName, button){
+ const confirmed = confirm(
+  `“${userName}” adlı üyeyi kalıcı olarak silmek üzeresiniz.\n\n`+
+  "Bu üyeye ait çiftlik, hayvanlar, envanter, bakiye ve işlem geçmişi, yükleme/çekim talepleri, destek kayıtları ve referans kayıtları silinecek.\n\n"+
+  "Bu işlem geri alınamaz. Devam etmek istiyor musunuz?"
+ );
+ if(!confirmed)return;
+ if(button){button.disabled=true;button.textContent="Siliniyor…";}
+ try{
+  await api("/admin-delete-user","POST",{user_id:userId});
+  closeUserDetail();
+  toast("Üye ve tüm kayıtları silindi.");
+  await loadData();
+ }catch(e){
+  toast("Silme işlemi tamamlanamadı: "+e.message,true);
+  if(button){button.disabled=false;button.textContent="Üyeyi Sil";}
+ }
+}
+
 async function saveUserBalance(event,userId){
  event.preventDefault();const value=Number($("#newBalance").value);
  if(!Number.isFinite(value)||value<0)return toast("Geçerli bir bakiye girin.",true);
@@ -127,6 +146,6 @@ function closeUserDetail(){const m=$("#userDetailModal");m.classList.remove("sho
 async function approve(type,id){if(!confirm(type==="load"?"Bu yükleme talebini onaylıyor musunuz?":"Bu çekim talebini onaylıyor musunuz?"))return;try{await api("/admin-approve","POST",{type,id});toast("Talep onaylandı.");await loadData()}catch(e){toast(e.message,true)}}
 async function reject(type,id){const reason=prompt("Reddetme nedeni:","Ödeme doğrulanamadı");if(reason===null)return;try{await api("/admin-reject","POST",{type,id,reason:reason.trim()||"Yönetici reddi"});toast("Talep reddedildi.");await loadData()}catch(e){toast(e.message,true)}}
 async function reply(id){const msg=$("#reply-"+CSS.escape(id))?.value.trim()||"";if(msg.length<2)return toast("Yanıt en az 2 karakter olmalıdır.",true);try{await api("/admin-support-reply","POST",{ticket_id:id,message:msg});toast("Yanıt gönderildi.");await loadData()}catch(e){toast(e.message,true)}}
-$("#closeDetailModal").addEventListener("click",closeUserDetail);$("#userDetailModal").addEventListener("click",e=>{if(e.target.id==="userDetailModal")closeUserDetail()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeUserDetail()});$("#loginButton").addEventListener("click",login);$("#adminPass").addEventListener("keydown",e=>{if(e.key==="Enter")login()});$("#logoutButton").addEventListener("click",logout);$("#userSearch").addEventListener("input",()=>members(dataState.users));$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)tab(b.dataset.tab)});document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(!b)return;if(b.dataset.action==="approve")approve(b.dataset.type,b.dataset.id);if(b.dataset.action==="reject")reject(b.dataset.type,b.dataset.id);if(b.dataset.action==="reply")reply(b.dataset.id);if(b.dataset.action==="detail")openUserDetail(b.dataset.id)});if(token){$("#loginScreen").style.display="none";$("#app").classList.add("show");start()}
+$("#closeDetailModal").addEventListener("click",closeUserDetail);$("#userDetailModal").addEventListener("click",e=>{if(e.target.id==="userDetailModal")closeUserDetail()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeUserDetail()});$("#loginButton").addEventListener("click",login);$("#adminPass").addEventListener("keydown",e=>{if(e.key==="Enter")login()});$("#logoutButton").addEventListener("click",logout);$("#userSearch").addEventListener("input",()=>members(dataState.users));$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)tab(b.dataset.tab)});document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(!b)return;if(b.dataset.action==="approve")approve(b.dataset.type,b.dataset.id);if(b.dataset.action==="reject")reject(b.dataset.type,b.dataset.id);if(b.dataset.action==="reply")reply(b.dataset.id);if(b.dataset.action==="detail")openUserDetail(b.dataset.id);if(b.dataset.action==="delete-user")deleteUser(b.dataset.id,b.dataset.name,b)});if(token){$("#loginScreen").style.display="none";$("#app").classList.add("show");start()}
 </script>
 </body></html>
