@@ -875,7 +875,116 @@ module.exports = async (req, res) => {
         new_balance: newBalance
       });
     }
+    // ================= ADMIN ÜYE SİLME =================
 
+    if (path === "/admin-delete-user" && req.method === "POST") {
+      const admin = await getAdminFromReq(req);
+      if (!admin) return err(res, "Yetkisiz", 401);
+
+      const { user_id } = req.body || {};
+
+      if (!user_id) {
+        return err(res, "Silinecek üye bilgisi gerekli");
+      }
+
+      // Silinecek üyeyi kontrol et
+      const { data: targetUser, error: userCheckError } = await supabase
+        .from("users")
+        .select("id, name, phone")
+        .eq("id", user_id)
+        .maybeSingle();
+
+      if (userCheckError) {
+        console.error("Üye kontrol hatası:", userCheckError);
+        return err(res, "Üye kontrol edilemedi", 500);
+      }
+
+      if (!targetUser) {
+        return err(res, "Üye bulunamadı");
+      }
+
+      try {
+        // Üyeye ait destek taleplerini bul
+        const { data: tickets, error: ticketReadError } = await supabase
+          .from("support_tickets")
+          .select("id")
+          .eq("user_id", user_id);
+
+        if (ticketReadError) throw ticketReadError;
+
+        // Destek cevaplarını sil
+        const ticketIds = (tickets || []).map(ticket => ticket.id);
+
+        if (ticketIds.length > 0) {
+          const { error } = await supabase
+            .from("support_replies")
+            .delete()
+            .in("ticket_id", ticketIds);
+
+          if (error) throw error;
+        }
+
+        // Üyenin davet eden olarak kazandığı referans kayıtlarını sil
+        const { error: rewardError } = await supabase
+          .from("referral_rewards")
+          .delete()
+          .eq("referrer_user_id", user_id);
+
+        if (rewardError) throw rewardError;
+
+        // Bu üyeyi referans gösteren diğer üyelerin bağlantısını kaldır
+        const { error: referralUpdateError } = await supabase
+          .from("users")
+          .update({ referred_by: null })
+          .eq("referred_by", user_id);
+
+        if (referralUpdateError) throw referralUpdateError;
+
+        // Üyeye bağlı diğer kayıtları sil
+        const tables = [
+          "animals",
+          "inventory",
+          "history",
+          "load_requests",
+          "withdraw_requests",
+          "support_tickets",
+          "farms"
+        ];
+
+        for (const table of tables) {
+          const { error } = await supabase
+            .from(table)
+            .delete()
+            .eq("user_id", user_id);
+
+          if (error) {
+            console.error(`${table} silme hatası:`, error);
+            throw error;
+          }
+        }
+
+        // En son üyeyi sil
+        const { error: deleteUserError } = await supabase
+          .from("users")
+          .delete()
+          .eq("id", user_id);
+
+        if (deleteUserError) throw deleteUserError;
+
+        return ok(res, {
+          message: `${targetUser.name} adlı üye ve ilişkili kayıtları silindi.`
+        });
+
+      } catch (e) {
+        console.error("Üye silme hatası:", e);
+
+        return err(
+          res,
+          "Üye silinemedi: " + e.message,
+          500
+        );
+      }
+    }
     // Eşleşen rota yoksa
     return err(res, "Endpoint bulunamadı: " + path, 404);
 
