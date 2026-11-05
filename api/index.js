@@ -46,26 +46,40 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Vercel üzerinden gelen API adresini belirle
   const requestedPath = req.query?.path || req.url.replace(/^\/api/, "").split("?")[0];
   const path = requestedPath === "/" || requestedPath === "" ? "/index" : requestedPath;
 
   try {
     // ================= AUTH =================
 
+    // ================= GÜNCELLENMİŞ KAYIT ROTASI =================
     if (path === "/register" && req.method === "POST") {
-      const { name, phone: rawPhone, password, avatar } = req.body || {};
+      const { name, surname, phone: rawPhone, email, password, avatar } = req.body || {};
       const rawReferralCode = String(req.body?.referral_code || "").trim().toUpperCase();
       const phone = normalizePhone(rawPhone);
 
-      if (!name || name.trim().length < 3) return err(res, "Ad soyad en az 3 karakter olmalı");
+      // Doğrulamalar
+      if (!name || name.trim().length < 2) return err(res, "Ad en az 2 karakter olmalı");
+      if (!surname || surname.trim().length < 2) return err(res, "Soyad en az 2 karakter olmalı");
       if (phone.length !== 10) return err(res, "Geçerli bir telefon girin");
-      if (!password || password.length < 4) return err(res, "Şifre en az 4 karakter olmalı");
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err(res, "Geçerli bir e-posta adresi girin");
+      if (!password || password.length < 8) return err(res, "Şifre en az 8 karakter olmalı");
+      
+      // Şifre karmaşıklık kontrolü (frontend'de yapılıyor ama backend'de de kontrol edelim)
+      if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        return err(res, "Şifre büyük harf, küçük harf, rakam ve özel karakter içermelidir");
+      }
 
       const { data: existing } = await supabase
         .from("users").select("id").eq("phone", phone).single();
 
       if (existing) return err(res, "Bu telefon numarası zaten kayıtlı");
+
+      // E-posta kontrolü
+      const { data: existingEmail } = await supabase
+        .from("users").select("id").eq("email", email.trim().toLowerCase()).single();
+
+      if (existingEmail) return err(res, "Bu e-posta adresi zaten kayıtlı");
 
       let referredBy = null;
 
@@ -87,8 +101,9 @@ module.exports = async (req, res) => {
       const password_hash = await bcrypt.hash(password, 10);
 
       const newUserData = {
-        name: name.trim(),
+        name: `${name.trim()} ${surname.trim()}`, // Ad ve soyadı birleştir
         phone,
+        email: email.trim().toLowerCase(), // E-posta ekle
         password_hash,
         avatar: avatar || "🐄",
         referral_code: createReferralCode(),
@@ -114,10 +129,12 @@ module.exports = async (req, res) => {
           id: user.id,
           name: user.name,
           phone: user.phone,
+          email: user.email,
           avatar: user.avatar
         }
       });
     }
+    // ================= KAYIT ROTASI SONU =================
 
     if (path === "/login" && req.method === "POST") {
       const { phone: rawPhone, password } = req.body || {};
@@ -150,6 +167,7 @@ module.exports = async (req, res) => {
           id: user.id,
           name: user.name,
           phone: user.phone,
+          email: user.email,
           avatar: user.avatar
         }
       });
@@ -168,7 +186,6 @@ module.exports = async (req, res) => {
 
     // ================= KULLANICI İŞLEMLERİ =================
 
-    // Referans bilgilerini getir
     if (path === "/referral-info" && req.method === "GET") {
       const user = await getUserFromReq(req);
       if (!user) return err(res, "Oturum bulunamadı", 401);
@@ -205,8 +222,6 @@ module.exports = async (req, res) => {
 
       let farm = await ensureFarm(user.id);
 
-      // Davet edilen üyenin ilk başarılı çiftlik yüklemesinde
-      // davet edene tek seferlik ödül ver.
       try {
         const { error: referralRewardError } = await supabase.rpc(
           "process_referral_reward",
@@ -222,7 +237,6 @@ module.exports = async (req, res) => {
 
       farm = await advanceAges(user.id, farm);
 
-      // OTOMATİK YEM KONTROLÜ
       if (farm.auto_feed && Number(farm.feed) < 10) {
         const { data: animalsAuto } = await supabase
           .from("animals").select("type").eq("user_id", user.id);
@@ -291,6 +305,7 @@ module.exports = async (req, res) => {
           id: user.id,
           name: user.name,
           phone: user.phone,
+          email: user.email,
           avatar: user.avatar,
           created_at: user.created_at
         },
@@ -421,7 +436,6 @@ module.exports = async (req, res) => {
 
       const space = FEED_CAP - Number(farm.feed);
 
-      // Dinamik fiyat hesaplama
       const { data: animals } = await supabase
         .from("animals").select("type").eq("user_id", user.id);
 
@@ -568,7 +582,7 @@ module.exports = async (req, res) => {
         ticketsRes,
         animalsRes
       ] = await Promise.all([
-        supabase.from("users").select("id, name, phone, avatar, created_at"),
+        supabase.from("users").select("id, name, phone, email, avatar, created_at"),
         supabase.from("farms").select("*"),
         supabase.from("load_requests").select("*").order("created_at", { ascending: false }),
         supabase.from("withdraw_requests").select("*").order("created_at", { ascending: false }),
@@ -768,7 +782,6 @@ module.exports = async (req, res) => {
 
     // ================= ADMIN ÜYE YÖNETİMİ =================
 
-    // Üye detaylarını görüntüleme
     if (path === "/admin-user-detail" && req.method === "GET") {
       const admin = await getAdminFromReq(req);
       if (!admin) return err(res, "Yetkisiz", 401);
@@ -784,7 +797,7 @@ module.exports = async (req, res) => {
         historyRes
       ] = await Promise.all([
         supabase.from("users")
-          .select("id, name, phone, avatar, created_at")
+          .select("id, name, phone, email, avatar, created_at")
           .eq("id", userId).single(),
 
         supabase.from("farms")
@@ -814,7 +827,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Üye bakiyesini düzenleme
     if (path === "/admin-adjust-balance" && req.method === "POST") {
       const admin = await getAdminFromReq(req);
       if (!admin) return err(res, "Yetkisiz", 401);
@@ -875,7 +887,6 @@ module.exports = async (req, res) => {
         new_balance: newBalance
       });
     }
-    // ================= ADMIN ÜYE SİLME =================
 
     if (path === "/admin-delete-user" && req.method === "POST") {
       const admin = await getAdminFromReq(req);
@@ -887,7 +898,6 @@ module.exports = async (req, res) => {
         return err(res, "Silinecek üye bilgisi gerekli");
       }
 
-      // Silinecek üyeyi kontrol et
       const { data: targetUser, error: userCheckError } = await supabase
         .from("users")
         .select("id, name, phone")
@@ -904,7 +914,6 @@ module.exports = async (req, res) => {
       }
 
       try {
-        // Üyeye ait destek taleplerini bul
         const { data: tickets, error: ticketReadError } = await supabase
           .from("support_tickets")
           .select("id")
@@ -912,7 +921,6 @@ module.exports = async (req, res) => {
 
         if (ticketReadError) throw ticketReadError;
 
-        // Destek cevaplarını sil
         const ticketIds = (tickets || []).map(ticket => ticket.id);
 
         if (ticketIds.length > 0) {
@@ -924,7 +932,6 @@ module.exports = async (req, res) => {
           if (error) throw error;
         }
 
-        // Üyenin davet eden olarak kazandığı referans kayıtlarını sil
         const { error: rewardError } = await supabase
           .from("referral_rewards")
           .delete()
@@ -932,7 +939,6 @@ module.exports = async (req, res) => {
 
         if (rewardError) throw rewardError;
 
-        // Bu üyeyi referans gösteren diğer üyelerin bağlantısını kaldır
         const { error: referralUpdateError } = await supabase
           .from("users")
           .update({ referred_by: null })
@@ -940,7 +946,6 @@ module.exports = async (req, res) => {
 
         if (referralUpdateError) throw referralUpdateError;
 
-        // Üyeye bağlı diğer kayıtları sil
         const tables = [
           "animals",
           "inventory",
@@ -962,17 +967,16 @@ module.exports = async (req, res) => {
             throw error;
           }
         }
-        // Üyenin davet edilen olarak bulunduğu referans ödül kayıtlarını sil
-const { error: referredRewardError } = await supabase
-  .from("referral rewards")
-  .delete()
-  .eq("referred_user_id", user_id);
 
-if (referredRewardError) {
-  throw referredRewardError;
-}
+        const { error: referredRewardError } = await supabase
+          .from("referral_rewards")
+          .delete()
+          .eq("referred_user_id", user_id);
 
-        // En son üyeyi sil
+        if (referredRewardError) {
+          throw referredRewardError;
+        }
+
         const { error: deleteUserError } = await supabase
           .from("users")
           .delete()
@@ -994,7 +998,7 @@ if (referredRewardError) {
         );
       }
     }
-    // Eşleşen rota yoksa
+
     return err(res, "Endpoint bulunamadı: " + path, 404);
 
   } catch (e) {
