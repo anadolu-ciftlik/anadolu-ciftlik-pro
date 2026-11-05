@@ -564,7 +564,7 @@ input:checked + .slider:before{transform:translateX(24px)}
           <input type="number" id="loadAmount" placeholder="Tutar girin (₺)" min="50" step="0.01">
           <button class="btn papara" style="width:auto;padding:14px 24px" onclick="openPaparaModal()" type="button">💜 Ödeme Yap</button>
         </div>
-        <div class="load-info">💡 <b>Nasıl çalışır?</b> Tutarı girin → "Ödeme Yap" → Papara numarasını kopyalayıp Papara üzerinden transferi tamamlayın → "Ödemeyi Yaptım" butonuna basın → Talebiniz admin onayına düşer → Ödeme kontrol edilip admin tarafından onaylandıktan sonra bakiyeniz yüklenir. Papara uygulamasının açılması, alıcı veya tutarın otomatik doldurulacağı anlamına gelmez.</div>
+        <div class="load-info">💡 <b>Nasıl çalışır?</b> Tutarı girin → "Ödeme Yap" → Papara numaramıza ödeme yapın → "Ödemeyi Yaptım" butonuna basın → Talebiniz admin onayına düşer → Admin onayladıktan sonra bakiyeniz yüklenir.</div>
       </div>
       <div class="profile-grid" id="profileGrid"></div>
     </section>
@@ -629,12 +629,11 @@ input:checked + .slider:before{transform:translateX(24px)}
 <div class="modal" id="paparaModal">
   <div class="modal-box" style="max-width:520px;text-align:left">
     <div style="text-align:center;margin-bottom:18px"><div style="font-size:3rem">💜</div><h3 style="margin-top:10px">Papara ile Bakiye Yükle</h3></div>
-    <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;text-align:center">Papara numarasını kopyalayın veya Papara uygulamasını açın. Transferi tamamladıktan sonra "Ödemeyi Yaptım" butonuna basın. Uygulama açıldığında alıcı ve tutar bilgilerini Papara içinde kontrol ederek girin.</p>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;text-align:center">Aşağıdaki Papara numarasına ödeme yapın, ardından "Ödemeyi Yaptım" butonuna basın.</p>
     <div class="papara-num">
       <small>PAPARA NUMARASI</small>
       <div class="num" id="paparaNumText">1234567890</div>
       <button class="copy-btn" onclick="copyPapara()" type="button">📋 Kopyala</button>
-      <button class="copy-btn" onclick="openPaparaApp()" type="button" style="margin-left:6px">💜 Papara Uygulamasını Aç</button>
     </div>
     <div class="papara-info">
       <div class="pi-row"><span>Yüklenecek Tutar</span><span id="paparaAmt">0 ₺</span></div>
@@ -1260,46 +1259,7 @@ function openPaparaModal(){
   $("#paparaModal").classList.add("show"); playSound("click");
 }
 function closePaparaModal(){ $("#paparaModal").classList.remove("show"); }
-
-async function copyPapara(){
-  try {
-    if(navigator.clipboard && window.isSecureContext){
-      await navigator.clipboard.writeText(PAPARA_NUMBER);
-    } else {
-      const temp = document.createElement("textarea");
-      temp.value = PAPARA_NUMBER;
-      temp.style.position = "fixed";
-      temp.style.opacity = "0";
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      temp.remove();
-    }
-    toast("📋 Papara numarası kopyalandı");
-  } catch(err) {
-    toast("Papara numarası: " + PAPARA_NUMBER, false, true);
-  }
-  playSound("click");
-}
-
-async function openPaparaApp(){
-  await copyPapara();
-  playSound("click");
-
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if(isMobile){
-    // Papara'nın herkese açık, doğrulanmış bir para gönderme deep-link'i olmadığı için
-    // yalnızca uygulamayı açmayı dener; alıcı ve tutar otomatik doldurulmaz.
-    window.location.href = "papara://";
-    setTimeout(() => {
-      if(!document.hidden){
-        window.open("https://www.papara.com/", "_blank", "noopener");
-      }
-    }, 1600);
-  } else {
-    window.open("https://www.papara.com/", "_blank", "noopener");
-  }
-}
+function copyPapara(){ navigator.clipboard?.writeText(PAPARA_NUMBER).then(()=>toast("📋 Papara numarası kopyalandı")).catch(()=>toast("Papara: " + PAPARA_NUMBER)); playSound("click"); }
 
 async function confirmPaparaPayment(){
   if(!paparaPendingAmount || paparaPendingAmount < MIN_LOAD){ closePaparaModal(); return; }
