@@ -58,10 +58,6 @@ button{font-family:inherit;cursor:pointer}
 .auth-msg.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#7ceb9e}
 .welcome-bonus{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px;font-size:.83rem;color:#f8d78a;line-height:1.6;margin-bottom:18px;text-align:center}
 .welcome-bonus b{color:var(--gold);font-size:1rem}
-.avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
-.avatar-opt{aspect-ratio:1;border-radius:12px;background:var(--panel2);border:2px solid var(--line);display:grid;place-items:center;font-size:1.6rem;cursor:pointer;transition:.15s}
-.avatar-opt:hover{border-color:rgba(34,197,94,.5);transform:scale(1.05)}
-.avatar-opt.sel{border-color:var(--green);background:rgba(34,197,94,.15);box-shadow:0 0 12px rgba(34,197,94,.4)}
 .app{display:none;grid-template-columns:260px 1fr;min-height:100vh}
 .app.show{display:grid}
 .sidebar{background:linear-gradient(180deg,var(--panel),var(--bg));border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
@@ -227,14 +223,11 @@ button{font-family:inherit;cursor:pointer}
 .pending-item .pi-meta{font-size:.74rem;color:var(--muted);margin-top:3px}
 .pending-item .pi-status{font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:20px;white-space:nowrap}
 .pending-item .pi-amount{font-weight:800;color:var(--gold);font-size:.95rem}
-
-/* SUPPORT */
 .support-fab{position:fixed;bottom:24px;left:24px;z-index:900;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:14px 22px;border-radius:50px;font-weight:800;font-size:.95rem;box-shadow:0 8px 24px rgba(124,58,237,.5);transition:.18s;cursor:pointer;display:none}
 .support-fab.show{display:flex}
 .support-fab:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(124,58,237,.6)}
 .support-fab .sf-icon{font-size:1.3rem}
 .support-fab .sf-dot{position:absolute;top:6px;right:6px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid #fff;animation:pulseDot 1.5s infinite}
-
 .support-ticket{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;transition:.15s}
 .support-ticket.replied{border-color:rgba(34,197,94,.4)}
 .support-ticket.closed{opacity:.7}
@@ -250,14 +243,6 @@ button{font-family:inherit;cursor:pointer}
 .st-reply-meta{font-size:.7rem;color:var(--green);font-weight:700;margin-bottom:4px}
 .st-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .st-actions button{padding:8px 14px;border-radius:8px;border:none;font-weight:700;font-size:.78rem;cursor:pointer;transition:.15s}
-.st-actions .st-close{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#ff8a80}
-.st-actions .st-close:hover{background:rgba(239,68,68,.25)}
-.st-actions .st-reopen{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);color:var(--green)}
-.st-actions .st-reopen:hover{background:rgba(34,197,94,.25)}
-.st-actions .st-follow{background:var(--panel);border:1px solid var(--line);color:var(--text)}
-.st-actions .st-follow:hover{background:var(--panel2)}
-
-/* DASHBOARD */
 .dash-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:20px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 22px}
 .dash-header-left h2{font-size:1.3rem;margin-bottom:4px}
 .dash-header-left p{font-size:.82rem;color:var(--muted)}
@@ -289,17 +274,6 @@ button{font-family:inherit;cursor:pointer}
 .heatmap-header h3{font-size:1rem}
 .heatmap-legend{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted)}
 .heatmap-legend .leg-box{width:14px;height:14px;border-radius:3px}
-.heatmap{display:grid;grid-template-columns:60px repeat(24,1fr);gap:3px;min-width:720px}
-.heatmap .hm-label{font-size:.66rem;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;min-height:22px}
-.heatmap .hm-hour{font-size:.6rem;color:var(--muted);font-weight:600;text-align:center;min-height:18px;display:flex;align-items:center;justify-content:center}
-.heatmap .hm-cell{height:22px;border-radius:4px;background:var(--panel2);transition:.15s;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:rgba(255,255,255,.9)}
-.heatmap .hm-cell:hover{transform:scale(1.2);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.4)}
-.heatmap .hm-cell.lvl0{background:var(--panel2)}
-.heatmap .hm-cell.lvl1{background:rgba(34,197,94,.2)}
-.heatmap .hm-cell.lvl2{background:rgba(34,197,94,.4)}
-.heatmap .hm-cell.lvl3{background:rgba(34,197,94,.6)}
-.heatmap .hm-cell.lvl4{background:rgba(34,197,94,.8);color:#03150a}
-.heatmap .hm-cell.lvl5{background:#22c55e;color:#03150a}
 .forecast-box{background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(16,185,129,.05));border:1px solid rgba(34,197,94,.35);border-radius:16px;padding:24px;margin-bottom:24px;position:relative;overflow:hidden}
 .forecast-box::before{content:"";position:absolute;top:-30px;right:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(34,197,94,.2),transparent 70%);pointer-events:none}
 .forecast-box h3{font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;position:relative}
@@ -319,8 +293,6 @@ button{font-family:inherit;cursor:pointer}
 .empty-chart{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-chart .emoji{font-size:2.4rem;opacity:.5;margin-bottom:8px}
 @media(max-width:900px){.chart-grid{grid-template-columns:1fr}.heatmap{min-width:600px}.heatmap .hm-label{width:50px}}
-
-/* MODAL & TOAST */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;place-items:center;z-index:9998;backdrop-filter:blur(4px);padding:20px;overflow-y:auto}
 .modal.show{display:grid}
 .modal-box{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:30px;max-width:520px;width:100%;text-align:center;max-height:90vh;overflow-y:auto}
@@ -351,8 +323,6 @@ button{font-family:inherit;cursor:pointer}
 .fly-icon{position:fixed;font-size:2.2rem;pointer-events:none;z-index:99998;animation:flyToWallet 1.2s cubic-bezier(.68,-0.55,.27,1.55) forwards}
 @keyframes flyToWallet{0%{transform:scale(0) rotate(0);opacity:0}20%{transform:scale(1.3) rotate(-20deg);opacity:1}100%{transform:scale(.3) translate(var(--tx,0),var(--ty,-200px));opacity:0}}
 .mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--panel2);border:1px solid var(--line);color:var(--text);width:44px;height:44px;border-radius:11px;font-size:1.3rem}
-
-/* YENİ YEM ÖZELLİKLERİ */
 #feedAlert{display:none;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff8a80;padding:14px;border-radius:12px;font-weight:700;margin-bottom:16px;text-align:center;animation:pulseDot 1.5s infinite}
 .switch{position:relative;display:inline-block;width:50px;height:26px;flex-shrink:0}
 .switch input{opacity:0;width:0;height:0}
@@ -360,7 +330,6 @@ button{font-family:inherit;cursor:pointer}
 .slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background-color:white;transition:.3s;border-radius:50%}
 input:checked + .slider{background-color:#22c55e}
 input:checked + .slider:before{transform:translateX(24px)}
-
 @media(max-width:900px){
   .app.show{grid-template-columns:1fr}
   .sidebar{position:fixed;left:-280px;z-index:100;transition:.3s;width:260px}
@@ -404,12 +373,33 @@ input:checked + .slider:before{transform:translateX(24px)}
     <form class="auth-form" id="registerForm" onsubmit="doRegister(event)">
       <div class="welcome-bonus">🎁 Yeni üyelere özel <b>150 ₺ hoş geldin bonusu!</b></div>
       <div class="auth-msg" id="registerMsg"></div>
-      <div class="form-group"><label>Ad Soyad</label><input type="text" id="regName" placeholder="Örn: Ahmet Yılmaz" required></div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="form-group"><label>Ad</label><input type="text" id="regName" placeholder="Ahmet" required></div>
+        <div class="form-group"><label>Soyad</label><input type="text" id="regSurname" placeholder="Yılmaz" required></div>
+      </div>
+      
       <div class="form-group"><label>Telefon Numarası</label><input type="tel" id="regPhone" placeholder="05XX XXX XX XX" required><small>Giriş için bu numarayı kullanacaksınız</small></div>
-      <div class="form-group"><label>Şifre</label><input type="password" id="regPass" placeholder="En az 4 karakter" required minlength="4"></div>
-      <div class="form-group"><label>Şifre (Tekrar)</label><input type="password" id="regPass2" placeholder="Şifreyi tekrar girin" required minlength="4"></div>
-      <div class="form-group"><label>Profil Avatarı Seç</label><div class="avatar-grid" id="avatarGrid"></div></div>
-      <button type="submit" class="btn">✅ Kayıt Ol ve 150 ₺ Kazan</button>
+      <div class="form-group"><label>E-posta Adresi</label><input type="email" id="regEmail" placeholder="ornek@mail.com" required></div>
+      
+      <div class="form-group">
+        <label>Şifre</label>
+        <div style="position:relative;">
+          <input type="password" id="regPass" placeholder="Şifrenizi oluşturun" required oninput="checkPasswordStrength()" style="padding-right:40px;">
+          <button type="button" onclick="togglePasswordVisibility('regPass', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem;">👁️</button>
+        </div>
+      </div>
+
+      <div id="passwordStrength" style="background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:16px; font-size:.8rem; line-height:1.6;">
+        <div style="font-weight:700; margin-bottom:6px; color:var(--muted);">Şifre Koşulları</div>
+        <div id="pwdReqUpper" style="color:var(--muted);">⭕ Büyük harf (A-Z)</div>
+        <div id="pwdReqLower" style="color:var(--muted);">⭕ Küçük harf (a-z)</div>
+        <div id="pwdReqNumber" style="color:var(--muted);">⭕ Rakam (0-9)</div>
+        <div id="pwdReqSpecial" style="color:var(--muted);">⭕ Özel karakter (!@#$...)</div>
+        <div id="pwdReqLength" style="color:var(--muted);">⭕ En az 8 karakter</div>
+      </div>
+
+      <button type="submit" class="btn" id="registerBtn" disabled>✅ Kayıt Ol ve 150 ₺ Kazan</button>
     </form>
     <form class="auth-form" id="forgotForm" onsubmit="doForgot(event)">
       <div class="auth-msg" id="forgotMsg"></div>
@@ -632,7 +622,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;text-align:center">Aşağıdaki Papara numarasına ödeme yapın, ardından "Ödemeyi Yaptım" butonuna basın.</p>
     <div class="papara-num">
       <small>PAPARA NUMARASI</small>
-      <div class="num" id="paparaNumText">1234567890</div>
+      <div class="num" id="paparaNumText">9789310466</div>
       <button class="copy-btn" onclick="copyPapara()" type="button">📋 Kopyala</button>
     </div>
     <div class="papara-info">
@@ -657,22 +647,10 @@ input:checked + .slider:before{transform:translateX(24px)}
   </div>
 </div>
 
-<div class="modal" id="avatarModal">
-  <div class="modal-box" style="max-width:520px">
-    <h3 style="margin-bottom:16px">Avatar Seç</h3>
-    <div class="avatar-grid" id="avatarGridProfile" style="grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px"></div>
-    <div class="modal-actions"><button class="btn ghost" onclick="closeAvatarModal()" type="button">İptal</button></div>
-  </div>
-</div>
-
 <script>
 "use strict";
 
-/* ============================================================
-   API BAĞLANTI AYARLARI
-   ============================================================ */
 const API_BASE = "/api";
-
 let authToken = null;
 try { authToken = localStorage.getItem("ciftlik_token"); } catch(e){}
 
@@ -704,9 +682,6 @@ async function apiRequest(endpoint, method = "GET", body = null) {
   }
 }
 
-/* ============================================================
-   GLOBAL DEĞİŞKENLER
-   ============================================================ */
 let currentUser = null;
 let S = null;
 let referralInfo = null;
@@ -752,9 +727,6 @@ const PRODUCTS = {
   peynir:  { name:"Peynir",  emoji:"🧀", base:25, unit:"kg",   color:"#a855f7" },
 };
 
-/* ============================================================
-   YARDIMCILAR
-   ============================================================ */
 const $ = s => document.querySelector(s);
 const fmt = n => (Number.isFinite(Number(n)) ? Math.round(Number(n)) : 0).toLocaleString("tr-TR");
 const fmtDec = (n, d=4) => (Number.isFinite(Number(n)) ? Number(n) : 0).toFixed(d).replace(".", ",");
@@ -777,9 +749,6 @@ function formatPhoneDisplay(p){
   return `0${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6,8)} ${d.slice(8,10)}`;
 }
 
-/* ============================================================
-   TEMA & SES
-   ============================================================ */
 function applyTheme(theme){
   document.documentElement.setAttribute("data-theme", theme);
   const icon = document.getElementById("themeIcon");
@@ -809,9 +778,6 @@ function playSound(type){
   else if(type === "levelup"){ osc.type="triangle"; osc.frequency.setValueAtTime(523,now); osc.frequency.setValueAtTime(659,now+.1); osc.frequency.setValueAtTime(784,now+.2); osc.frequency.setValueAtTime(1047,now+.3); gain.gain.setValueAtTime(.1,now); gain.gain.exponentialRampToValueAtTime(.001,now+.5); osc.start(now); osc.stop(now+.5); }
 }
 
-/* ============================================================
-   AUTH & OTURUM
-   ============================================================ */
 function showLogin(){
   document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.auth === 'login'));
   document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
@@ -830,17 +796,7 @@ function hideMsg(){ ["loginMsg","registerMsg","forgotMsg"].forEach(id=>{ const e
 function showMsg(id, msg, isErr=false){ const el = $("#"+id); el.textContent = msg; el.className = "auth-msg show " + (isErr?"err":"ok"); }
 
 function initAvatarGrid(){
-  const g1 = $("#avatarGrid"); const g2 = $("#avatarGridProfile");
-  if(g1){
-    g1.innerHTML = "";
-    AVATARS.forEach(a=>{
-      const d = document.createElement("div");
-      d.className = "avatar-opt" + (a===selectedAvatar ? " sel" : "");
-      d.textContent = a;
-      d.onclick = ()=>{ selectedAvatar = a; initAvatarGrid(); playSound("click"); };
-      g1.appendChild(d);
-    });
-  }
+  const g2 = $("#avatarGridProfile");
   if(g2){
     g2.innerHTML = "";
     AVATARS.forEach(a=>{
@@ -859,21 +815,63 @@ function initAvatarGrid(){
   }
 }
 
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === "password") {
+    input.type = "text";
+    btn.textContent = "🙈";
+  } else {
+    input.type = "password";
+    btn.textContent = "👁️";
+  }
+}
+
+function checkPasswordStrength() {
+  const pass = document.getElementById("regPass").value;
+  
+  const hasUpper = /[A-Z]/.test(pass);
+  const hasLower = /[a-z]/.test(pass);
+  const hasNumber = /[0-9]/.test(pass);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+  const hasLength = pass.length >= 8;
+
+  document.getElementById("pwdReqUpper").innerHTML = (hasUpper ? "✅" : "⭕") + " Büyük harf (A-Z)";
+  document.getElementById("pwdReqUpper").style.color = hasUpper ? "var(--green)" : "var(--muted)";
+  
+  document.getElementById("pwdReqLower").innerHTML = (hasLower ? "✅" : "⭕") + " Küçük harf (a-z)";
+  document.getElementById("pwdReqLower").style.color = hasLower ? "var(--green)" : "var(--muted)";
+
+  document.getElementById("pwdReqNumber").innerHTML = (hasNumber ? "✅" : "⭕") + " Rakam (0-9)";
+  document.getElementById("pwdReqNumber").style.color = hasNumber ? "var(--green)" : "var(--muted)";
+
+  document.getElementById("pwdReqSpecial").innerHTML = (hasSpecial ? "✅" : "⭕") + " Özel karakter (!@#$...)";
+  document.getElementById("pwdReqSpecial").style.color = hasSpecial ? "var(--green)" : "var(--muted)";
+
+  document.getElementById("pwdReqLength").innerHTML = (hasLength ? "✅" : "⭕") + " En az 8 karakter";
+  document.getElementById("pwdReqLength").style.color = hasLength ? "var(--green)" : "var(--muted)";
+
+  const allValid = hasUpper && hasLower && hasNumber && hasSpecial && hasLength;
+  document.getElementById("registerBtn").disabled = !allValid;
+}
+
 async function doRegister(e){
   e.preventDefault();
   const name = $("#regName").value.trim();
+  const surname = $("#regSurname").value.trim();
   const phone = normalizePhone($("#regPhone").value.trim());
+  const email = $("#regEmail").value.trim();
   const pass = $("#regPass").value;
-  const pass2 = $("#regPass2").value;
   
-  if(name.length < 3){ showMsg("registerMsg","❌ Ad soyad en az 3 karakter olmalı", true); playSound("error"); return; }
+  if(name.length < 2){ showMsg("registerMsg","❌ Ad en az 2 karakter olmalı", true); playSound("error"); return; }
+  if(surname.length < 2){ showMsg("registerMsg","❌ Soyad en az 2 karakter olmalı", true); playSound("error"); return; }
   if(phone.length !== 10){ showMsg("registerMsg","❌ Geçerli bir telefon girin", true); playSound("error"); return; }
-  if(pass.length < 4){ showMsg("registerMsg","❌ Şifre en az 4 karakter olmalı", true); playSound("error"); return; }
-  if(pass !== pass2){ showMsg("registerMsg","❌ Şifreler uyuşmuyor", true); playSound("error"); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg("registerMsg","❌ Geçerli bir e-posta adresi girin", true); playSound("error"); return; }
+  if(pass.length < 8){ showMsg("registerMsg","❌ Şifre en az 8 karakter olmalı", true); playSound("error"); return; }
 
   try {
     const data = await apiRequest("/register", "POST", {
-      name, phone, password: pass, avatar: selectedAvatar,
+      name, surname, phone, email, password: pass,
       referral_code: pendingReferralCode || ""
     });
     if(!data.token) throw new Error("Kayıt yanıtında oturum anahtarı bulunamadı.");
@@ -884,7 +882,7 @@ async function doRegister(e){
     try { localStorage.setItem("ciftlik_token", data.token); } catch(e) {}
     authToken = data.token;
     setTimeout(()=>{
-      $("#regName").value=""; $("#regPhone").value=""; $("#regPass").value=""; $("#regPass2").value="";
+      $("#regName").value=""; $("#regSurname").value=""; $("#regPhone").value=""; $("#regEmail").value=""; $("#regPass").value="";
       startSession(data.token);
     }, 900);
   } catch(err) {
@@ -1112,9 +1110,6 @@ function tryRestoreSession(){
   return true;
 }
 
-/* ============================================================
-   AKTİF HAYVAN SAYILARI
-   ============================================================ */
 function aliveCount(key){ 
   if(!S || !S.owned[key]) return 0;
   return S.owned[key].filter(a => a < ANIMAL_LIFE_SEC).length; 
@@ -1128,9 +1123,6 @@ function totalPerHour(){ return totalPerSecond() * SEC_PER_HOUR; }
 function inventoryValue(){ let v=0; if(!S) return 0; for(const p in PRODUCTS) v += (S.inventory[p]||0) * S.prices[p]; return v; }
 function feedNeededPerDay(){ let f=0; for(const k in ANIMALS) f += aliveCount(k) * ANIMALS[k].feedPerDay; return f; }
 
-/* ============================================================
-   AKSİYONLAR (API ÇAĞRILARI)
-   ============================================================ */
 function changeQty(key, d){ if(!S || !ANIMALS[key]) return; S.qty[key] = Math.min(1000, Math.max(1, (S.qty[key]||1) + d)); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); playSound("click"); }
 function setQty(key, val){ if(!S || !ANIMALS[key]) return; S.qty[key] = Math.min(1000, Math.max(1, parseInt(val,10)||1)); const inp = $("#qty-"+key); if(inp) inp.value = S.qty[key]; updateBuyButton(key); }
 function updateBuyButton(key){ if(!S) return; const btn = $("#buy-"+key); if(!btn) return; const cost = ANIMALS[key].price * S.qty[key]; btn.textContent = `🛒 Yatırım Yap (${fmt(cost)} ₺)`; }
@@ -1245,9 +1237,6 @@ async function requestWithdraw(){
 }
 function closeWithdrawModal(){ $("#withdrawModal").classList.remove("show"); }
 
-/* ============================================================
-   BAKİYE YÜKLEME & PAPARA
-   ============================================================ */
 function openPaparaModal(){
   let amt = parseFloat($("#loadAmount").value) || loadPresetAmount;
   if(!Number.isFinite(amt) || amt < MIN_LOAD){ toast(`❌ Minimum yükleme tutarı ${MIN_LOAD} ₺`, true); playSound("error"); return; }
@@ -1281,9 +1270,6 @@ async function confirmPaparaPayment(){
 }
 function closePendingModal(){ $("#pendingModal").classList.remove("show"); }
 
-/* ============================================================
-   DESTEK TALEBİ
-   ============================================================ */
 function openSupportModal(){
   playSound("click");
   $("#supportSubject").value = "";
@@ -1328,9 +1314,6 @@ function updateSupportBadge(){
   }
 }
 
-/* ============================================================
-   RENDER FONKSİYONLARI
-   ============================================================ */
 function updateLiveDOM(){
   if(!S) return;
   const walletEl = $("#wallet"); if(walletEl) walletEl.textContent = fmt(S.wallet) + " ₺";
@@ -1615,9 +1598,6 @@ function renderProfile(){
   `;
 }
 
-/* ============================================================
-   DASHBOARD
-   ============================================================ */
 function setDashPeriod(p){
   dashPeriod = p;
   document.querySelectorAll(".dash-tab").forEach(t=>t.classList.toggle("active", t.dataset.period === p));
@@ -1735,9 +1715,6 @@ function renderTopProducts(){
   g.innerHTML = `<div class="empty-chart"><div class="emoji">🏆</div><p>Backend satış istatistikleri entegre edilecek.</p></div>`;
 }
 
-/* ============================================================
-   DESTEK TALEPLERİ RENDER
-   ============================================================ */
 function renderSupport() {
   const g = $("#supportList"); if(!g || !currentUser) return;
   const tickets = S?.tickets || [];
@@ -1779,9 +1756,6 @@ function renderSupport() {
   });
 }
 
-/* ============================================================
-   UI & TOAST
-   ============================================================ */
 function toast(msg, isErr=false, isGold=false, isPurple=false){
   const el = document.createElement("div");
   el.className = "toast show" + (isErr?" err":"") + (isGold?" gold":"") + (isPurple?" purple":"");
@@ -1851,9 +1825,6 @@ function goLoad(){ switchTab("profile"); setTimeout(()=>{ const el = document.qu
 function openAvatarModal(){ initAvatarGrid(); $("#avatarModal").classList.add("show"); }
 function closeAvatarModal(){ $("#avatarModal").classList.remove("show"); }
 
-/* ============================================================
-   INIT
-   ============================================================ */
 initTheme();
 initAvatarGrid();
 document.querySelectorAll('.auth-tab').forEach(t=>{
