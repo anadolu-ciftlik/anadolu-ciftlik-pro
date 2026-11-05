@@ -962,6 +962,15 @@ module.exports = async (req, res) => {
             throw error;
           }
         }
+        // Üyenin davet edilen olarak bulunduğu referans ödül kayıtlarını sil
+const { error: referredRewardError } = await supabase
+  .from("referral rewards")
+  .delete()
+  .eq("referred_user_id", user_id);
+
+if (referredRewardError) {
+  throw referredRewardError;
+}
 
         // En son üyeyi sil
         const { error: deleteUserError } = await supabase
