@@ -1,5 +1,8 @@
 const crypto = require("crypto");
+const { Resend } = require("resend");
 const { supabase, bcrypt, ok, err, cors, normalizePhone, signToken, getUserFromReq, getAdminFromReq, ensureFarm, ADMIN_USER, ADMIN_PASS, verifyToken } = require("./_lib");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function createReferralCode() {
   return crypto.randomBytes(5).toString("hex").toUpperCase();
@@ -52,58 +55,44 @@ module.exports = async (req, res) => {
   try {
     // ================= AUTH =================
 
-    // ================= GÜNCELLENMİŞ KAYIT ROTASI =================
     if (path === "/register" && req.method === "POST") {
       const { name, surname, phone: rawPhone, email, password, avatar } = req.body || {};
       const rawReferralCode = String(req.body?.referral_code || "").trim().toUpperCase();
       const phone = normalizePhone(rawPhone);
 
-      // Doğrulamalar
       if (!name || name.trim().length < 2) return err(res, "Ad en az 2 karakter olmalı");
       if (!surname || surname.trim().length < 2) return err(res, "Soyad en az 2 karakter olmalı");
       if (phone.length !== 10) return err(res, "Geçerli bir telefon girin");
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err(res, "Geçerli bir e-posta adresi girin");
       if (!password || password.length < 8) return err(res, "Şifre en az 8 karakter olmalı");
       
-      // Şifre karmaşıklık kontrolü (frontend'de yapılıyor ama backend'de de kontrol edelim)
       if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         return err(res, "Şifre büyük harf, küçük harf, rakam ve özel karakter içermelidir");
       }
 
       const { data: existing } = await supabase
         .from("users").select("id").eq("phone", phone).single();
-
       if (existing) return err(res, "Bu telefon numarası zaten kayıtlı");
 
-      // E-posta kontrolü
       const { data: existingEmail } = await supabase
         .from("users").select("id").eq("email", email.trim().toLowerCase()).single();
-
       if (existingEmail) return err(res, "Bu e-posta adresi zaten kayıtlı");
 
       let referredBy = null;
-
       if (rawReferralCode) {
-        if (!/^[A-F0-9]{10}$/.test(rawReferralCode)) {
-          return err(res, "Referans kodu geçersiz");
-        }
-
+        if (!/^[A-F0-9]{10}$/.test(rawReferralCode)) return err(res, "Referans kodu geçersiz");
         const { data: referrer, error: referralLookupError } = await supabase
-          .from("users").select("id")
-          .eq("referral_code", rawReferralCode).maybeSingle();
-
+          .from("users").select("id").eq("referral_code", rawReferralCode).maybeSingle();
         if (referralLookupError) return err(res, "Referans kodu kontrol edilemedi");
         if (!referrer) return err(res, "Bu referans kodu bulunamadı");
-
         referredBy = referrer.id;
       }
 
       const password_hash = await bcrypt.hash(password, 10);
-
       const newUserData = {
-        name: `${name.trim()} ${surname.trim()}`, // Ad ve soyadı birleştir
+        name: `${name.trim()} ${surname.trim()}`,
         phone,
-        email: email.trim().toLowerCase(), // E-posta ekle
+        email: email.trim().toLowerCase(),
         password_hash,
         avatar: avatar || "🐄",
         referral_code: createReferralCode(),
@@ -112,37 +101,22 @@ module.exports = async (req, res) => {
 
       const { data: user, error } = await supabase
         .from("users").insert(newUserData).select().single();
-
       if (error) return err(res, error.message);
 
       await ensureFarm(user.id);
-
-      const token = signToken({
-        id: user.id,
-        type: "user",
-        phone: user.phone
-      });
+      const token = signToken({ id: user.id, type: "user", phone: user.phone });
 
       return ok(res, {
         token,
-        user: {
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          email: user.email,
-          avatar: user.avatar
-        }
+        user: { id: user.id, name: user.name, phone: user.phone, email: user.email, avatar: user.avatar }
       });
     }
-    // ================= KAYIT ROTASI SONU =================
 
     if (path === "/login" && req.method === "POST") {
       const { phone: rawPhone, password } = req.body || {};
       const phone = normalizePhone(rawPhone);
 
-      if (phone.length !== 10 || !password) {
-        return err(res, "Telefon ve şifre gerekli");
-      }
+      if (phone.length !== 10 || !password) return err(res, "Telefon ve şifre gerekli");
 
       const { data: user, error } = await supabase
         .from("users").select("*").eq("phone", phone).single();
@@ -150,38 +124,92 @@ module.exports = async (req, res) => {
       if (error || !user) return err(res, "Bu telefon numarası kayıtlı değil");
 
       const match = await bcrypt.compare(password, user.password_hash);
-
       if (!match) return err(res, "Şifre hatalı");
 
       await ensureFarm(user.id);
-
-      const token = signToken({
-        id: user.id,
-        type: "user",
-        phone: user.phone
-      });
+      const token = signToken({ id: user.id, type: "user", phone: user.phone });
 
       return ok(res, {
         token,
-        user: {
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          email: user.email,
-          avatar: user.avatar
-        }
+        user: { id: user.id, name: user.name, phone: user.phone, email: user.email, avatar: user.avatar }
       });
     }
 
     if (path === "/admin-login" && req.method === "POST") {
       const { username, password } = req.body || {};
-
       if (username !== ADMIN_USER || password !== ADMIN_PASS) {
         return err(res, "Kullanıcı adı veya şifre hatalı", 401);
       }
-
       const token = signToken({ username, type: "admin" });
       return ok(res, { token });
+    }
+
+    // ================= ŞİFRE SIFIRLAMA =================
+
+    if (path === "/forgot-password" && req.method === "POST") {
+      const { email } = req.body || {};
+      if (!email) return err(res, "E-posta adresi gerekli");
+
+      const { data: user, error } = await supabase
+        .from("users").select("id, name, email").eq("email", email.trim().toLowerCase()).single();
+
+      if (error || !user) {
+        return ok(res, { message: "Eğer bu e-posta kayıtlıysa, sıfırlama linki gönderildi." });
+      }
+
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+      await supabase.from("password_reset_tokens").insert({
+        user_id: user.id,
+        token: resetToken,
+        expires_at: expiresAt.toISOString()
+      });
+
+      try {
+        await resend.emails.send({
+          from: 'Anadolu Çiftlik <onboarding@resend.dev>',
+          to: [user.email],
+          subject: 'Şifre Sıfırlama Talebi',
+          html: `
+            <h2>Merhaba ${user.name},</h2>
+            <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>
+            <p><a href="https://anadolu-ciftlik-pro.vercel.app/reset-password.html?token=${resetToken}">Şifremi Sıfırla</a></p>
+            <p>Bu link 15 dakika içinde geçersiz olacaktır.</p>
+            <p>Eğer bu talebi siz yapmadıysanız, bu e-postayı dikkate almayın.</p>
+          `
+        });
+      } catch (emailErr) {
+        console.error("E-posta gönderme hatası:", emailErr);
+        return err(res, "E-posta gönderilemedi. Lütfen daha sonra tekrar deneyin.", 500);
+      }
+
+      return ok(res, { message: "Eğer bu e-posta kayıtlıysa, sıfırlama linki gönderildi." });
+    }
+
+    if (path === "/reset-password" && req.method === "POST") {
+      const { token, newPassword } = req.body || {};
+      if (!token || !newPassword) return err(res, "Token ve yeni şifre gerekli");
+      if (newPassword.length < 8) return err(res, "Şifre en az 8 karakter olmalı");
+
+      const { data: resetRequest, error } = await supabase
+        .from("password_reset_tokens")
+        .select("user_id, expires_at")
+        .eq("token", token)
+        .single();
+
+      if (error || !resetRequest) return err(res, "Geçersiz veya kullanılmış token");
+      if (new Date(resetRequest.expires_at) < new Date()) return err(res, "Token'ın süresi dolmuş");
+
+      const password_hash = await bcrypt.hash(newPassword, 10);
+      const { error: updateError } = await supabase
+        .from("users").update({ password_hash }).eq("id", resetRequest.user_id);
+
+      if (updateError) return err(res, "Şifre güncellenemedi", 500);
+
+      await supabase.from("password_reset_tokens").delete().eq("token", token);
+
+      return ok(res, { message: "Şifreniz başarıyla güncellendi. Giriş yapabilirsiniz." });
     }
 
     // ================= KULLANICI İŞLEMLERİ =================
@@ -204,9 +232,7 @@ module.exports = async (req, res) => {
       }
 
       const rewardRows = rewards || [];
-      const total = rewardRows.reduce(
-        (sum, row) => sum + Number(row.amount || 0), 0
-      );
+      const total = rewardRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
 
       return ok(res, {
         referral_code: referralCode,
@@ -224,13 +250,9 @@ module.exports = async (req, res) => {
 
       try {
         const { error: referralRewardError } = await supabase.rpc(
-          "process_referral_reward",
-          { p_referred_user_id: user.id }
+          "process_referral_reward", { p_referred_user_id: user.id }
         );
-
-        if (referralRewardError) {
-          console.error("Referans ödülü işlenemedi:", referralRewardError);
-        }
+        if (referralRewardError) console.error("Referans ödülü işlenemedi:", referralRewardError);
       } catch (referralRewardException) {
         console.error("Referans ödülü işlem hatası:", referralRewardException);
       }
@@ -242,17 +264,10 @@ module.exports = async (req, res) => {
           .from("animals").select("type").eq("user_id", user.id);
 
         const aliveAuto = { tavuk:0, ari:0, koyun:0, inek:0 };
-
-        (animalsAuto || []).forEach(a => {
-          aliveAuto[a.type]++;
-        });
+        (animalsAuto || []).forEach(a => { aliveAuto[a.type]++; });
 
         let dailyNeedAuto = 0;
-
-        for (const k in aliveAuto) {
-          dailyNeedAuto += aliveAuto[k] * ANIMALS[k].feedPerDay;
-        }
-
+        for (const k in aliveAuto) dailyNeedAuto += aliveAuto[k] * ANIMALS[k].feedPerDay;
         if (dailyNeedAuto === 0) dailyNeedAuto = 1;
 
         const priceAuto = Math.max(1, Math.floor(100 / dailyNeedAuto));
@@ -268,10 +283,8 @@ module.exports = async (req, res) => {
           }).eq("user_id", user.id);
 
           await supabase.from("history").insert({
-            user_id: user.id,
-            type: "feed",
-            description: `Otomatik Yem Alımı (${qtyAuto} birim)`,
-            amount: -costAuto
+            user_id: user.id, type: "feed",
+            description: `Otomatik Yem Alımı (${qtyAuto} birim)`, amount: -costAuto
           });
 
           farm.feed = Number(farm.feed) + qtyAuto;
@@ -279,40 +292,18 @@ module.exports = async (req, res) => {
         }
       }
 
-      const [
-        animalsRes,
-        inventoryRes,
-        historyRes,
-        loadReqRes,
-        withdrawRes,
-        ticketsRes
-      ] = await Promise.all([
+      const [animalsRes, inventoryRes, historyRes, loadReqRes, withdrawRes, ticketsRes] = await Promise.all([
         supabase.from("animals").select("*").eq("user_id", user.id),
         supabase.from("inventory").select("*").eq("user_id", user.id),
-        supabase.from("history").select("*").eq("user_id", user.id)
-          .order("created_at", { ascending: false }).limit(100),
-        supabase.from("load_requests").select("*").eq("user_id", user.id)
-          .order("created_at", { ascending: false }).limit(20),
-        supabase.from("withdraw_requests").select("*").eq("user_id", user.id)
-          .order("created_at", { ascending: false }).limit(20),
-        supabase.from("support_tickets").select("*, support_replies(*)")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
+        supabase.from("history").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
+        supabase.from("load_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+        supabase.from("withdraw_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+        supabase.from("support_tickets").select("*, support_replies(*)").eq("user_id", user.id).order("created_at", { ascending: false })
       ]);
 
       return ok(res, {
-        user: {
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          email: user.email,
-          avatar: user.avatar,
-          created_at: user.created_at
-        },
-        farm: {
-          ...farm,
-          auto_feed: Boolean(farm.auto_feed)
-        },
+        user: { id: user.id, name: user.name, phone: user.phone, email: user.email, avatar: user.avatar, created_at: user.created_at },
+        farm: { ...farm, auto_feed: Boolean(farm.auto_feed) },
         animals: animalsRes.data || [],
         inventory: inventoryRes.data || [],
         history: historyRes.data || [],
@@ -327,27 +318,16 @@ module.exports = async (req, res) => {
       if (!user) return err(res, "Oturum bulunamadı", 401);
 
       const enable = req.body?.enable;
-
-      if (typeof enable !== "boolean") {
-        return err(res, "Geçersiz otomatik yem ayarı");
-      }
+      if (typeof enable !== "boolean") return err(res, "Geçersiz otomatik yem ayarı");
 
       await ensureFarm(user.id);
-
       const { data, error } = await supabase
-        .from("farms").update({ auto_feed: enable })
-        .eq("user_id", user.id)
+        .from("farms").update({ auto_feed: enable }).eq("user_id", user.id)
         .select("auto_feed").single();
 
-      if (error) {
-        console.error("Otomatik yem kayıt hatası:", error);
-        return err(res, "Otomatik yem ayarı kaydedilemedi", 500);
-      }
+      if (error) { console.error("Otomatik yem kayıt hatası:", error); return err(res, "Otomatik yem ayarı kaydedilemedi", 500); }
 
-      return ok(res, {
-        message: "Otomatik yem ayarı güncellendi",
-        auto_feed: Boolean(data.auto_feed)
-      });
+      return ok(res, { message: "Otomatik yem ayarı güncellendi", auto_feed: Boolean(data.auto_feed) });
     }
 
     if (path === "/buy-animal" && req.method === "POST") {
@@ -355,7 +335,6 @@ module.exports = async (req, res) => {
       if (!user) return err(res, "Oturum bulunamadı", 401);
 
       const { type, qty } = req.body || {};
-
       if (!ANIMALS[type]) return err(res, "Geçersiz hayvan türü");
 
       const quantity = Math.max(1, parseInt(qty) || 1);
@@ -365,11 +344,7 @@ module.exports = async (req, res) => {
       if (Number(farm.wallet) < cost) return err(res, "Yetersiz bakiye");
 
       const rows = [];
-
-      for (let i = 0; i < quantity; i++) {
-        rows.push({ user_id: user.id, type, age_seconds: 0 });
-      }
-
+      for (let i = 0; i < quantity; i++) rows.push({ user_id: user.id, type, age_seconds: 0 });
       await supabase.from("animals").insert(rows);
 
       await supabase.from("farms").update({
@@ -378,16 +353,11 @@ module.exports = async (req, res) => {
       }).eq("user_id", user.id);
 
       await supabase.from("history").insert({
-        user_id: user.id,
-        type: "buy",
-        description: `${quantity} adet ${ANIMALS[type].name} yatırımı`,
-        amount: -cost
+        user_id: user.id, type: "buy",
+        description: `${quantity} adet ${ANIMALS[type].name} yatırımı`, amount: -cost
       });
 
-      return ok(res, {
-        message: `${quantity} adet ${ANIMALS[type].name} alındı`,
-        cost
-      });
+      return ok(res, { message: `${quantity} adet ${ANIMALS[type].name} alındı`, cost });
     }
 
     if (path === "/sell-product" && req.method === "POST") {
@@ -395,33 +365,25 @@ module.exports = async (req, res) => {
       if (!user) return err(res, "Oturum bulunamadı", 401);
 
       const { product } = req.body || {};
-
       if (!BASE_PRICES[product]) return err(res, "Geçersiz ürün");
 
       const { data: inv } = await supabase.from("inventory")
-        .select("amount").eq("user_id", user.id)
-        .eq("product", product).single();
-
+        .select("amount").eq("user_id", user.id).eq("product", product).single();
       const amount = Number(inv?.amount || 0);
-
       if (amount <= 0) return err(res, "Satacak ürün yok");
 
       const earned = amount * BASE_PRICES[product];
       const farm = await ensureFarm(user.id);
 
-      await supabase.from("inventory").update({ amount: 0 })
-        .eq("user_id", user.id).eq("product", product);
-
+      await supabase.from("inventory").update({ amount: 0 }).eq("user_id", user.id).eq("product", product);
       await supabase.from("farms").update({
         wallet: Number(farm.wallet) + earned,
         total_sold: Number(farm.total_sold) + earned
       }).eq("user_id", user.id);
 
       await supabase.from("history").insert({
-        user_id: user.id,
-        type: "sell",
-        description: `${amount.toFixed(2)} ${product} satışı`,
-        amount: earned
+        user_id: user.id, type: "sell",
+        description: `${amount.toFixed(2)} ${product} satışı`, amount: earned
       });
 
       return ok(res, { message: "Satış yapıldı", earned, amount });
@@ -433,45 +395,26 @@ module.exports = async (req, res) => {
 
       const { amount } = req.body || {};
       const farm = await ensureFarm(user.id);
-
       const space = FEED_CAP - Number(farm.feed);
 
-      const { data: animals } = await supabase
-        .from("animals").select("type").eq("user_id", user.id);
-
+      const { data: animals } = await supabase.from("animals").select("type").eq("user_id", user.id);
       const aliveCounts = { tavuk:0, ari:0, koyun:0, inek:0 };
-
-      (animals || []).forEach(a => {
-        aliveCounts[a.type]++;
-      });
+      (animals || []).forEach(a => { aliveCounts[a.type]++; });
 
       let dailyFeedNeed = 0;
-
-      for (const k in aliveCounts) {
-        dailyFeedNeed += aliveCounts[k] * ANIMALS[k].feedPerDay;
-      }
-
+      for (const k in aliveCounts) dailyFeedNeed += aliveCounts[k] * ANIMALS[k].feedPerDay;
       if (dailyFeedNeed === 0) dailyFeedNeed = 1;
 
       const feedPricePerUnit = Math.max(1, Math.floor(100 / dailyFeedNeed));
 
       let qty = parseInt(amount);
-
-      if (isNaN(qty) || qty <= 0) {
-        qty = Math.ceil(dailyFeedNeed);
-      }
+      if (isNaN(qty) || qty <= 0) qty = Math.ceil(dailyFeedNeed);
 
       const realAmount = Math.min(qty, space);
-
-      if (realAmount <= 0) {
-        return err(res, "Yem deposu dolu (Kapasite: 1000)");
-      }
+      if (realAmount <= 0) return err(res, "Yem deposu dolu (Kapasite: 1000)");
 
       const cost = realAmount * feedPricePerUnit;
-
-      if (Number(farm.wallet) < cost) {
-        return err(res, "Yetersiz bakiye! Gerekli: " + cost + " ₺");
-      }
+      if (Number(farm.wallet) < cost) return err(res, "Yetersiz bakiye! Gerekli: " + cost + " ₺");
 
       await supabase.from("farms").update({
         wallet: Number(farm.wallet) - cost,
@@ -482,17 +425,11 @@ module.exports = async (req, res) => {
       }).eq("user_id", user.id);
 
       await supabase.from("history").insert({
-        user_id: user.id,
-        type: "feed",
-        description: `${realAmount} birim yem alımı`,
-        amount: -cost
+        user_id: user.id, type: "feed",
+        description: `${realAmount} birim yem alımı`, amount: -cost
       });
 
-      return ok(res, {
-        message: `${realAmount} yem alındı`,
-        cost,
-        price: feedPricePerUnit
-      });
+      return ok(res, { message: `${realAmount} yem alındı`, cost, price: feedPricePerUnit });
     }
 
     if (path === "/withdraw" && req.method === "POST") {
@@ -501,23 +438,15 @@ module.exports = async (req, res) => {
 
       const { amount, bank, iban, name } = req.body || {};
       const amt = parseFloat(amount);
-
       if (!amt || amt < 500) return err(res, "Minimum çekim 500 ₺");
       if (!bank || !iban || !name) return err(res, "Banka, IBAN ve isim gerekli");
 
       const farm = await ensureFarm(user.id);
-
       if (Number(farm.wallet) < amt) return err(res, "Yetersiz bakiye");
 
       await supabase.from("withdraw_requests").insert({
-        user_id: user.id,
-        amount: amt,
-        bank,
-        iban,
-        name,
-        status: "pending"
+        user_id: user.id, amount: amt, bank, iban, name, status: "pending"
       });
-
       await supabase.from("farms").update({
         wallet: Number(farm.wallet) - amt,
         total_withdrawn: Number(farm.total_withdrawn) + amt
@@ -532,15 +461,12 @@ module.exports = async (req, res) => {
 
       const { amount } = req.body || {};
       const amt = parseFloat(amount);
-
       if (!amt || amt < 50) return err(res, "Minimum yükleme tutarı 50 ₺");
 
       const { data, error } = await supabase.from("load_requests")
-        .insert({ user_id: user.id, amount: amt, status: "pending" })
-        .select().single();
+        .insert({ user_id: user.id, amount: amt, status: "pending" }).select().single();
 
       if (error) return err(res, error.message);
-
       return ok(res, { request: data });
     }
 
@@ -549,22 +475,13 @@ module.exports = async (req, res) => {
       if (!user) return err(res, "Oturum bulunamadı", 401);
 
       const { subject, message } = req.body || {};
-
       if (!subject) return err(res, "Konu seçin");
-      if (!message || message.length < 10) {
-        return err(res, "Mesaj en az 10 karakter olmalı");
-      }
+      if (!message || message.length < 10) return err(res, "Mesaj en az 10 karakter olmalı");
 
       const { data, error } = await supabase.from("support_tickets")
-        .insert({
-          user_id: user.id,
-          subject,
-          message,
-          status: "pending"
-        }).select().single();
+        .insert({ user_id: user.id, subject, message, status: "pending" }).select().single();
 
       if (error) return err(res, error.message);
-
       return ok(res, { ticket: data });
     }
 
@@ -574,14 +491,7 @@ module.exports = async (req, res) => {
       const admin = await getAdminFromReq(req);
       if (!admin) return err(res, "Yetkisiz", 401);
 
-      const [
-        usersRes,
-        farmsRes,
-        loadsRes,
-        withdrawsRes,
-        ticketsRes,
-        animalsRes
-      ] = await Promise.all([
+      const [usersRes, farmsRes, loadsRes, withdrawsRes, ticketsRes, animalsRes] = await Promise.all([
         supabase.from("users").select("id, name, phone, email, avatar, created_at"),
         supabase.from("farms").select("*"),
         supabase.from("load_requests").select("*").order("created_at", { ascending: false }),
@@ -592,61 +502,23 @@ module.exports = async (req, res) => {
 
       const users = usersRes.data || [];
       const farms = farmsRes.data || [];
-
-      const userMap = {};
-      const farmMap = {};
-
-      users.forEach(u => {
-        userMap[u.id] = u;
-      });
-
-      farms.forEach(f => {
-        farmMap[f.user_id] = f;
-      });
+      const userMap = {}, farmMap = {};
+      users.forEach(u => { userMap[u.id] = u; });
+      farms.forEach(f => { farmMap[f.user_id] = f; });
 
       const animalMap = {};
-
       (animalsRes.data || []).forEach(a => {
-        if (!animalMap[a.user_id]) {
-          animalMap[a.user_id] = { total: 0, alive: 0 };
-        }
-
+        if (!animalMap[a.user_id]) animalMap[a.user_id] = { total: 0, alive: 0 };
         animalMap[a.user_id].total++;
-
-        if (Number(a.age_seconds) < ANIMAL_LIFE_SEC) {
-          animalMap[a.user_id].alive++;
-        }
+        if (Number(a.age_seconds) < ANIMAL_LIFE_SEC) animalMap[a.user_id].alive++;
       });
 
-      const enrichedUsers = users.map(u => ({
-        ...u,
-        farm: farmMap[u.id] || null,
-        animals: animalMap[u.id] || { total: 0, alive: 0 }
-      }));
+      const enrichedUsers = users.map(u => ({ ...u, farm: farmMap[u.id] || null, animals: animalMap[u.id] || { total: 0, alive: 0 } }));
+      const enrichedLoads = (loadsRes.data || []).map(l => ({ ...l, user: userMap[l.user_id] || null, type: "load" }));
+      const enrichedWithdraws = (withdrawsRes.data || []).map(w => ({ ...w, user: userMap[w.user_id] || null, type: "withdraw" }));
+      const enrichedTickets = (ticketsRes.data || []).map(t => ({ ...t, user: userMap[t.user_id] || null }));
 
-      const enrichedLoads = (loadsRes.data || []).map(l => ({
-        ...l,
-        user: userMap[l.user_id] || null,
-        type: "load"
-      }));
-
-      const enrichedWithdraws = (withdrawsRes.data || []).map(w => ({
-        ...w,
-        user: userMap[w.user_id] || null,
-        type: "withdraw"
-      }));
-
-      const enrichedTickets = (ticketsRes.data || []).map(t => ({
-        ...t,
-        user: userMap[t.user_id] || null
-      }));
-
-      return ok(res, {
-        users: enrichedUsers,
-        loads: enrichedLoads,
-        withdraws: enrichedWithdraws,
-        tickets: enrichedTickets
-      });
+      return ok(res, { users: enrichedUsers, loads: enrichedLoads, withdraws: enrichedWithdraws, tickets: enrichedTickets });
     }
 
     if (path === "/admin-approve" && req.method === "POST") {
@@ -654,60 +526,27 @@ module.exports = async (req, res) => {
       if (!admin) return err(res, "Yetkisiz", 401);
 
       const { type, id } = req.body || {};
-
-      if (!id || (type !== "load" && type !== "withdraw")) {
-        return err(res, "Geçersiz istek");
-      }
+      if (!id || (type !== "load" && type !== "withdraw")) return err(res, "Geçersiz istek");
 
       if (type === "load") {
-        const { data: lr } = await supabase.from("load_requests")
-          .select("*").eq("id", id).single();
+        const { data: lr } = await supabase.from("load_requests").select("*").eq("id", id).single();
+        if (!lr || lr.status !== "pending") return err(res, "Talep bulunamadı veya işlenmiş");
 
-        if (!lr || lr.status !== "pending") {
-          return err(res, "Talep bulunamadı veya işlenmiş");
-        }
-
-        await supabase.from("load_requests").update({
-          status: "approved",
-          approved_at: new Date().toISOString()
-        }).eq("id", id);
-
-        const { data: farm } = await supabase.from("farms")
-          .select("*").eq("user_id", lr.user_id).single();
-
+        await supabase.from("load_requests").update({ status: "approved", approved_at: new Date().toISOString() }).eq("id", id);
+        const { data: farm } = await supabase.from("farms").select("*").eq("user_id", lr.user_id).single();
         await supabase.from("farms").update({
           wallet: Number(farm.wallet) + Number(lr.amount),
           total_loaded: Number(farm.total_loaded) + Number(lr.amount)
         }).eq("user_id", lr.user_id);
 
-        await supabase.from("history").insert({
-          user_id: lr.user_id,
-          type: "load",
-          description: "Bakiye yükleme (Admin onaylı)",
-          amount: lr.amount
-        });
-
+        await supabase.from("history").insert({ user_id: lr.user_id, type: "load", description: "Bakiye yükleme (Admin onaylı)", amount: lr.amount });
       } else {
-        const { data: wr } = await supabase.from("withdraw_requests")
-          .select("*").eq("id", id).single();
+        const { data: wr } = await supabase.from("withdraw_requests").select("*").eq("id", id).single();
+        if (!wr || wr.status !== "pending") return err(res, "Talep bulunamadı veya işlenmiş");
 
-        if (!wr || wr.status !== "pending") {
-          return err(res, "Talep bulunamadı veya işlenmiş");
-        }
-
-        await supabase.from("withdraw_requests").update({
-          status: "approved",
-          approved_at: new Date().toISOString()
-        }).eq("id", id);
-
-        await supabase.from("history").insert({
-          user_id: wr.user_id,
-          type: "withdraw",
-          description: "Banka hesabına para çekme (Onaylı)",
-          amount: -wr.amount
-        });
+        await supabase.from("withdraw_requests").update({ status: "approved", approved_at: new Date().toISOString() }).eq("id", id);
+        await supabase.from("history").insert({ user_id: wr.user_id, type: "withdraw", description: "Banka hesabına para çekme (Onaylı)", amount: -wr.amount });
       }
-
       return ok(res, { message: "Onaylandı" });
     }
 
@@ -716,46 +555,24 @@ module.exports = async (req, res) => {
       if (!admin) return err(res, "Yetkisiz", 401);
 
       const { type, id, reason } = req.body || {};
-
-      if (!id || (type !== "load" && type !== "withdraw")) {
-        return err(res, "Geçersiz istek");
-      }
-
+      if (!id || (type !== "load" && type !== "withdraw")) return err(res, "Geçersiz istek");
       const rejectReason = reason || "Admin reddi";
 
       if (type === "load") {
-        await supabase.from("load_requests").update({
-          status: "rejected",
-          reject_reason: rejectReason
-        }).eq("id", id);
-
+        await supabase.from("load_requests").update({ status: "rejected", reject_reason: rejectReason }).eq("id", id);
       } else {
-        const { data: wr } = await supabase.from("withdraw_requests")
-          .select("*").eq("id", id).single();
-
+        const { data: wr } = await supabase.from("withdraw_requests").select("*").eq("id", id).single();
         if (wr) {
-          const { data: farm } = await supabase.from("farms")
-            .select("*").eq("user_id", wr.user_id).single();
-
+          const { data: farm } = await supabase.from("farms").select("*").eq("user_id", wr.user_id).single();
           await supabase.from("farms").update({
             wallet: Number(farm.wallet) + Number(wr.amount),
             total_withdrawn: Number(farm.total_withdrawn) - Number(wr.amount)
           }).eq("user_id", wr.user_id);
 
-          await supabase.from("withdraw_requests").update({
-            status: "rejected",
-            reject_reason: rejectReason
-          }).eq("id", id);
-
-          await supabase.from("history").insert({
-            user_id: wr.user_id,
-            type: "withdraw_reject",
-            description: `Çekim reddedildi: ${rejectReason}`,
-            amount: wr.amount
-          });
+          await supabase.from("withdraw_requests").update({ status: "rejected", reject_reason: rejectReason }).eq("id", id);
+          await supabase.from("history").insert({ user_id: wr.user_id, type: "withdraw_reject", description: `Çekim reddedildi: ${rejectReason}`, amount: wr.amount });
         }
       }
-
       return ok(res, { message: "Reddedildi" });
     }
 
@@ -764,18 +581,10 @@ module.exports = async (req, res) => {
       if (!admin) return err(res, "Yetkisiz", 401);
 
       const { ticket_id, message } = req.body || {};
-
       if (!ticket_id || !message) return err(res, "Eksik bilgi");
 
-      await supabase.from("support_replies").insert({
-        ticket_id,
-        message,
-        by_admin: true
-      });
-
-      await supabase.from("support_tickets").update({
-        status: "answered"
-      }).eq("id", ticket_id);
+      await supabase.from("support_replies").insert({ ticket_id, message, by_admin: true });
+      await supabase.from("support_tickets").update({ status: "answered" }).eq("id", ticket_id);
 
       return ok(res, { message: "Cevap gönderildi" });
     }
@@ -789,34 +598,15 @@ module.exports = async (req, res) => {
       const userId = req.query?.user_id;
       if (!userId) return err(res, "Üye bilgisi gerekli");
 
-      const [
-        userRes,
-        farmRes,
-        animalsRes,
-        inventoryRes,
-        historyRes
-      ] = await Promise.all([
-        supabase.from("users")
-          .select("id, name, phone, email, avatar, created_at")
-          .eq("id", userId).single(),
-
-        supabase.from("farms")
-          .select("*").eq("user_id", userId).single(),
-
-        supabase.from("animals")
-          .select("*").eq("user_id", userId),
-
-        supabase.from("inventory")
-          .select("*").eq("user_id", userId),
-
-        supabase.from("history")
-          .select("*").eq("user_id", userId)
-          .order("created_at", { ascending: false }).limit(100)
+      const [userRes, farmRes, animalsRes, inventoryRes, historyRes] = await Promise.all([
+        supabase.from("users").select("id, name, phone, email, avatar, created_at").eq("id", userId).single(),
+        supabase.from("farms").select("*").eq("user_id", userId).single(),
+        supabase.from("animals").select("*").eq("user_id", userId),
+        supabase.from("inventory").select("*").eq("user_id", userId),
+        supabase.from("history").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100)
       ]);
 
-      if (userRes.error || !userRes.data) {
-        return err(res, "Üye bulunamadı");
-      }
+      if (userRes.error || !userRes.data) return err(res, "Üye bulunamadı");
 
       return ok(res, {
         user: userRes.data,
@@ -833,59 +623,30 @@ module.exports = async (req, res) => {
 
       const { user_id, balance } = req.body || {};
       const newBalance = Number(balance);
-
       if (!user_id) return err(res, "Üye bilgisi gerekli");
 
-      if (
-        balance === undefined ||
-        balance === null ||
-        balance === "" ||
-        !Number.isFinite(newBalance) ||
-        newBalance < 0 ||
-        newBalance > 1000000000
-      ) {
+      if (balance === undefined || balance === null || balance === "" || !Number.isFinite(newBalance) || newBalance < 0 || newBalance > 1000000000) {
         return err(res, "Geçerli bir bakiye girin");
       }
 
-      const { data: farm, error: farmError } = await supabase
-        .from("farms").select("wallet")
-        .eq("user_id", user_id).single();
-
-      if (farmError || !farm) {
-        return err(res, "Üyenin çiftlik bilgisi bulunamadı");
-      }
+      const { data: farm, error: farmError } = await supabase.from("farms").select("wallet").eq("user_id", user_id).single();
+      if (farmError || !farm) return err(res, "Üyenin çiftlik bilgisi bulunamadı");
 
       const oldBalance = Number(farm.wallet || 0);
       const difference = newBalance - oldBalance;
 
-      const { error: updateError } = await supabase
-        .from("farms").update({ wallet: newBalance })
-        .eq("user_id", user_id);
+      const { error: updateError } = await supabase.from("farms").update({ wallet: newBalance }).eq("user_id", user_id);
+      if (updateError) { console.error("Bakiye güncelleme hatası:", updateError); return err(res, "Bakiye güncellenemedi", 500); }
 
-      if (updateError) {
-        console.error("Bakiye güncelleme hatası:", updateError);
-        return err(res, "Bakiye güncellenemedi", 500);
-      }
-
-      const { error: historyError } = await supabase
-        .from("history")
-        .insert({
-          user_id,
-          type: "admin_adjustment",
-          description: `Yönetici tarafından bakiye düzenlendi. Eski bakiye: ${oldBalance} ₺, Yeni bakiye: ${newBalance} ₺`,
-          amount: difference
-        });
-
-      if (historyError) {
-        console.error("Bakiye işlem geçmişi kayıt hatası:", historyError);
-        return err(res, "Bakiye güncellendi ancak işlem geçmişi kaydedilemedi", 500);
-      }
-
-      return ok(res, {
-        message: "Üye bakiyesi güncellendi",
-        old_balance: oldBalance,
-        new_balance: newBalance
+      const { error: historyError } = await supabase.from("history").insert({
+        user_id, type: "admin_adjustment",
+        description: `Yönetici tarafından bakiye düzenlendi. Eski bakiye: ${oldBalance} ₺, Yeni bakiye: ${newBalance} ₺`,
+        amount: difference
       });
+
+      if (historyError) { console.error("Bakiye işlem geçmişi kayıt hatası:", historyError); return err(res, "Bakiye güncellendi ancak işlem geçmişi kaydedilemedi", 500); }
+
+      return ok(res, { message: "Üye bakiyesi güncellendi", old_balance: oldBalance, new_balance: newBalance });
     }
 
     if (path === "/admin-delete-user" && req.method === "POST") {
@@ -893,109 +654,45 @@ module.exports = async (req, res) => {
       if (!admin) return err(res, "Yetkisiz", 401);
 
       const { user_id } = req.body || {};
+      if (!user_id) return err(res, "Silinecek üye bilgisi gerekli");
 
-      if (!user_id) {
-        return err(res, "Silinecek üye bilgisi gerekli");
-      }
-
-      const { data: targetUser, error: userCheckError } = await supabase
-        .from("users")
-        .select("id, name, phone")
-        .eq("id", user_id)
-        .maybeSingle();
-
-      if (userCheckError) {
-        console.error("Üye kontrol hatası:", userCheckError);
-        return err(res, "Üye kontrol edilemedi", 500);
-      }
-
-      if (!targetUser) {
-        return err(res, "Üye bulunamadı");
-      }
+      const { data: targetUser, error: userCheckError } = await supabase.from("users").select("id, name, phone").eq("id", user_id).maybeSingle();
+      if (userCheckError) { console.error("Üye kontrol hatası:", userCheckError); return err(res, "Üye kontrol edilemedi", 500); }
+      if (!targetUser) return err(res, "Üye bulunamadı");
 
       try {
-        const { data: tickets, error: ticketReadError } = await supabase
-          .from("support_tickets")
-          .select("id")
-          .eq("user_id", user_id);
-
+        const { data: tickets, error: ticketReadError } = await supabase.from("support_tickets").select("id").eq("user_id", user_id);
         if (ticketReadError) throw ticketReadError;
 
         const ticketIds = (tickets || []).map(ticket => ticket.id);
-
         if (ticketIds.length > 0) {
-          const { error } = await supabase
-            .from("support_replies")
-            .delete()
-            .in("ticket_id", ticketIds);
-
+          const { error } = await supabase.from("support_replies").delete().in("ticket_id", ticketIds);
           if (error) throw error;
         }
 
-        const { error: rewardError } = await supabase
-          .from("referral_rewards")
-          .delete()
-          .eq("referrer_user_id", user_id);
-
+        const { error: rewardError } = await supabase.from("referral_rewards").delete().eq("referrer_user_id", user_id);
         if (rewardError) throw rewardError;
 
-        const { error: referralUpdateError } = await supabase
-          .from("users")
-          .update({ referred_by: null })
-          .eq("referred_by", user_id);
-
+        const { error: referralUpdateError } = await supabase.from("users").update({ referred_by: null }).eq("referred_by", user_id);
         if (referralUpdateError) throw referralUpdateError;
 
-        const tables = [
-          "animals",
-          "inventory",
-          "history",
-          "load_requests",
-          "withdraw_requests",
-          "support_tickets",
-          "farms"
-        ];
-
+        const tables = ["animals", "inventory", "history", "load_requests", "withdraw_requests", "support_tickets", "farms"];
         for (const table of tables) {
-          const { error } = await supabase
-            .from(table)
-            .delete()
-            .eq("user_id", user_id);
-
-          if (error) {
-            console.error(`${table} silme hatası:`, error);
-            throw error;
-          }
+          const { error } = await supabase.from(table).delete().eq("user_id", user_id);
+          if (error) { console.error(`${table} silme hatası:`, error); throw error; }
         }
 
-        const { error: referredRewardError } = await supabase
-          .from("referral_rewards")
-          .delete()
-          .eq("referred_user_id", user_id);
+        const { error: referredRewardError } = await supabase.from("referral_rewards").delete().eq("referred_user_id", user_id);
+        if (referredRewardError) throw referredRewardError;
 
-        if (referredRewardError) {
-          throw referredRewardError;
-        }
-
-        const { error: deleteUserError } = await supabase
-          .from("users")
-          .delete()
-          .eq("id", user_id);
-
+        const { error: deleteUserError } = await supabase.from("users").delete().eq("id", user_id);
         if (deleteUserError) throw deleteUserError;
 
-        return ok(res, {
-          message: `${targetUser.name} adlı üye ve ilişkili kayıtları silindi.`
-        });
+        return ok(res, { message: `${targetUser.name} adlı üye ve ilişkili kayıtları silindi.` });
 
       } catch (e) {
         console.error("Üye silme hatası:", e);
-
-        return err(
-          res,
-          "Üye silinemedi: " + e.message,
-          500
-        );
+        return err(res, "Üye silinemedi: " + e.message, 500);
       }
     }
 
@@ -1012,32 +709,18 @@ async function advanceAges(userId, farm) {
   const now = new Date();
   const lastTick = new Date(farm.last_tick);
   const deltaSec = Math.max(0, (now - lastTick) / 1000);
-
   if (deltaSec <= 0) return farm;
 
-  const { data: animals } = await supabase
-    .from("animals").select("*").eq("user_id", userId);
-
+  const { data: animals } = await supabase.from("animals").select("*").eq("user_id", userId);
   const animalRows = animals || [];
 
   if (animalRows.length > 0) {
-    const updates = animalRows.map(a =>
-      supabase.from("animals")
-        .update({ age_seconds: Number(a.age_seconds) + deltaSec })
-        .eq("id", a.id)
-    );
-
+    const updates = animalRows.map(a => supabase.from("animals").update({ age_seconds: Number(a.age_seconds) + deltaSec }).eq("id", a.id));
     await Promise.all(updates);
   }
 
   const aliveCounts = { tavuk:0, ari:0, koyun:0, inek:0 };
-
-  animalRows.forEach(a => {
-    if (Number(a.age_seconds) + deltaSec < ANIMAL_LIFE_SEC) {
-      aliveCounts[a.type]++;
-    }
-  });
-
+  animalRows.forEach(a => { if (Number(a.age_seconds) + deltaSec < ANIMAL_LIFE_SEC) aliveCounts[a.type]++; });
   const feedFactor = Number(farm.feed) > 0 ? 1 : 0;
 
   for (const key in ANIMALS) {
@@ -1048,27 +731,16 @@ async function advanceAges(userId, farm) {
       const inc = secUnits * deltaSec * aliveCounts[key];
 
       if (inc > 0) {
-        const { data: inv } = await supabase.from("inventory")
-          .select("amount")
-          .eq("user_id", userId)
-          .eq("product", animal.product)
-          .single();
-
+        const { data: inv } = await supabase.from("inventory").select("amount").eq("user_id", userId).eq("product", animal.product).single();
         if (inv) {
-          await supabase.from("inventory")
-            .update({ amount: Number(inv.amount) + inc })
-            .eq("user_id", userId)
-            .eq("product", animal.product);
+          await supabase.from("inventory").update({ amount: Number(inv.amount) + inc }).eq("user_id", userId).eq("product", animal.product);
         }
       }
     }
   }
 
   let feedNeed = 0;
-
-  for (const k in aliveCounts) {
-    feedNeed += aliveCounts[k] * ANIMALS[k].feedPerDay;
-  }
+  for (const k in aliveCounts) feedNeed += aliveCounts[k] * ANIMALS[k].feedPerDay;
 
   const daysPassed = deltaSec / 86400;
   const feedUsed = feedNeed * daysPassed;
@@ -1081,9 +753,5 @@ async function advanceAges(userId, farm) {
     last_tick: now.toISOString()
   }).eq("user_id", userId);
 
-  return {
-    ...farm,
-    feed: newFeed,
-    last_tick: now.toISOString()
-  };
+  return { ...farm, feed: newFeed, last_tick: now.toISOString() };
 }
