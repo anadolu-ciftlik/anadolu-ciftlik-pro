@@ -415,9 +415,9 @@ input:checked + .slider:before{transform:translateX(24px)}
     </form>
     <form class="auth-form" id="forgotForm" onsubmit="doForgot(event)">
       <div class="auth-msg" id="forgotMsg"></div>
-      <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;line-height:1.6">Kayıtlı telefon numaranızı girin. Sistemde kayıtlıysa size yeni bir geçici şifre göndereceğiz.</p>
-      <div class="form-group"><label>Telefon Numarası</label><input type="tel" id="forgotPhone" placeholder="05XX XXX XX XX" required></div>
-      <button type="submit" class="btn gold">🔑 Geçici Şifre Oluştur</button>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;line-height:1.6">Kayıtlı e-posta adresinizi girin. Size şifre sıfırlama linki göndereceğiz.</p>
+      <div class="form-group"><label>E-posta Adresi</label><input type="email" id="forgotEmail" placeholder="ornek@mail.com" required></div>
+      <button type="submit" class="btn gold">🔑 Sıfırlama Linki Gönder</button>
       <a class="link" onclick="showLogin()">← Girişe dön</a>
     </form>
   </div>
@@ -656,6 +656,14 @@ input:checked + .slider:before{transform:translateX(24px)}
     <h3>Ödeme Talebiniz Alındı</h3>
     <p id="pendingModalText">Ödemeniz admin onayına gönderilmiştir. Onaylandıktan sonra bakiyenize aktarılacaktır.</p>
     <div class="modal-actions"><button class="btn" onclick="closePendingModal()" type="button">Tamam</button></div>
+  </div>
+</div>
+
+<div class="modal" id="avatarModal">
+  <div class="modal-box" style="max-width:520px">
+    <h3 style="margin-bottom:16px">Avatar Seç</h3>
+    <div class="avatar-grid" id="avatarGridProfile" style="grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeAvatarModal()" type="button">İptal</button></div>
   </div>
 </div>
 
@@ -926,9 +934,18 @@ async function doLogin(e){
   }
 }
 
-function doForgot(e){
+async function doForgot(e){
   e.preventDefault();
-  showMsg("forgotMsg", "❌ Bu özellik backend'de henüz aktif değil. Lütfen destek talebi oluşturun.", true);
+  const email = $("#forgotEmail").value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg("forgotMsg","❌ Geçerli bir e-posta adresi girin", true); playSound("error"); return; }
+
+  try {
+    await apiRequest("/forgot-password", "POST", { email });
+    showMsg("forgotMsg", "✅ Eğer bu e-posta kayıtlıysa, sıfırlama linki gönderildi. Lütfen gelen kutunuzu kontrol edin.", false);
+    playSound("levelup");
+  } catch(err) {
+    showMsg("forgotMsg", "❌ " + err.message, true); playSound("error");
+  }
 }
 
 function openLogoutModal(){ $("#logoutModal").classList.add("show"); $("#userMenu").classList.remove("show"); }
