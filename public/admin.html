@@ -19,7 +19,7 @@
 .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin:12px 0 18px}.detail-box{background:#091426;border:1px solid var(--line);border-radius:10px;padding:11px}.detail-box small{display:block;color:var(--m);font-size:10px;font-weight:800;margin-bottom:5px}.detail-box b{font-size:14px;overflow-wrap:anywhere}
 .detail-section{margin-top:18px}.detail-section h4{font-size:13px;margin-bottom:9px}.detail-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}.detail-table{width:100%;border-collapse:collapse;font-size:11px;min-width:460px}.detail-table th,.detail-table td{padding:9px 10px;text-align:left;border-bottom:1px solid #ffffff12}.detail-table th{color:var(--m);background:#091426}.balance-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.balance-form input{flex:1;min-width:150px;padding:10px;background:#091426;border:1px solid var(--line);border-radius:8px;color:var(--t)}.balance-form button{padding:10px 14px;border:0;border-radius:8px;background:var(--green);color:#062012;font-weight:900}
 @media(max-width:600px){.detail-modal{padding:14px}.modal-backdrop{padding:8px}}
-
+.animal-filter-btn.active{background:var(--gold)!important;color:#17120a!important}
 </style>
 </head>
 <body>
@@ -39,13 +39,39 @@
 <div class="stat"><small>🐾 KAYITLI HAYVAN</small><b class="greenText" id="sAnimals">—</b></div>
 </div>
 <nav class="tabs" id="tabs">
-<button class="tab active" data-tab="dashboard">📊 Genel Bakış</button><button class="tab" data-tab="all">📋 Tüm Talepler <span class="cnt" id="cntAll">0</span></button><button class="tab" data-tab="pendingLoad">💳 Yükleme <span class="cnt" id="cntPendingLoad">0</span></button><button class="tab" data-tab="pendingWithdraw">🏦 Çekim <span class="cnt" id="cntPendingWithdraw">0</span></button><button class="tab" data-tab="support">💬 Destek <span class="cnt" id="cntSupport">0</span></button><button class="tab" data-tab="approved">✅ Onaylanan</button><button class="tab" data-tab="rejected">❌ Reddedilen</button><button class="tab" data-tab="users">👥 Üye İşlemleri <span class="cnt" id="cntUsers">0</span></button>
+<button class="tab active" data-tab="dashboard">📊 Genel Bakış</button>
+<button class="tab" data-tab="all">📋 Tüm Talepler <span class="cnt" id="cntAll">0</span></button>
+<button class="tab" data-tab="pendingLoad">💳 Yükleme <span class="cnt" id="cntPendingLoad">0</span></button>
+<button class="tab" data-tab="pendingWithdraw">🏦 Çekim <span class="cnt" id="cntPendingWithdraw">0</span></button>
+<button class="tab" data-tab="support">💬 Destek <span class="cnt" id="cntSupport">0</span></button>
+<button class="tab" data-tab="animals">🐾 Tüm Hayvanlar <span class="cnt" id="cntAnimals">0</span></button>
+<button class="tab" data-tab="approved">✅ Onaylanan</button>
+<button class="tab" data-tab="rejected">❌ Reddedilen</button>
+<button class="tab" data-tab="users">👥 Üye İşlemleri <span class="cnt" id="cntUsers">0</span></button>
 </nav>
 <section class="section active" id="tab-dashboard"><div class="charts"><div class="panel"><div class="panelhead"><h3>Son 7 Gün — Yükleme Talepleri</h3></div><div class="chart"><canvas id="loadChart"></canvas></div></div><div class="panel"><div class="panelhead"><h3>Son 7 Gün — Çekim Talepleri</h3></div><div class="chart"><canvas id="withdrawChart"></canvas></div></div></div><div class="panel"><div class="panelhead"><h3>Son İşlemler</h3><span class="muted">En son oluşturulan talepler</span></div><div id="recentList"></div></div><div class="panel"><h3>İstatistik notu</h3><p class="muted" style="line-height:1.8">Bakiyeler ve toplam yükleme/çekim değerleri mevcut üye-farm kayıtlarından hesaplanır. Grafikler son 7 gündeki talep kayıt sayılarını gösterir. Hayvan türü dağılımı, en çok satın alınan hayvan ve günlük/aylık gerçek para hareketi için ayrıca sunucu tarafında istatistik API'si eklenmelidir.</p></div></section>
 <section class="section" id="tab-all"><div class="panel"><div class="panelhead"><h3>Tüm Bakiye Talepleri</h3><span class="muted" id="allInfo"></span></div><div id="allList"></div></div></section>
 <section class="section" id="tab-pendingLoad"><div class="panel"><div class="panelhead"><h3>Bekleyen Yüklemeler</h3><span class="muted" id="pendingLoadInfo"></span></div><div id="pendingLoadList"></div></div></section>
 <section class="section" id="tab-pendingWithdraw"><div class="panel"><div class="panelhead"><h3>Bekleyen Para Çekme Talepleri</h3><span class="muted" id="pendingWithdrawInfo"></span></div><div id="pendingWithdrawList"></div></div></section>
 <section class="section" id="tab-support"><div class="panel"><div class="panelhead"><h3>Üye Destek Talepleri</h3><span class="muted" id="supportInfo"></span></div><div id="supportList"></div></div></section>
+
+<!-- 🆕 TÜM HAYVANLAR SEKMESİ -->
+<section class="section" id="tab-animals">
+  <div class="panel">
+    <div class="panelhead">
+      <h3>🐾 Tüm Üyelerin Hayvanları</h3>
+      <span class="muted" id="animalsInfo">Yükleniyor…</span>
+    </div>
+    <input class="search" id="animalSearch" placeholder="Üye adı, telefon veya hayvan türüyle ara…">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn ghost animal-filter-btn active" data-animal-filter="all">Tümü</button>
+      <button class="btn ghost animal-filter-btn" data-animal-filter="alive">🟢 Canlı</button>
+      <button class="btn ghost animal-filter-btn" data-animal-filter="dead">⚫ Ölü</button>
+    </div>
+    <div id="animalsList"></div>
+  </div>
+</section>
+
 <section class="section" id="tab-approved"><div class="panel"><h3 style="margin-bottom:14px">Onaylanan Talepler</h3><div id="approvedList"></div></div></section>
 <section class="section" id="tab-rejected"><div class="panel"><h3 style="margin-bottom:14px">Reddedilen Talepler</h3><div id="rejectedList"></div></div></section>
 <section class="section" id="tab-users"><div class="panel"><div class="panelhead"><h3>Üye İşlemleri</h3><span class="muted" id="usersInfo"></span></div><input class="search" id="userSearch" placeholder="Üye adı veya telefon numarasıyla ara…"><div id="usersList"></div></div></section>
@@ -63,7 +89,10 @@ const fmt=n=>Math.round(Number(n)||0).toLocaleString("tr-TR"),money=n=>fmt(n)+" 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const date=d=>d?new Date(d).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}):"-";
 const phone=p=>{p=String(p||"-");return p.length===10?"0"+p.slice(0,3)+" "+p.slice(3,6)+" "+p.slice(6,8)+" "+p.slice(8):p};
-let token=null,dataState={users:[],loads:[],withdraws:[],tickets:[]},timer=null,chartLoad=null,chartWithdraw=null;
+let token=null,
+    dataState={users:[],loads:[],withdraws:[],tickets:[],animals:[]},
+    timer=null, chartLoad=null, chartWithdraw=null,
+    animalFilter="all";
 try{token=localStorage.getItem(TOKEN_KEY)}catch(e){}
 async function api(path,method="GET",body=null){const headers={"Content-Type":"application/json"};if(token)headers.Authorization="Bearer "+token;const opt={method,headers};if(body!==null)opt.body=JSON.stringify(body);const res=await fetch(API_BASE+path,opt);let d={};try{d=await res.json()}catch(e){}if(res.status===401){logout();throw Error(d.error||"Oturum süresi doldu.");}if(!res.ok)throw Error(d.error||"İstek başarısız oldu.");return d}
 function toast(msg,error=false){const x=$("#toast");x.textContent=msg;x.className="toast show"+(error?" err":"");clearTimeout(x._t);x._t=setTimeout(()=>x.className="toast",3000)}
@@ -71,15 +100,39 @@ function loginMsg(msg,error){$("#loginMsg").textContent=msg;$("#loginMsg").class
 async function login(){const username=$("#adminUser").value.trim(),password=$("#adminPass").value;if(!username||!password)return loginMsg("Kullanıcı adı ve şifre gereklidir.",true);$("#loginButton").disabled=true;try{const d=await api("/admin-login","POST",{username,password});if(!d.token)throw Error("Oturum anahtarı alınamadı.");token=d.token;localStorage.setItem(TOKEN_KEY,token);$("#loginScreen").style.display="none";$("#app").classList.add("show");await start();}catch(e){loginMsg(e.message,true)}finally{$("#loginButton").disabled=false}}
 function logout(){try{localStorage.removeItem(TOKEN_KEY)}catch(e){}token=null;if(timer)clearInterval(timer);timer=null;$("#loginScreen").style.display="grid";$("#app").classList.remove("show")}
 async function start(){await loadData();if(timer)clearInterval(timer);timer=setInterval(loadData,15000)}
-async function loadData(){try{const d=await api("/admin-pending");dataState={users:d.users||[],loads:d.loads||[],withdraws:d.withdraws||[],tickets:d.tickets||[]};render();$("#lastRefresh").textContent="Son güncelleme: "+new Date().toLocaleTimeString("tr-TR")}catch(e){console.error(e);if(token)toast("Veriler alınamadı: "+e.message,true)}}
+
+async function loadData(){
+  try{
+    const [d, animalsData] = await Promise.all([
+      api("/admin-pending"),
+      api("/admin-all-animals")
+    ]);
+    dataState = {
+      users: d.users||[],
+      loads: d.loads||[],
+      withdraws: d.withdraws||[],
+      tickets: d.tickets||[],
+      animals: animalsData.animals||[]
+    };
+    render();
+    $("#lastRefresh").textContent="Son güncelleme: "+new Date().toLocaleTimeString("tr-TR");
+  }catch(e){
+    console.error(e);
+    if(token)toast("Veriler alınamadı: "+e.message,true);
+  }
+}
+
 function tab(name){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));document.querySelectorAll(".section").forEach(x=>x.classList.toggle("active",x.id==="tab-"+name))}
 function render(){const {users,loads,withdraws,tickets}=dataState,pL=loads.filter(x=>x.status==="pending"),pW=withdraws.filter(x=>x.status==="pending"),aL=loads.filter(x=>x.status==="approved"),aW=withdraws.filter(x=>x.status==="approved"),rejL=loads.filter(x=>x.status==="rejected"),rejW=withdraws.filter(x=>x.status==="rejected"),pT=tickets.filter(x=>x.status==="pending");
 const sum=(key)=>users.reduce((s,u)=>s+Number(u.farm?.[key]||0),0);
 $("#sUsers").textContent=fmt(users.length);$("#sWallet").textContent=money(sum("wallet"));$("#sLoaded").textContent=money(sum("total_loaded"));$("#sWithdrawn").textContent=money(sum("total_withdrawn"));$("#sPendingLoad").textContent=fmt(pL.length);$("#sPendingWithdraw").textContent=fmt(pW.length);$("#sSupport").textContent=fmt(pT.length);$("#sAnimals").textContent=fmt(users.reduce((s,u)=>s+Number(u.animals?.total||0),0));
 $("#cntAll").textContent=loads.length+withdraws.length;$("#cntPendingLoad").textContent=pL.length;$("#cntPendingWithdraw").textContent=pW.length;$("#cntSupport").textContent=pT.length;$("#cntUsers").textContent=users.length;
+$("#cntAnimals").textContent=(dataState.animals||[]).length;
 $("#allInfo").textContent=(loads.length+withdraws.length)+" kayıt";$("#pendingLoadInfo").textContent=pL.length+" bekleyen";$("#pendingWithdrawInfo").textContent=pW.length+" bekleyen";$("#supportInfo").textContent=pT.length+" bekleyen / "+tickets.length+" toplam";$("#usersInfo").textContent=users.length+" üye";
 const all=[...loads.map(x=>({...x,type:"load"})),...withdraws.map(x=>({...x,type:"withdraw"}))].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-requests("allList",all);requests("pendingLoadList",pL.map(x=>({...x,type:"load"})));requests("pendingWithdrawList",pW.map(x=>({...x,type:"withdraw"})));requests("approvedList",[...aL.map(x=>({...x,type:"load"})),...aW.map(x=>({...x,type:"withdraw"}))]);requests("rejectedList",[...rejL.map(x=>({...x,type:"load"})),...rejW.map(x=>({...x,type:"withdraw"}))]);support(tickets);members(users);recent(all.slice(0,6));charts(loads,withdraws)}
+requests("allList",all);requests("pendingLoadList",pL.map(x=>({...x,type:"load"})));requests("pendingWithdrawList",pW.map(x=>({...x,type:"withdraw"})));requests("approvedList",[...aL.map(x=>({...x,type:"load"})),...aW.map(x=>({...x,type:"withdraw"}))]);requests("rejectedList",[...rejL.map(x=>({...x,type:"load"})),...rejW.map(x=>({...x,type:"withdraw"}))]);support(tickets);members(users);recent(all.slice(0,6));charts(loads,withdraws);
+renderAnimals();
+}
 function requests(id,arr){const root=$("#"+id);if(!arr.length){root.innerHTML='<div class="empty">📭<br>Bu kategoride kayıt yok.</div>';return}root.innerHTML="";arr.forEach(r=>{const load=r.type==="load",status=r.status||"pending",u=r.user||{},el=document.createElement("div");el.className="request";const extra=!load&&r.bank?`<br>🏦 ${esc(r.bank)} · IBAN: ${esc(String(r.iban||"").slice(0,8))}… · Alıcı: ${esc(r.name||"-")}`:"";let action=status==="pending"?`<div class="actions"><button class="approve" data-action="approve" data-type="${r.type}" data-id="${esc(r.id)}">Onayla</button><button class="reject" data-action="reject" data-type="${r.type}" data-id="${esc(r.id)}">Reddet</button></div>`:`<span class="status ${status}">${status==="approved"?"ONAYLANDI":"REDDEDİLDİ"}</span>`;el.innerHTML=`<div class="requser"><div class="avatar">${esc(u.avatar||"🐄")}</div><div><div class="reqname">${load?"💳 Bakiye Yükleme":"🏦 Para Çekme"} · ${esc(u.name||"Bilinmeyen")}</div><div class="meta">📱 ${esc(phone(u.phone))} · Talep: ${esc(String(r.id||"").slice(0,12))}<br>📅 ${esc(date(r.created_at))}${extra}${r.reject_reason?`<br>Red nedeni: ${esc(r.reject_reason)}`:""}</div></div></div><div class="amount">${money(r.amount)}</div>${action}`;root.appendChild(el)})}
 function recent(arr){const root=$("#recentList");if(!arr.length){root.innerHTML='<div class="empty">Henüz talep yok.</div>';return}root.innerHTML="";arr.forEach(r=>{const el=document.createElement("div");el.className="request";el.innerHTML=`<div class="requser"><div class="avatar">${r.type==="load"?"💳":"🏦"}</div><div><div class="reqname">${r.type==="load"?"Yükleme":"Çekim"} · ${esc(r.user?.name||"Bilinmeyen")}</div><div class="meta">${esc(date(r.created_at))}</div></div></div><div class="amount">${money(r.amount)}</div><span class="status ${esc(r.status||"pending")}">${r.status==="approved"?"Onaylandı":r.status==="rejected"?"Reddedildi":"Beklemede"}</span>`;root.appendChild(el)})}
 function charts(loads,withdraws){if(typeof Chart==="undefined")return;const labels=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);labels.push(d.toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"}))}const vals=a=>labels.map(l=>a.filter(x=>new Date(x.created_at).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"})===l).length);const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#91a4c5"},grid:{color:"#ffffff10"}},y:{beginAtZero:true,ticks:{precision:0,color:"#91a4c5"},grid:{color:"#ffffff10"}}}};if(chartLoad)chartLoad.destroy();if(chartWithdraw)chartWithdraw.destroy();chartLoad=new Chart($("#loadChart"),{type:"bar",data:{labels,datasets:[{data:vals(loads),backgroundColor:"#60a5fa99",borderRadius:6}]},options:opts});chartWithdraw=new Chart($("#withdrawChart"),{type:"bar",data:{labels,datasets:[{data:vals(withdraws),backgroundColor:"#ff707099",borderRadius:6}]},options:opts})}
@@ -95,6 +148,97 @@ function members(arr){
   root.appendChild(el);
  });
 }
+
+function renderAnimals(){
+  const root=$("#animalsList");
+  if(!root)return;
+
+  const q=($("#animalSearch")?.value||"").trim().toLocaleLowerCase("tr-TR");
+  const all=dataState.animals||[];
+
+  let list=all;
+  if(animalFilter==="alive")list=list.filter(a=>a.alive);
+  if(animalFilter==="dead") list=list.filter(a=>!a.alive);
+
+  if(q){
+    list=list.filter(a=>{
+      const hay=(String(a.user?.name||"")+" "+String(a.user?.phone||"")+" "+String(a.type||"")).toLocaleLowerCase("tr-TR");
+      return hay.includes(q);
+    });
+  }
+
+  $("#animalsInfo").textContent=`${list.length} / ${all.length} hayvan`;
+
+  if(!list.length){
+    root.innerHTML='<div class="empty">🐾<br>Bu filtrede hayvan bulunamadı.</div>';
+    return;
+  }
+
+  const emoji={tavuk:"🐔",ari:"🐝",koyun:"🐑",inek:"🐄"};
+
+  const grouped={};
+  list.forEach(a=>{
+    const key=a.user_id;
+    if(!grouped[key])grouped[key]={user:a.user,items:[]};
+    grouped[key].items.push(a);
+  });
+
+  let html="";
+  Object.values(grouped).forEach(group=>{
+    const u=group.user||{};
+    const aliveCount=group.items.filter(x=>x.alive).length;
+    const deadCount=group.items.length-aliveCount;
+
+    html+=`
+      <div class="request" style="flex-direction:column;align-items:stretch">
+        <div class="requser" style="margin-bottom:10px">
+          <div class="avatar">${esc(u.avatar||"🐄")}</div>
+          <div>
+            <div class="reqname">${esc(u.name||"Bilinmeyen")}</div>
+            <div class="meta">📱 ${esc(phone(u.phone))} · 🟢 ${aliveCount} canlı · ⚫ ${deadCount} ölü</div>
+          </div>
+        </div>
+        <div class="detail-table-wrap">
+          <table class="detail-table" style="min-width:520px">
+            <thead>
+              <tr>
+                <th>Tür</th>
+                <th>Yaş (gün)</th>
+                <th>Durum</th>
+                <th>Kayıt</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${group.items.map(a=>`
+                <tr>
+                  <td>${emoji[a.type]||"🐾"} ${esc(a.type)}</td>
+                  <td>${(Number(a.age_seconds)/86400).toFixed(1)}</td>
+                  <td>${a.alive
+                    ?'<span class="status approved">CANLI</span>'
+                    :'<span class="status closed">ÖLÜ</span>'}</td>
+                  <td>${esc(date(a.created_at))}</td>
+                  <td>
+                    <button class="btn red"
+                            style="padding:5px 10px;font-size:11px"
+                            data-action="delete-animal"
+                            data-id="${esc(a.id)}"
+                            data-user-id="${esc(a.user_id)}">
+                      🗑️ Sil
+                    </button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  });
+
+  root.innerHTML=html;
+}
+
 function detailTable(rows,columns){
  if(!Array.isArray(rows)||!rows.length)return '<div class="empty">Kayıt bulunamadı.</div>';
  return `<div class="detail-table-wrap"><table class="detail-table"><thead><tr>${columns.map(c=>`<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>${rows.map(row=>`<tr>${columns.map(c=>`<td>${esc(c.format?c.format(row):row[c.key]??"-")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
@@ -105,17 +249,63 @@ async function openUserDetail(userId){
   const d=await api("/admin-user-detail?user_id="+encodeURIComponent(userId));
   const u=d.user||{},f=d.farm||{},animals=d.animals||[],inventory=d.inventory||[],history=d.history||[];
   $("#detailTitle").textContent=(u.name||"Üye")+" — Üye Detayları";
+
+  let animalsHtml = "";
+  if (animals.length === 0) {
+    animalsHtml = '<div class="empty">Bu üyenin hayvanı yok.</div>';
+  } else {
+    animalsHtml = `
+      <div class="detail-table-wrap">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Tür</th>
+              <th>Yaş (sn)</th>
+              <th>Kayıt Tarihi</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${animals.map(a => `
+              <tr>
+                <td>${esc(a.type)}</td>
+                <td>${Number(a.age_seconds).toFixed(0)}</td>
+                <td>${esc(date(a.created_at))}</td>
+                <td>
+                  <button class="btn red" style="padding:5px 10px;font-size:11px;" data-action="delete-animal" data-id="${esc(a.id)}" data-user-id="${esc(userId)}">🗑️ Sil</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   content.innerHTML=`<div class="detail-grid">
    <div class="detail-box"><small>ÜYE</small><b>${esc(u.name||"-")}</b></div><div class="detail-box"><small>TELEFON</small><b>${esc(phone(u.phone))}</b></div><div class="detail-box"><small>ÜYE NUMARASI</small><b>${esc(u.id||userId)}</b></div><div class="detail-box"><small>KAYIT TARİHİ</small><b>${esc(date(u.created_at))}</b></div>
    <div class="detail-box"><small>BAKİYE</small><b class="gold">${money(f.wallet)}</b></div><div class="detail-box"><small>TOPLAM YÜKLEME</small><b>${money(f.total_loaded)}</b></div><div class="detail-box"><small>TOPLAM SATIŞ</small><b>${money(f.total_sold)}</b></div><div class="detail-box"><small>TOPLAM ÇEKİM</small><b>${money(f.total_withdrawn)}</b></div>
   </div>
   <div class="detail-section"><h4>💰 Üye Bakiyesini Düzenle</h4><div class="muted">Yeni bakiye tutarını girin. Bu işlem mevcut bakiyenin üzerine ekleme yapmaz, bakiyeyi girdiğiniz tutara ayarlar.</div><form class="balance-form" id="balanceForm"><input id="newBalance" type="number" min="0" step="0.01" value="${Number(f.wallet||0)}" required><button type="submit">Bakiyeyi Kaydet</button></form></div>
-  <div class="detail-section"><h4>🐾 Hayvanlar</h4>${detailTable(animals,[{key:"type",label:"Tür"},{key:"name",label:"Ad"},{key:"age_seconds",label:"Yaş (sn)"},{key:"created_at",label:"Kayıt tarihi",format:r=>date(r.created_at)}])}</div>
-  <div class="detail-section"><h4>📦 Envanter</h4>${detailTable(inventory,[{key:"product",label:"Ürün"},{key:"amount",label:"Miktar"},{key:"quantity",label:"Adet"}])}</div>
+  <div class="detail-section"><h4>🐾 Hayvanlar</h4>${animalsHtml}</div>
+  <div class="detail-section"><h4>📦 Envanter</h4>${detailTable(inventory,[{key:"product",label:"Ürün"},{key:"amount",label:"Miktar"}])}</div>
   <div class="detail-section"><h4>🧾 İşlem Geçmişi</h4>${detailTable(history,[{key:"type",label:"İşlem"},{key:"description",label:"Açıklama"},{key:"amount",label:"Tutar"},{key:"created_at",label:"Tarih",format:r=>date(r.created_at)}])}</div>`;
   $("#balanceForm").addEventListener("submit",e=>saveUserBalance(e,userId));
  }catch(e){content.innerHTML=`<div class="empty">Üye detayları alınamadı: ${esc(e.message)}</div>`}
 }
+
+async function deleteAnimal(animalId, userId, fromList=false){
+  if(!confirm("Bu hayvanı silmek istediğinize emin misiniz? Para iadesi YAPILMAYACAK.")) return;
+  try {
+    await api("/admin-delete-animal", "POST", { animal_id: animalId });
+    toast("Hayvan silindi (para iadesi yapılmadı).");
+    if (!fromList) await openUserDetail(userId);
+    await loadData();
+  } catch(err) {
+    toast("Hata: " + err.message, true);
+  }
+}
+
 async function deleteUser(userId, userName, button){
  const confirmed = confirm(
   `“${userName}” adlı üyeyi kalıcı olarak silmek üzeresiniz.\n\n`+
@@ -146,6 +336,43 @@ function closeUserDetail(){const m=$("#userDetailModal");m.classList.remove("sho
 async function approve(type,id){if(!confirm(type==="load"?"Bu yükleme talebini onaylıyor musunuz?":"Bu çekim talebini onaylıyor musunuz?"))return;try{await api("/admin-approve","POST",{type,id});toast("Talep onaylandı.");await loadData()}catch(e){toast(e.message,true)}}
 async function reject(type,id){const reason=prompt("Reddetme nedeni:","Ödeme doğrulanamadı");if(reason===null)return;try{await api("/admin-reject","POST",{type,id,reason:reason.trim()||"Yönetici reddi"});toast("Talep reddedildi.");await loadData()}catch(e){toast(e.message,true)}}
 async function reply(id){const msg=$("#reply-"+CSS.escape(id))?.value.trim()||"";if(msg.length<2)return toast("Yanıt en az 2 karakter olmalıdır.",true);try{await api("/admin-support-reply","POST",{ticket_id:id,message:msg});toast("Yanıt gönderildi.");await loadData()}catch(e){toast(e.message,true)}}
-$("#closeDetailModal").addEventListener("click",closeUserDetail);$("#userDetailModal").addEventListener("click",e=>{if(e.target.id==="userDetailModal")closeUserDetail()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeUserDetail()});$("#loginButton").addEventListener("click",login);$("#adminPass").addEventListener("keydown",e=>{if(e.key==="Enter")login()});$("#logoutButton").addEventListener("click",logout);$("#userSearch").addEventListener("input",()=>members(dataState.users));$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)tab(b.dataset.tab)});document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(!b)return;if(b.dataset.action==="approve")approve(b.dataset.type,b.dataset.id);if(b.dataset.action==="reject")reject(b.dataset.type,b.dataset.id);if(b.dataset.action==="reply")reply(b.dataset.id);if(b.dataset.action==="detail")openUserDetail(b.dataset.id);if(b.dataset.action==="delete-user")deleteUser(b.dataset.id,b.dataset.name,b)});if(token){$("#loginScreen").style.display="none";$("#app").classList.add("show");start()}
+$("#closeDetailModal").addEventListener("click",closeUserDetail);
+$("#userDetailModal").addEventListener("click",e=>{if(e.target.id==="userDetailModal")closeUserDetail()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeUserDetail()});
+$("#loginButton").addEventListener("click",login);
+$("#adminPass").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+$("#logoutButton").addEventListener("click",logout);
+$("#userSearch").addEventListener("input",()=>members(dataState.users));
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)tab(b.dataset.tab)});
+
+document.addEventListener("input",e=>{
+  if(e.target.id==="animalSearch")renderAnimals();
+});
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-animal-filter]");
+  if(!b)return;
+  animalFilter=b.dataset.animalFilter;
+  document.querySelectorAll("[data-animal-filter]").forEach(x=>
+    x.classList.toggle("active",x.dataset.animalFilter===animalFilter)
+  );
+  renderAnimals();
+});
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-action]");
+  if(!b)return;
+  if(b.dataset.action==="approve")approve(b.dataset.type,b.dataset.id);
+  if(b.dataset.action==="reject")reject(b.dataset.type,b.dataset.id);
+  if(b.dataset.action==="reply")reply(b.dataset.id);
+  if(b.dataset.action==="detail")openUserDetail(b.dataset.id);
+  if(b.dataset.action==="delete-user")deleteUser(b.dataset.id,b.dataset.name,b);
+  if(b.dataset.action==="delete-animal"){
+    const fromList = !b.closest("#userDetailModal");
+    deleteAnimal(b.dataset.id, b.dataset.userId, fromList);
+  }
+});
+
+if(token){$("#loginScreen").style.display="none";$("#app").classList.add("show");start()}
 </script>
 </body></html>
