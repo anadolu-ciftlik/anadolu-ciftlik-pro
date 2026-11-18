@@ -1,3 +1,4 @@
+
 const crypto = require("crypto");
 const { Resend } = require("resend");
 const { supabase, bcrypt, ok, err, cors, normalizePhone, signToken, getUserFromReq, getAdminFromReq, ensureFarm, ADMIN_USER, ADMIN_PASS, verifyToken } = require("./_lib");
@@ -65,7 +66,7 @@ module.exports = async (req, res) => {
       if (phone.length !== 10) return err(res, "Geçerli bir telefon girin");
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err(res, "Geçerli bir e-posta adresi girin");
       if (!password || password.length < 8) return err(res, "Şifre en az 8 karakter olmalı");
-      
+
       if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         return err(res, "Şifre büyük harf, küçük harf, rakam ve özel karakter içermelidir");
       }
@@ -614,6 +615,53 @@ module.exports = async (req, res) => {
         animals: animalsRes.data || [],
         inventory: inventoryRes.data || [],
         history: historyRes.data || []
+      });
+    }
+
+    // ================= ADMIN HAYVAN SİLME =================
+
+    if (path === "/admin-delete-animal" && req.method === "POST") {
+      const admin = await getAdminFromReq(req);
+      if (!admin) return err(res, "Yetkisiz", 401);
+
+      const { animal_id } = req.body || {};
+
+      if (!animal_id) {
+        return err(res, "Silinecek hayvan bilgisi gerekli");
+      }
+
+      // Silinecek hayvanı kontrol et
+      const { data: animal, error: animalError } = await supabase
+        .from("animals")
+        .select("id, user_id, type")
+        .eq("id", animal_id)
+        .maybeSingle();
+
+      if (animalError) {
+        console.error("Hayvan kontrol hatası:", animalError);
+        return err(res, "Hayvan bilgisi kontrol edilemedi", 500);
+      }
+
+      if (!animal) {
+        return err(res, "Hayvan bulunamadı");
+      }
+
+      // Hayvanı veritabanından sil
+      const { error: deleteError } = await supabase
+        .from("animals")
+        .delete()
+        .eq("id", animal_id);
+
+      if (deleteError) {
+        console.error("Hayvan silme hatası:", deleteError);
+        return err(res, "Hayvan silinemedi", 500);
+      }
+
+      return ok(res, {
+        message: "Hayvan başarıyla silindi",
+        animal_id: animal.id,
+        user_id: animal.user_id,
+        type: animal.type
       });
     }
 
