@@ -438,7 +438,7 @@ module.exports = async (req, res) => {
 
       const { amount, bank, iban, name } = req.body || {};
       const amt = parseFloat(amount);
-      if (!amt || amt < 500) return err(res, "Minimum çekim 500 ₺");
+      if (!amt || amt < 2500) return err(res, "Minimum çekim 2500 ₺");
       if (!bank || !iban || !name) return err(res, "Banka, IBAN ve isim gerekli");
 
       const farm = await ensureFarm(user.id);
