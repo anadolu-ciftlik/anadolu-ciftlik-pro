@@ -20,6 +20,9 @@
 .detail-section{margin-top:18px}.detail-section h4{font-size:13px;margin-bottom:9px}.detail-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}.detail-table{width:100%;border-collapse:collapse;font-size:11px;min-width:460px}.detail-table th,.detail-table td{padding:9px 10px;text-align:left;border-bottom:1px solid #ffffff12}.detail-table th{color:var(--m);background:#091426}.balance-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.balance-form input{flex:1;min-width:150px;padding:10px;background:#091426;border:1px solid var(--line);border-radius:8px;color:var(--t)}.balance-form button{padding:10px 14px;border:0;border-radius:8px;background:var(--green);color:#062012;font-weight:900}
 @media(max-width:600px){.detail-modal{padding:14px}.modal-backdrop{padding:8px}}
 .animal-filter-btn.active{background:var(--gold)!important;color:#17120a!important}
+.bulk-qty{display:flex;gap:6px;align-items:center;margin-top:6px}
+.bulk-qty input{flex:1;padding:6px;background:#091426;border:1px solid var(--line);border-radius:6px;color:var(--t);text-align:center;font-weight:800}
+.bulk-qty button{padding:4px 10px;border:0;border-radius:6px;background:#263752;color:var(--t);font-weight:900}
 </style>
 </head>
 <body>
@@ -55,7 +58,7 @@
 <section class="section" id="tab-pendingWithdraw"><div class="panel"><div class="panelhead"><h3>Bekleyen Para Çekme Talepleri</h3><span class="muted" id="pendingWithdrawInfo"></span></div><div id="pendingWithdrawList"></div></div></section>
 <section class="section" id="tab-support"><div class="panel"><div class="panelhead"><h3>Üye Destek Talepleri</h3><span class="muted" id="supportInfo"></span></div><div id="supportList"></div></div></section>
 
-<!-- 🆕 TÜM HAYVANLAR SEKMESİ -->
+<!-- TÜM HAYVANLAR SEKMESİ -->
 <section class="section" id="tab-animals">
   <div class="panel">
     <div class="panelhead">
@@ -282,12 +285,40 @@ async function openUserDetail(userId){
     `;
   }
 
+  const aliveByType = { tavuk:0, ari:0, koyun:0, inek:0 };
+  animals.forEach(a => {
+    if (Number(a.age_seconds) < 86400 * 30) aliveByType[a.type]++;
+  });
+
+  const bulkDeleteHtml = `
+    <div class="detail-section">
+      <h4>🗑️ Toplu Hayvan Sil (para iadesi yok)</h4>
+      <div class="muted" style="margin-bottom:10px">Silmek istediğiniz adetleri girin. En yaşlı hayvanlardan başlanarak silinir.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+        ${["tavuk","ari","koyun","inek"].map(t => `
+          <div class="detail-box">
+            <small>${t.toUpperCase()} (${aliveByType[t]} canlı)</small>
+            <div class="bulk-qty">
+              <button type="button" onclick="bulkQtyChange('${t}',-1)">−</button>
+              <input id="bulk-${t}" type="number" min="0" max="${aliveByType[t]}" value="0">
+              <button type="button" onclick="bulkQtyChange('${t}',1)">+</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn red" type="button" data-action="bulk-delete-animals" data-id="${esc(userId)}">🗑️ Seçilenleri Sil</button>
+      </div>
+    </div>
+  `;
+
   content.innerHTML=`<div class="detail-grid">
    <div class="detail-box"><small>ÜYE</small><b>${esc(u.name||"-")}</b></div><div class="detail-box"><small>TELEFON</small><b>${esc(phone(u.phone))}</b></div><div class="detail-box"><small>ÜYE NUMARASI</small><b>${esc(u.id||userId)}</b></div><div class="detail-box"><small>KAYIT TARİHİ</small><b>${esc(date(u.created_at))}</b></div>
    <div class="detail-box"><small>BAKİYE</small><b class="gold">${money(f.wallet)}</b></div><div class="detail-box"><small>TOPLAM YÜKLEME</small><b>${money(f.total_loaded)}</b></div><div class="detail-box"><small>TOPLAM SATIŞ</small><b>${money(f.total_sold)}</b></div><div class="detail-box"><small>TOPLAM ÇEKİM</small><b>${money(f.total_withdrawn)}</b></div>
   </div>
   <div class="detail-section"><h4>💰 Üye Bakiyesini Düzenle</h4><div class="muted">Yeni bakiye tutarını girin. Bu işlem mevcut bakiyenin üzerine ekleme yapmaz, bakiyeyi girdiğiniz tutara ayarlar.</div><form class="balance-form" id="balanceForm"><input id="newBalance" type="number" min="0" step="0.01" value="${Number(f.wallet||0)}" required><button type="submit">Bakiyeyi Kaydet</button></form></div>
   <div class="detail-section"><h4>🐾 Hayvanlar</h4>${animalsHtml}</div>
+  ${bulkDeleteHtml}
   <div class="detail-section"><h4>📦 Envanter</h4>${detailTable(inventory,[{key:"product",label:"Ürün"},{key:"amount",label:"Miktar"}])}</div>
   <div class="detail-section"><h4>🧾 İşlem Geçmişi</h4>${detailTable(history,[{key:"type",label:"İşlem"},{key:"description",label:"Açıklama"},{key:"amount",label:"Tutar"},{key:"created_at",label:"Tarih",format:r=>date(r.created_at)}])}</div>`;
   $("#balanceForm").addEventListener("submit",e=>saveUserBalance(e,userId));
@@ -304,6 +335,31 @@ async function deleteAnimal(animalId, userId, fromList=false){
   } catch(err) {
     toast("Hata: " + err.message, true);
   }
+}
+
+function bulkQtyChange(type, delta){
+  const inp = document.getElementById("bulk-"+type);
+  if(!inp) return;
+  const cur = parseInt(inp.value) || 0;
+  const max = parseInt(inp.max) || 0;
+  inp.value = Math.max(0, Math.min(max, cur + delta));
+}
+
+async function bulkDeleteAnimals(userId){
+  const counts = {};
+  let total = 0;
+  for(const t of ["tavuk","ari","koyun","inek"]){
+    const v = parseInt(document.getElementById("bulk-"+t)?.value) || 0;
+    if(v > 0){ counts[t] = v; total += v; }
+  }
+  if(total === 0) return toast("Silinecek adet girin", true);
+  if(!confirm(`${total} adet hayvan silinecek. Para iadesi YAPILMAYACAK. Onaylıyor musunuz?`)) return;
+  try{
+    const res = await api("/admin-bulk-delete-animals","POST",{ user_id: userId, counts });
+    toast(res.message || "Silindi");
+    await openUserDetail(userId);
+    await loadData();
+  }catch(e){ toast("Hata: "+e.message, true); }
 }
 
 async function deleteUser(userId, userName, button){
@@ -370,6 +426,9 @@ document.addEventListener("click",e=>{
   if(b.dataset.action==="delete-animal"){
     const fromList = !b.closest("#userDetailModal");
     deleteAnimal(b.dataset.id, b.dataset.userId, fromList);
+  }
+  if(b.dataset.action==="bulk-delete-animals"){
+    bulkDeleteAnimals(b.dataset.id);
   }
 });
 
