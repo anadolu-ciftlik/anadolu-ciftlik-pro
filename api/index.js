@@ -1,4 +1,3 @@
-
 const crypto = require("crypto");
 const { Resend } = require("resend");
 const { supabase, bcrypt, ok, err, cors, normalizePhone, signToken, getUserFromReq, getAdminFromReq, ensureFarm, ADMIN_USER, ADMIN_PASS, verifyToken } = require("./_lib");
@@ -66,7 +65,7 @@ module.exports = async (req, res) => {
       if (phone.length !== 10) return err(res, "Geçerli bir telefon girin");
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err(res, "Geçerli bir e-posta adresi girin");
       if (!password || password.length < 8) return err(res, "Şifre en az 8 karakter olmalı");
-
+      
       if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         return err(res, "Şifre büyük harf, küçük harf, rakam ve özel karakter içermelidir");
       }
@@ -522,6 +521,60 @@ module.exports = async (req, res) => {
       return ok(res, { users: enrichedUsers, loads: enrichedLoads, withdraws: enrichedWithdraws, tickets: enrichedTickets });
     }
 
+    // ---- Tüm hayvanları listele ----
+    if (path === "/admin-all-animals" && req.method === "GET") {
+      const admin = await getAdminFromReq(req);
+      if (!admin) return err(res, "Yetkisiz", 401);
+
+      const [animalsRes, usersRes] = await Promise.all([
+        supabase.from("animals")
+          .select("id, user_id, type, age_seconds, created_at")
+          .order("created_at", { ascending: false }),
+        supabase.from("users").select("id, name, phone, avatar")
+      ]);
+
+      if (animalsRes.error) return err(res, "Hayvanlar alınamadı", 500);
+
+      const userMap = {};
+      (usersRes.data || []).forEach(u => { userMap[u.id] = u; });
+
+      const enriched = (animalsRes.data || []).map(a => ({
+        ...a,
+        alive: Number(a.age_seconds) < ANIMAL_LIFE_SEC,
+        user: userMap[a.user_id] || { name: "Bilinmeyen", phone: "-", avatar: "🐄" }
+      }));
+
+      return ok(res, { animals: enriched });
+    }
+
+    // ---- Hayvan sil (para iadesi yok) ----
+    if (path === "/admin-delete-animal" && req.method === "POST") {
+      const admin = await getAdminFromReq(req);
+      if (!admin) return err(res, "Yetkisiz", 401);
+
+      const { animal_id } = req.body || {};
+      if (!animal_id) return err(res, "Hayvan bilgisi gerekli");
+
+      const { data: animal, error: readError } = await supabase
+        .from("animals").select("id, user_id, type").eq("id", animal_id).maybeSingle();
+
+      if (readError) return err(res, "Hayvan kontrol edilemedi", 500);
+      if (!animal) return err(res, "Hayvan bulunamadı");
+
+      const { error } = await supabase.from("animals").delete().eq("id", animal_id);
+      if (error) return err(res, "Hayvan silinemedi: " + error.message, 500);
+
+      // İşlem geçmişine kayıt (opsiyonel ama önerilir)
+      await supabase.from("history").insert({
+        user_id: animal.user_id,
+        type: "admin_animal_delete",
+        description: `Yönetici tarafından 1 adet ${animal.type} silindi (para iadesi yapılmadı)`,
+        amount: 0
+      });
+
+      return ok(res, { message: "Hayvan silindi" });
+    }
+
     if (path === "/admin-approve" && req.method === "POST") {
       const admin = await getAdminFromReq(req);
       if (!admin) return err(res, "Yetkisiz", 401);
@@ -535,6 +588,7 @@ module.exports = async (req, res) => {
 
         await supabase.from("load_requests").update({ status: "approved", approved_at: new Date().toISOString() }).eq("id", id);
         const { data: farm } = await supabase.from("farms").select("*").eq("user_id", lr.user_id).single();
+        if (!farm) return err(res, "Üyenin çiftlik kaydı bulunamadı");
         await supabase.from("farms").update({
           wallet: Number(farm.wallet) + Number(lr.amount),
           total_loaded: Number(farm.total_loaded) + Number(lr.amount)
@@ -565,6 +619,7 @@ module.exports = async (req, res) => {
         const { data: wr } = await supabase.from("withdraw_requests").select("*").eq("id", id).single();
         if (wr) {
           const { data: farm } = await supabase.from("farms").select("*").eq("user_id", wr.user_id).single();
+          if (!farm) return err(res, "Üyenin çiftlik kaydı bulunamadı");
           await supabase.from("farms").update({
             wallet: Number(farm.wallet) + Number(wr.amount),
             total_withdrawn: Number(farm.total_withdrawn) - Number(wr.amount)
@@ -615,53 +670,6 @@ module.exports = async (req, res) => {
         animals: animalsRes.data || [],
         inventory: inventoryRes.data || [],
         history: historyRes.data || []
-      });
-    }
-
-    // ================= ADMIN HAYVAN SİLME =================
-
-    if (path === "/admin-delete-animal" && req.method === "POST") {
-      const admin = await getAdminFromReq(req);
-      if (!admin) return err(res, "Yetkisiz", 401);
-
-      const { animal_id } = req.body || {};
-
-      if (!animal_id) {
-        return err(res, "Silinecek hayvan bilgisi gerekli");
-      }
-
-      // Silinecek hayvanı kontrol et
-      const { data: animal, error: animalError } = await supabase
-        .from("animals")
-        .select("id, user_id, type")
-        .eq("id", animal_id)
-        .maybeSingle();
-
-      if (animalError) {
-        console.error("Hayvan kontrol hatası:", animalError);
-        return err(res, "Hayvan bilgisi kontrol edilemedi", 500);
-      }
-
-      if (!animal) {
-        return err(res, "Hayvan bulunamadı");
-      }
-
-      // Hayvanı veritabanından sil
-      const { error: deleteError } = await supabase
-        .from("animals")
-        .delete()
-        .eq("id", animal_id);
-
-      if (deleteError) {
-        console.error("Hayvan silme hatası:", deleteError);
-        return err(res, "Hayvan silinemedi", 500);
-      }
-
-      return ok(res, {
-        message: "Hayvan başarıyla silindi",
-        animal_id: animal.id,
-        user_id: animal.user_id,
-        type: animal.type
       });
     }
 
