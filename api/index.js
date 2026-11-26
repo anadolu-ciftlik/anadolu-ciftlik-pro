@@ -575,6 +575,70 @@ module.exports = async (req, res) => {
       return ok(res, { message: "Hayvan silindi" });
     }
 
+        // ---- Toplu hayvan sil (para iadesi yok) ----
+    if (path === "/admin-bulk-delete-animals" && req.method === "POST") {
+      const admin = await getAdminFromReq(req);
+      if (!admin) return err(res, "Yetkisiz", 401);
+
+      const { user_id, counts } = req.body || {};
+      if (!user_id || !counts || typeof counts !== "object") {
+        return err(res, "Eksik bilgi");
+      }
+
+      const types = ["tavuk", "ari", "koyun", "inek"];
+      const results = { deleted: 0, byType: {} };
+
+      for (const type of types) {
+        const requested = parseInt(counts[type]) || 0;
+        if (requested <= 0) continue;
+
+        // O türdeki en yaşlı hayvanlardan başlayarak istenen adedi seç
+        const { data: animals, error: readErr } = await supabase
+          .from("animals")
+          .select("id")
+          .eq("user_id", user_id)
+          .eq("type", type)
+          .order("age_seconds", { ascending: false })
+          .limit(requested);
+
+        if (readErr) {
+          console.error(`${type} okuma hatası:`, readErr);
+          continue;
+        }
+        if (!animals || animals.length === 0) continue;
+
+        const ids = animals.map(a => a.id);
+        const { error: delErr } = await supabase
+          .from("animals").delete().in("id", ids);
+
+        if (delErr) {
+          console.error(`${type} silme hatası:`, delErr);
+          continue;
+        }
+
+        results.deleted += ids.length;
+        results.byType[type] = ids.length;
+      }
+
+      if (results.deleted === 0) return err(res, "Silinecek hayvan bulunamadı");
+
+      const summary = Object.entries(results.byType)
+        .map(([t, n]) => `${n} ${t}`).join(", ");
+
+      await supabase.from("history").insert({
+        user_id,
+        type: "admin_animal_delete",
+        description: `Yönetici tarafından toplu hayvan silindi (para iadesi yok): ${summary}`,
+        amount: 0
+      });
+
+      return ok(res, {
+        message: `${results.deleted} hayvan silindi`,
+        deleted: results.deleted,
+        byType: results.byType
+      });
+    }
+
     if (path === "/admin-approve" && req.method === "POST") {
       const admin = await getAdminFromReq(req);
       if (!admin) return err(res, "Yetkisiz", 401);
