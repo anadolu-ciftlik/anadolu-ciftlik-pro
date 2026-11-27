@@ -346,9 +346,101 @@ input:checked + .slider:before{transform:translateX(24px)}
   .support-fab{bottom:80px;left:16px;padding:12px 18px;font-size:.88rem}
 }
 @media(min-width:901px){.mob-toggle{display:none!important}}
+
+/* ==== ÖNEMLİ DUYURU OVERLAY ==== */
+.notice-overlay{
+  position:fixed;inset:0;z-index:99999;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:rgba(5,10,20,.85);
+  backdrop-filter:blur(6px);
+  animation:noticeFade .35s ease;
+}
+@keyframes noticeFade{from{opacity:0}to{opacity:1}}
+.notice-box{
+  width:min(680px,100%);
+  max-height:90vh;overflow-y:auto;
+  background:linear-gradient(145deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);
+  border-top:4px solid var(--gold);
+  border-radius:20px;
+  padding:34px 30px;
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+  color:var(--text);
+}
+.notice-box .notice-icon{
+  width:64px;height:64px;border-radius:16px;
+  display:grid;place-items:center;font-size:2rem;
+  background:rgba(245,158,11,.15);
+  border:1px solid rgba(245,158,11,.4);
+  margin:0 auto 18px;
+}
+.notice-box h2{
+  text-align:center;font-size:1.35rem;
+  color:var(--gold);letter-spacing:.5px;
+  margin-bottom:6px;
+}
+.notice-box .notice-sub{
+  text-align:center;color:var(--muted);
+  font-size:.85rem;margin-bottom:22px;
+}
+.notice-box p{
+  font-size:.95rem;line-height:1.75;
+  color:var(--text);margin-bottom:14px;
+}
+.notice-box p.small{font-size:.85rem;color:var(--muted)}
+.notice-box .notice-sign{
+  margin-top:22px;padding-top:18px;
+  border-top:1px dashed rgba(128,128,128,.25);
+  text-align:right;font-weight:800;
+  color:var(--gold);font-size:.9rem;line-height:1.6;
+}
+.notice-box .notice-sign small{
+  display:block;color:var(--muted);
+  font-weight:600;font-size:.78rem;margin-top:2px;
+}
+@media(max-width:600px){
+  .notice-box{padding:26px 20px}
+  .notice-box h2{font-size:1.15rem}
+  .notice-box p{font-size:.9rem}
+}
+  
 </style>
 </head>
 <body>
+
+  <!-- ÖNEMLİ DUYURU -->
+<div class="notice-overlay" id="noticeOverlay" role="alertdialog" aria-modal="true" aria-labelledby="noticeTitle">
+  <div class="notice-box">
+    <div class="notice-icon">📢</div>
+    <h2 id="noticeTitle">ÖNEMLİ DUYURU</h2>
+    <div class="notice-sub">Değerli Kullanıcılarımız,</div>
+
+    <p>
+      Anadolu Çiftlik Yatırım olarak, platformumuzun işleyiş modelinin farklı şekillerde
+      yorumlanması ve <b>saadet zinciri benzeri yapılarla ilişkilendirilebileceğine</b>
+      yönelik endişeler nedeniyle faaliyetlerimizi <b>sonlandırma kararı</b> almış bulunuyoruz.
+    </p>
+
+    <p>
+      Kullanıcılarımıza <b>gerçek dışı kazanç beklentileri sunmak</b> veya
+      <b>geleceğe yönelik belirsiz vaatlerde bulunmak</b> istemiyoruz.
+    </p>
+
+    <p>
+      Bu doğrultuda <b>tüm faaliyetlerimiz durdurulmuştur.</b>
+    </p>
+
+    <p class="small">
+      Bugüne kadar göstermiş olduğunuz ilgi ve güven için teşekkür ederiz.
+    </p>
+
+    <div class="notice-sign">
+      Anadolu Çiftlik Yatırım Yönetimi
+      <small>Saygılarımızla</small>
+    </div>
+  </div>
+</div>
 
 <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
   <defs>
